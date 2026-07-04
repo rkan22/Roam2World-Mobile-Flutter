@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/r2w_bottom_nav.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -8,7 +9,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const _BottomNav(),
+      bottomNavigationBar: const R2WBottomNav(selectedIndex: 0),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -71,10 +72,7 @@ class _Header extends StatelessWidget {
               SizedBox(height: 4),
               Text(
                 'B2B mobile dashboard',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 15,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
               ),
             ],
           ),
@@ -102,10 +100,7 @@ class _WalletCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primary,
-            AppColors.navy,
-          ],
+          colors: [AppColors.primary, AppColors.navy],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -149,10 +144,7 @@ class _WalletPill extends StatelessWidget {
   final String label;
   final String value;
 
-  const _WalletPill({
-    required this.label,
-    required this.value,
-  });
+  const _WalletPill({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -242,10 +234,7 @@ class _KpiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
+          Text(title, style: const TextStyle(color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -278,10 +267,7 @@ class _QuickActions extends StatelessWidget {
     return Row(
       children: const [
         Expanded(
-          child: _ActionButton(
-            icon: Icons.add_card_rounded,
-            label: 'Buy eSIM',
-          ),
+          child: _ActionButton(icon: Icons.add_card_rounded, label: 'Buy eSIM'),
         ),
         SizedBox(width: 12),
         Expanded(
@@ -299,10 +285,7 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-  });
+  const _ActionButton({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -317,10 +300,7 @@ class _ActionButton extends StatelessWidget {
         children: [
           Icon(icon, color: AppColors.primary),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
     );
@@ -389,13 +369,13 @@ class _OrderCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                amount,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
+              Text(amount, style: const TextStyle(fontWeight: FontWeight.w900)),
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(999),
@@ -413,44 +393,6 @@ class _OrderCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  const _BottomNav();
-
-  @override
-  Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: 0,
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard_rounded),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.storefront_outlined),
-          selectedIcon: Icon(Icons.storefront_rounded),
-          label: 'Store',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.receipt_long_outlined),
-          selectedIcon: Icon(Icons.receipt_long_rounded),
-          label: 'Orders',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.sim_card_outlined),
-          selectedIcon: Icon(Icons.sim_card_rounded),
-          label: 'eSIMs',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.account_balance_wallet_outlined),
-          selectedIcon: Icon(Icons.account_balance_wallet_rounded),
-          label: 'Wallet',
-        ),
-      ],
     );
   }
 }
