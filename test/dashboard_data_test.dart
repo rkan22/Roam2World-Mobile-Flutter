@@ -1,0 +1,49 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:roam2world_mobile_flutter/features/dashboard/dashboard_data.dart';
+
+void main() {
+  test('parses reseller dashboard response', () {
+    final data = DashboardData.fromResponse({
+      'success': true,
+      'data': {
+        'role': 'reseller',
+        'current_credit': '125.50',
+        'currency': 'USD',
+        'today_sales': '20.00',
+        'monthly_sales': '740.25',
+        'active_esim_count': 12,
+        'expired_esim_count': 3,
+        'recent_orders': [
+          {
+            'id': 9,
+            'order_number': 'R2W-009',
+            'product_name': 'Turkey 5GB',
+            'status': 'completed',
+            'total_amount': '15.00',
+            'created_at': '2026-08-06T00:00:00Z',
+          },
+        ],
+      },
+    });
+
+    expect(data.role, 'reseller');
+    expect(data.balance, 125.5);
+    expect(data.monthlySales, 740.25);
+    expect(data.activeEsimCount, 12);
+    expect(data.recentOrders.single.orderNumber, 'R2W-009');
+  });
+
+  test('uses dealer current balance field', () {
+    final data = DashboardData.fromResponse({
+      'data': {
+        'role': 'dealer',
+        'current_balance': '44.10',
+        'recent_orders': const [],
+      },
+    });
+
+    expect(data.role, 'dealer');
+    expect(data.balance, 44.1);
+    expect(data.currency, 'USD');
+  });
+}
