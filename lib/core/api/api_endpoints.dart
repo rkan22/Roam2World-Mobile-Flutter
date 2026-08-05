@@ -13,10 +13,18 @@ class ApiEndpoints {
       '/api/v1/mobile/transactions/';
   static const String mobileNotifications =
       '/api/v1/mobile/notifications/';
+  static const String mobileNotificationsReadAll =
+      '/api/v1/mobile/notifications/read-all/';
 
   static String mobileOrderDetail(Object orderId) =>
       '/api/v1/mobile/orders/$orderId/';
 
   static String mobileEsimDetail(Object esimId) =>
       '/api/v1/mobile/esims/$esimId/';
+
+  static String mobileNotificationRead(Object notificationId) =>
+      '/api/v1/mobile/notifications/$notificationId/read/';
+
+  static String mobileNotificationUnread(Object notificationId) =>
+      '/api/v1/mobile/notifications/$notificationId/unread/';
 }
