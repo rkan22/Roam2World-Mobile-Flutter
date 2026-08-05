@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:roam2world_mobile/features/orders/order_history.dart';
+import 'package:roam2world_mobile_flutter/features/orders/order_history.dart';
 
 void main() {
   test('parses mobile order history response', () {
