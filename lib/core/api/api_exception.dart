@@ -17,9 +17,12 @@ class ApiException implements Exception {
     String? responseMessage;
     String? responseCode;
 
-    if (data is Map<String, dynamic>) {
-      responseMessage = data['message']?.toString();
-      responseCode = data['code']?.toString();
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      responseMessage = map['message']?.toString() ??
+          map['error']?.toString() ??
+          map['detail']?.toString();
+      responseCode = map['code']?.toString();
     }
 
     return ApiException(
