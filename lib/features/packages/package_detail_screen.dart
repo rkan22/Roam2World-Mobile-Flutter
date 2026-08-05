@@ -13,7 +13,7 @@ class PackageDetailScreen extends StatelessWidget {
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         child: ElevatedButton(
           onPressed: () => context.push('/checkout'),
-          child: const Text('Buy Now  •  $15.00'),
+          child: const Text('Buy Now  •  \$15.00'),
         ),
       ),
       body: SafeArea(
@@ -82,7 +82,7 @@ class PackageDetailScreen extends StatelessWidget {
                     children: [
                       Expanded(child: _PlanMetric(label: 'Data', value: '10 GB')),
                       Expanded(child: _PlanMetric(label: 'Validity', value: '30 Days')),
-                      Expanded(child: _PlanMetric(label: 'Price', value: '$15.00')),
+                      Expanded(child: _PlanMetric(label: 'Price', value: '\$15.00')),
                     ],
                   ),
                   SizedBox(height: 20),
