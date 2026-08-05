@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 
 import '../config/app_environment.dart';
 import '../storage/token_storage.dart';
+import 'api_endpoints.dart';
 import 'api_exception.dart';
 
 class ApiClient {
@@ -28,12 +31,99 @@ class ApiClient {
           }
           handler.next(options);
         },
+        onError: (exception, handler) async {
+          final request = exception.requestOptions;
+          final isUnauthorized = exception.response?.statusCode == 401;
+          final isRefreshRequest = request.path == ApiEndpoints.tokenRefresh;
+          final alreadyRetried = request.extra['retried_after_refresh'] == true;
+
+          if (!isUnauthorized || isRefreshRequest || alreadyRetried) {
+            handler.next(exception);
+            return;
+          }
+
+          try {
+            final accessToken = await _refreshAccessToken();
+            if (accessToken == null || accessToken.isEmpty) {
+              handler.next(exception);
+              return;
+            }
+
+            request.extra['retried_after_refresh'] = true;
+            request.headers['Authorization'] = 'Bearer $accessToken';
+            final response = await _dio.fetch<dynamic>(request);
+            handler.resolve(response);
+          } catch (_) {
+            await _tokenStorage.clear();
+            handler.next(exception);
+          }
+        },
       ),
     );
   }
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
+  Future<String?>? _refreshFuture;
+
+  Future<String?> _refreshAccessToken() {
+    final current = _refreshFuture;
+    if (current != null) return current;
+
+    final future = _performRefresh();
+    _refreshFuture = future;
+    return future.whenComplete(() => _refreshFuture = null);
+  }
+
+  Future<String?> _performRefresh() async {
+    final refreshToken = await _tokenStorage.readRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      await _tokenStorage.clear();
+      return null;
+    }
+
+    final refreshDio = Dio(
+      BaseOptions(
+        baseUrl: AppEnvironment.apiBaseUrl,
+        connectTimeout: AppEnvironment.connectTimeout,
+        receiveTimeout: AppEnvironment.receiveTimeout,
+        headers: const {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    try {
+      final response = await refreshDio.post<dynamic>(
+        ApiEndpoints.tokenRefresh,
+        data: {'refresh': refreshToken},
+      );
+      final body = response.data;
+      final map = body is Map
+          ? Map<String, dynamic>.from(body)
+          : <String, dynamic>{};
+      final data = map['data'] is Map
+          ? Map<String, dynamic>.from(map['data'] as Map)
+          : map;
+      final accessToken = data['access']?.toString() ?? '';
+      final rotatedRefreshToken = data['refresh']?.toString();
+
+      if (accessToken.isEmpty) {
+        await _tokenStorage.clear();
+        return null;
+      }
+
+      await _tokenStorage.saveTokens(
+        accessToken: accessToken,
+        refreshToken: rotatedRefreshToken,
+      );
+      return accessToken;
+    } on DioException {
+      await _tokenStorage.clear();
+      return null;
+    }
+  }
 
   Future<T> get<T>(
     String path, {
