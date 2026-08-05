@@ -11,7 +11,9 @@ import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
+import '../../features/orders/order_result.dart';
 import '../../features/orders/orders_screen.dart';
+import '../../features/packages/package_catalog.dart';
 import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
 import '../../features/profile/profile_screen.dart';
@@ -44,78 +46,36 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
   return GoRouter(
     initialLocation: initialLocation,
     routes: [
-      GoRoute(
-        path: AppRoutes.onboarding,
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dashboard,
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.packages,
-        builder: (context, state) => const PackagesScreen(),
-      ),
+      GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
+      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
       GoRoute(
         path: AppRoutes.packageDetail,
-        builder: (context, state) => const PackageDetailScreen(),
+        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) => PackageDetailScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkout,
-        builder: (context, state) => const CheckoutScreen(),
+        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) => CheckoutScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkoutSuccess,
-        builder: (context, state) => const OrderSuccessScreen(),
+        redirect: (context, state) => state.extra is MobileOrderResult ? null : AppRoutes.orders,
+        builder: (context, state) => OrderSuccessScreen(result: state.extra! as MobileOrderResult),
       ),
-      GoRoute(
-        path: AppRoutes.customers,
-        builder: (context, state) => const CustomersScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.esims,
-        builder: (context, state) => const EsimsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.esimDetail,
-        builder: (context, state) => const EsimDetailScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.orders,
-        builder: (context, state) => const OrdersScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.orderDetail,
-        builder: (context, state) => const OrderDetailScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.wallet,
-        builder: (context, state) => const WalletScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.settings,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.support,
-        builder: (context, state) => const SupportScreen(),
-      ),
+      GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
+      GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
+      GoRoute(path: AppRoutes.esimDetail, builder: (context, state) => const EsimDetailScreen()),
+      GoRoute(path: AppRoutes.orders, builder: (context, state) => const OrdersScreen()),
+      GoRoute(path: AppRoutes.orderDetail, builder: (context, state) => const OrderDetailScreen()),
+      GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
+      GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: AppRoutes.support, builder: (context, state) => const SupportScreen()),
     ],
   );
 }
