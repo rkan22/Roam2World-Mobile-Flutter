@@ -36,6 +36,7 @@ class AuthRepository {
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
     );
+    await _tokenStorage.saveProfile(session.toStoredProfile());
     return session;
   }
 
@@ -44,5 +45,10 @@ class AuthRepository {
   Future<bool> hasSession() async {
     final token = await _tokenStorage.readAccessToken();
     return token != null && token.isNotEmpty;
+  }
+
+  Future<AuthSession?> readStoredProfile() async {
+    final profile = await _tokenStorage.readProfile();
+    return profile == null ? null : AuthSession.fromStoredProfile(profile);
   }
 }
