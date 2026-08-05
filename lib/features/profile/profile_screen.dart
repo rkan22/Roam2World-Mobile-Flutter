@@ -2,59 +2,92 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/app_router.dart';
-import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../auth/auth_repository.dart';
+import '../auth/auth_session.dart';
+import '../wallet/wallet_data.dart';
+import '../wallet/wallet_repository.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
-  Future<void> _logout(BuildContext context) async {
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _authRepository = AuthRepository();
+  final _walletRepository = WalletRepository();
+  AuthSession? _session;
+  WalletData? _wallet;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final session = await _authRepository.readStoredProfile();
+    WalletData? wallet;
+    try {
+      wallet = await _walletRepository.fetchWallet();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _session = session;
+      _wallet = wallet;
+    });
+  }
+
+  Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Log out?'),
-        content: const Text(
-          'Your secure session will be removed from this device.',
-        ),
+        content: const Text('Your secure session will be removed from this device.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Log out'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
         ],
       ),
     );
-
     if (confirmed != true) return;
-    await TokenStorage().clear();
-    if (context.mounted) context.go(AppRoutes.login);
+    await _authRepository.signOut();
+    if (mounted) context.go(AppRoutes.login);
+  }
+
+  String get _balanceLabel {
+    final wallet = _wallet;
+    if (wallet == null) return 'Open wallet';
+    return '${wallet.currency} ${wallet.availableAmount.toStringAsFixed(2)}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+      ),
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 4),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          const _ProfileHeader(),
+          _ProfileHeader(session: _session),
           const SizedBox(height: 20),
           _SettingsCard(
             children: [
-              const _SettingsTile(
+              _SettingsTile(
                 icon: Icons.business_outlined,
-                title: 'Company information',
+                title: 'Account type',
+                trailing: _session?.role.isNotEmpty == true ? _session!.role : 'Business',
               ),
               _SettingsTile(
                 icon: Icons.account_balance_wallet_outlined,
                 title: 'Wallet',
-                trailing: 'Live balance',
+                trailing: _balanceLabel,
                 onTap: () => context.push(AppRoutes.wallet),
               ),
               _SettingsTile(
@@ -92,12 +125,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
-            onPressed: () => _logout(context),
+            onPressed: _logout,
             icon: const Icon(Icons.logout_rounded, color: AppColors.danger),
-            label: const Text(
-              'Log out',
-              style: TextStyle(color: AppColors.danger),
-            ),
+            label: const Text('Log out', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
@@ -106,10 +136,22 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader();
+  const _ProfileHeader({required this.session});
+  final AuthSession? session;
 
   @override
   Widget build(BuildContext context) {
+    final name = session?.displayName?.trim();
+    final title = name?.isNotEmpty == true ? name! : 'Roam2World Account';
+    final email = session?.email.isNotEmpty == true ? session!.email : 'Business mobile workspace';
+    final initials = title
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    final role = session?.role.trim().toLowerCase() ?? '';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -121,53 +163,29 @@ class _ProfileHeader extends StatelessWidget {
               alignment: Alignment.center,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.navy],
-                ),
+                gradient: LinearGradient(colors: [AppColors.primary, AppColors.navy]),
               ),
-              child: const Text(
-                'R2W',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+              child: Text(
+                initials.isEmpty ? 'R2W' : initials,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
               ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Roam2World Account',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Business mobile workspace',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  SizedBox(height: 6),
+                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(email, style: const TextStyle(color: AppColors.textSecondary)),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(
-                        Icons.verified_rounded,
-                        size: 16,
-                        color: AppColors.success,
-                      ),
-                      SizedBox(width: 5),
+                      const Icon(Icons.verified_rounded, size: 16, color: AppColors.success),
+                      const SizedBox(width: 5),
                       Text(
-                        'Authenticated account',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.success,
-                        ),
+                        role.isEmpty ? 'Authenticated account' : 'Verified $role account',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.success),
                       ),
                     ],
                   ),
@@ -182,25 +200,19 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _SettingsCard extends StatelessWidget {
-  final List<Widget> children;
   const _SettingsCard({required this.children});
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) => Card(child: Column(children: children));
 }
 
 class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({required this.icon, required this.title, this.trailing, this.onTap});
   final IconData icon;
   final String title;
   final String? trailing;
   final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.trailing,
-    this.onTap,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -209,10 +221,7 @@ class _SettingsTile extends StatelessWidget {
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(12)),
         child: Icon(icon, size: 21, color: AppColors.primary),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -220,9 +229,9 @@ class _SettingsTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailing != null)
-            Text(
-              trailing!,
-              style: const TextStyle(color: AppColors.textSecondary),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 140),
+              child: Text(trailing!, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
             ),
           const SizedBox(width: 6),
           const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
