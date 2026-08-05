@@ -10,6 +10,8 @@ class ApiEndpoints {
   static const String mobileOrders = '/api/v1/mobile/orders/';
   static const String mobileEsims = '/api/v1/mobile/esims/';
   static const String mobileWallet = '/api/v1/mobile/wallet/';
+  static const String mobileWalletRequests =
+      '/api/v1/mobile/wallet/requests/';
   static const String mobileTransactions =
       '/api/v1/mobile/transactions/';
   static const String mobileNotifications =
