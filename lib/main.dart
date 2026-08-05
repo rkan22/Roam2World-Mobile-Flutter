@@ -7,10 +7,15 @@ import 'core/storage/token_storage.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final accessToken = await TokenStorage().readAccessToken();
+  final storage = TokenStorage();
+  final accessToken = await storage.readAccessToken();
+  final completedOnboarding = await storage.hasCompletedOnboarding();
+
   final initialLocation = accessToken != null && accessToken.isNotEmpty
       ? AppRoutes.dashboard
-      : AppRoutes.onboarding;
+      : completedOnboarding
+          ? AppRoutes.login
+          : AppRoutes.onboarding;
 
   runApp(Roam2WorldApp(initialLocation: initialLocation));
 }
