@@ -27,7 +27,7 @@ class OrderDetailScreen extends StatelessWidget {
                 _DetailRow(label: 'Order ID', value: '#ORD-2026-000124'),
                 _DetailRow(label: 'Customer', value: 'Mehmet Yılmaz'),
                 _DetailRow(label: 'Package', value: 'Turkey · 10 GB'),
-                _DetailRow(label: 'Amount', value: '$15.00'),
+                _DetailRow(label: 'Amount', value: '\$15.00'),
                 _DetailRow(label: 'Status', value: 'Completed', valueColor: AppColors.success, last: true),
               ]),
             ),
@@ -43,7 +43,7 @@ class OrderDetailScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-                  child: QrImageView(data: 'LPA:1$sm-v4-070-a-gtm.pr.go-esim.com$R2W-2026-000124', size: 190),
+                  child: QrImageView(data: r'LPA:1$sm-v4-070-a-gtm.pr.go-esim.com$R2W-2026-000124', size: 190),
                 ),
                 const SizedBox(height: 22),
                 Row(children: [
