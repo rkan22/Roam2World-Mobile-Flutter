@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
+import 'features/esims/esim_detail_screen.dart';
 import 'features/esims/esims_screen.dart';
 import 'features/orders/order_detail_screen.dart';
 import 'features/orders/orders_screen.dart';
@@ -25,6 +26,7 @@ class Roam2WorldApp extends StatelessWidget {
         GoRoute(path: '/packages', builder: (context, state) => const PackagesScreen()),
         GoRoute(path: '/packages/detail', builder: (context, state) => const PackageDetailScreen()),
         GoRoute(path: '/esims', builder: (context, state) => const EsimsScreen()),
+        GoRoute(path: '/esims/detail', builder: (context, state) => const EsimDetailScreen()),
         GoRoute(path: '/orders', builder: (context, state) => const OrdersScreen()),
         GoRoute(path: '/orders/detail', builder: (context, state) => const OrderDetailScreen()),
         GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
