@@ -6,9 +6,9 @@ import 'package:roam2world_mobile_flutter/features/auth/login_screen.dart';
 void main() {
   testWidgets('app opens with onboarding', (tester) async {
     await tester.pumpWidget(const Roam2WorldApp());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('Global packages'), findsOneWidget);
+    expect(find.text('Global eSIM catalogue'), findsOneWidget);
     expect(find.text('Skip'), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
   });
