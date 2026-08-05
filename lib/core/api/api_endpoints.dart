@@ -2,6 +2,7 @@ class ApiEndpoints {
   const ApiEndpoints._();
 
   static const String mobileLogin = '/api/v1/mobile/auth/login/';
+  static const String tokenRefresh = '/api/v1/auth/refresh/';
   static const String mobileDashboard = '/api/v1/mobile/dashboard/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
