@@ -38,7 +38,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     _SuccessRow(label: 'Order ID', value: '#ORD-2026-000125'),
                     _SuccessRow(label: 'Package', value: 'Turkey · 10 GB'),
                     _SuccessRow(label: 'Customer', value: 'Mehmet Yılmaz'),
-                    _SuccessRow(label: 'Total', value: '$15.00', last: true),
+                    _SuccessRow(label: 'Total', value: '\$15.00', last: true),
                   ],
                 ),
               ),
