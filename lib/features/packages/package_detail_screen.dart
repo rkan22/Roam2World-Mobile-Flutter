@@ -12,7 +12,7 @@ class PackageDetailScreen extends StatelessWidget {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         child: ElevatedButton(
-          onPressed: () => _showCheckout(context),
+          onPressed: () => context.push('/checkout'),
           child: const Text('Buy Now  •  $15.00'),
         ),
       ),
@@ -98,32 +98,6 @@ class PackageDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCheckout(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Confirm Order', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 18),
-            const TextField(decoration: InputDecoration(labelText: 'Customer name')),
-            const SizedBox(height: 12),
-            const TextField(keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: 'Customer email')),
-            const SizedBox(height: 18),
-            const Row(children: [Text('Turkey · 10 GB · 30 Days', style: TextStyle(fontWeight: FontWeight.w800)), Spacer(), Text('$15.00', style: TextStyle(fontWeight: FontWeight.w900))]),
-            const SizedBox(height: 18),
-            ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Confirm Order')),
           ],
         ),
       ),
