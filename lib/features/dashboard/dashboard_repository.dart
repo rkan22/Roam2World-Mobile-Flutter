@@ -1,5 +1,5 @@
 import '../../core/api/api_client.dart';
-import '../../core/api/mobile_api_endpoints.dart';
+import '../../core/api/api_endpoints.dart';
 import 'dashboard_data.dart';
 
 class DashboardRepository {
@@ -10,7 +10,7 @@ class DashboardRepository {
 
   Future<DashboardData> fetchDashboard() {
     return _apiClient.get<DashboardData>(
-      MobileApiEndpoints.dashboard,
+      ApiEndpoints.mobileDashboard,
       parser: DashboardData.fromResponse,
     );
   }
