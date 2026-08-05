@@ -9,12 +9,21 @@ class TokenStorage {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _profileKey = 'auth_profile';
+  static const _onboardingCompletedKey = 'onboarding_completed';
 
   final FlutterSecureStorage _storage;
 
   Future<String?> readAccessToken() => _storage.read(key: _accessTokenKey);
 
   Future<String?> readRefreshToken() => _storage.read(key: _refreshTokenKey);
+
+  Future<bool> hasCompletedOnboarding() async {
+    return await _storage.read(key: _onboardingCompletedKey) == 'true';
+  }
+
+  Future<void> markOnboardingCompleted() {
+    return _storage.write(key: _onboardingCompletedKey, value: 'true');
+  }
 
   Future<Map<String, dynamic>?> readProfile() async {
     final raw = await _storage.read(key: _profileKey);
