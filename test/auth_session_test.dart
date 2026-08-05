@@ -33,6 +33,28 @@ void main() {
     expect(session.account?['currency'], 'USD');
   });
 
+  test('round-trips the stored authenticated profile without tokens', () {
+    const session = AuthSession(
+      accessToken: 'secret-access',
+      refreshToken: 'secret-refresh',
+      userId: '7',
+      email: 'reseller@example.com',
+      role: 'reseller',
+      displayName: 'Grace Hopper',
+      account: {'currency': 'EUR'},
+    );
+
+    final restored = AuthSession.fromStoredProfile(session.toStoredProfile());
+
+    expect(restored.accessToken, isEmpty);
+    expect(restored.refreshToken, isEmpty);
+    expect(restored.userId, '7');
+    expect(restored.email, 'reseller@example.com');
+    expect(restored.role, 'reseller');
+    expect(restored.displayName, 'Grace Hopper');
+    expect(restored.account?['currency'], 'EUR');
+  });
+
   test('returns empty tokens for a malformed response', () {
     final session = AuthSession.fromMobileLoginResponse({
       'success': true,
