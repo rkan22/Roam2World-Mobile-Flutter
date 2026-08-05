@@ -11,128 +11,160 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool rememberMe = true;
-  bool hidePassword = true;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _rememberMe = true;
+  bool _hidePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _isLoading = true);
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    context.go('/dashboard');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24),
-              Container(
-                height: 88,
-                width: 88,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: const Icon(
-                  Icons.public_rounded,
-                  color: AppColors.primary,
-                  size: 42,
-                ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Welcome back',
-                style: TextStyle(
-                  fontSize: 34,
-                  height: 1.05,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sign in to manage eSIM orders, wallet and reseller operations.',
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Form(
+                key: _formKey,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email address',
-                        prefixIcon: Icon(Icons.mail_outline_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      obscureText: hidePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() => hidePassword = !hidePassword);
-                          },
-                          icon: Icon(
-                            hidePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        Checkbox(
-                          value: rememberMe,
-                          onChanged: (value) {
-                            setState(() => rememberMe = value ?? true);
-                          },
+                        Container(
+                          height: 56,
+                          width: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Icon(Icons.public_rounded, color: Colors.white, size: 30),
                         ),
-                        const Text('Remember me'),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text('Forgot?'),
+                        const SizedBox(width: 14),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Roam2World', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                            Text('Business connectivity', style: TextStyle(color: AppColors.textSecondary)),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () => context.go('/dashboard'),
-                      child: const Text('Sign in'),
+                    const SizedBox(height: 38),
+                    const Text('Welcome back', style: TextStyle(fontSize: 36, height: 1.05, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Manage packages, orders, eSIMs and wallet operations securely.',
+                      style: TextStyle(fontSize: 16, height: 1.5, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 30),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.email],
+                            decoration: const InputDecoration(
+                              labelText: 'Email address',
+                              prefixIcon: Icon(Icons.mail_outline_rounded),
+                            ),
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) return 'Enter your email address';
+                              if (!text.contains('@')) return 'Enter a valid email address';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _hidePassword,
+                            textInputAction: TextInputAction.done,
+                            autofillHints: const [AutofillHints.password],
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline_rounded),
+                              suffixIcon: IconButton(
+                                onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                                icon: Icon(_hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                              ),
+                            ),
+                            validator: (value) {
+                              if ((value ?? '').isEmpty) return 'Enter your password';
+                              if ((value ?? '').length < 6) return 'Password must be at least 6 characters';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) => setState(() => _rememberMe = value ?? true),
+                              ),
+                              const Text('Remember me'),
+                              const Spacer(),
+                              TextButton(
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Password reset flow will be connected to the API.')),
+                                  );
+                                },
+                                child: const Text('Forgot password?'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _submit,
+                            child: _isLoading
+                                ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
+                                : const Text('Sign in'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shield_outlined, size: 18, color: AppColors.textSecondary),
+                        SizedBox(width: 8),
+                        Text('Secure reseller access', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              const Center(
-                child: Text(
-                  'Secure B2B eSIM reseller access',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
