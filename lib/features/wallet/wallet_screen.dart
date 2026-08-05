@@ -51,18 +51,118 @@ class _WalletScreenState extends State<WalletScreen> {
     return NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
   }
 
+  Future<void> _showTopUpRequest(WalletData wallet) async {
+    final amountController = TextEditingController();
+    final noteController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var submitting = false;
+    String? submitError;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          Future<void> submit() async {
+            if (!(formKey.currentState?.validate() ?? false) || submitting) return;
+            setSheetState(() {
+              submitting = true;
+              submitError = null;
+            });
+            try {
+              final request = await _repository.createTopUpRequest(
+                amount: double.parse(amountController.text.trim()),
+                currency: wallet.currency,
+                note: noteController.text,
+              );
+              if (!mounted || !sheetContext.mounted) return;
+              Navigator.of(sheetContext).pop();
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '${request.currency} ${request.amount.toStringAsFixed(2)} top-up request created. Status: ${request.status}.',
+                  ),
+                ),
+              );
+            } on ApiException catch (error) {
+              setSheetState(() => submitError = error.message);
+            } catch (_) {
+              setSheetState(() => submitError = 'Top-up request could not be created.');
+            } finally {
+              if (sheetContext.mounted) {
+                setSheetState(() => submitting = false);
+              }
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              4,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 24,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Request wallet top-up', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Your balance will change only after the request is approved.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 18),
+                  TextFormField(
+                    controller: amountController,
+                    enabled: !submitting,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: 'Amount', prefixText: '${wallet.currency} '),
+                    validator: (value) {
+                      final amount = double.tryParse(value?.trim() ?? '');
+                      if (amount == null || amount <= 0) return 'Enter an amount greater than zero.';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: noteController,
+                    enabled: !submitting,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Note (optional)'),
+                  ),
+                  if (submitError != null) ...[
+                    const SizedBox(height: 12),
+                    Text(submitError!, style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                  ],
+                  const SizedBox(height: 18),
+                  ElevatedButton(
+                    onPressed: submitting ? null : submit,
+                    child: submitting
+                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Send request'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    amountController.dispose();
+    noteController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
+        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
         title: const Text('Wallet'),
-        actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
-        ],
+        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -87,55 +187,37 @@ class _WalletScreenState extends State<WalletScreen> {
       Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.navy, AppColors.primary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: const LinearGradient(colors: [AppColors.navy, AppColors.primary], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(28),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              wallet.isDealer ? 'Available balance' : 'Available credit',
-              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
-            ),
+            Text(wallet.isDealer ? 'Available balance' : 'Available credit', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
             const SizedBox(height: 10),
-            Text(
-              _money(wallet.availableAmount, wallet.currency),
-              style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900),
-            ),
+            Text(_money(wallet.availableAmount, wallet.currency), style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
             const SizedBox(height: 20),
             Row(
               children: [
-                Expanded(
-                  child: _Metric(
-                    label: wallet.isDealer ? 'Current balance' : 'Current credit',
-                    value: _money(wallet.currentAmount, wallet.currency),
-                  ),
-                ),
+                Expanded(child: _Metric(label: wallet.isDealer ? 'Current balance' : 'Current credit', value: _money(wallet.currentAmount, wallet.currency))),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: _Metric(
-                    label: wallet.secondaryLabel,
-                    value: _money(wallet.secondaryAmount, wallet.currency),
-                  ),
-                ),
+                Expanded(child: _Metric(label: wallet.secondaryLabel, value: _money(wallet.secondaryAmount, wallet.currency))),
               ],
             ),
           ],
         ),
       ),
+      const SizedBox(height: 16),
+      ElevatedButton.icon(
+        onPressed: () => _showTopUpRequest(wallet),
+        icon: const Icon(Icons.add_card_rounded),
+        label: const Text('Request top-up'),
+      ),
       const SizedBox(height: 26),
       const Text('Recent transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
       const SizedBox(height: 12),
       if (wallet.transactions.isEmpty)
-        const ContentEmptyState(
-          icon: Icons.receipt_long_outlined,
-          title: 'No transactions yet',
-          message: 'Wallet activity will appear here.',
-        )
+        const ContentEmptyState(icon: Icons.receipt_long_outlined, title: 'No transactions yet', message: 'Wallet activity will appear here.')
       else
         for (var index = 0; index < wallet.transactions.length; index++) ...[
           _TransactionTile(transaction: wallet.transactions[index]),
@@ -153,18 +235,12 @@ class _Metric extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
-          ],
-        ),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(18)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+        ]),
       );
 }
 
@@ -177,44 +253,20 @@ class _TransactionTile extends StatelessWidget {
     final positive = transaction.isCredit;
     final color = positive ? AppColors.success : AppColors.danger;
     final sign = positive ? '+' : '-';
-    final date = transaction.createdAt == null
-        ? transaction.status
-        : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal());
+    final date = transaction.createdAt == null ? transaction.status : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal());
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 46,
-            width: 46,
-            decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(15)),
-            child: Icon(positive ? Icons.add_rounded : Icons.remove_rounded, color: color),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.description.isEmpty ? transaction.type : transaction.description,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 4),
-                Text(date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
-          ),
-          Text(
-            '$sign${transaction.currency} ${transaction.amount.toStringAsFixed(2)}',
-            style: TextStyle(color: color, fontWeight: FontWeight.w900),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AppColors.border)),
+      child: Row(children: [
+        Container(height: 46, width: 46, decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(15)), child: Icon(positive ? Icons.add_rounded : Icons.remove_rounded, color: color)),
+        const SizedBox(width: 13),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(transaction.description.isEmpty ? transaction.type : transaction.description, style: const TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        ])),
+        Text('$sign${transaction.currency} ${transaction.amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontWeight: FontWeight.w900)),
+      ]),
     );
   }
 }
