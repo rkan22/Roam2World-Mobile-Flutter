@@ -6,144 +6,46 @@ import '../../shared/widgets/r2w_bottom_nav.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
-
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
   int selectedTab = 0;
-  final tabs = ['All', 'Processing', 'Completed', 'Failed'];
+  final tabs = ['All', 'Completed', 'Pending', 'Failed'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const R2WBottomNav(selectedIndex: 2),
+      bottomNavigationBar: const R2WBottomNav(selectedIndex: 3),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
           children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => context.go('/dashboard'),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: Text(
-                    'Orders',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.file_download_outlined),
-                ),
-              ],
-            ),
+            Row(children: [
+              const Expanded(child: Text('Orders', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900))),
+              IconButton.filledTonal(onPressed: () {}, icon: const Icon(Icons.file_download_outlined)),
+            ]),
             const SizedBox(height: 18),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search order, customer, phone or ICCID',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.filter_list_rounded,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
+            const TextField(decoration: InputDecoration(hintText: 'Search order or customer', prefixIcon: Icon(Icons.search_rounded), suffixIcon: Icon(Icons.tune_rounded))),
+            const SizedBox(height: 16),
             SizedBox(
-              height: 46,
+              height: 42,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: tabs.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  final selected = selectedTab == index;
-                  return GestureDetector(
-                    onTap: () => setState(() => selectedTab = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 11,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary : Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.border,
-                        ),
-                      ),
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          color: selected
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) => ChoiceChip(label: Text(tabs[index]), selected: selectedTab == index, onSelected: (_) => setState(() => selectedTab = index)),
               ),
             ),
-            const SizedBox(height: 22),
-            const _OrderSummaryCard(),
             const SizedBox(height: 18),
-            const _OrderTile(
-              orderNo: 'R2W-240701-001',
-              provider: 'Orange Europe',
-              package: '100GB · 30 Days',
-              customer: 'Mehmet Yilmaz',
-              phone: '+90 555 123 4567',
-              amount: '\$35.00',
-              status: 'Completed',
-              color: AppColors.success,
-            ),
+            _OrderTile(flag: '🇹🇷', title: 'Orange · Turkey', date: 'Today, 10:30', amount: '\$15.00', status: 'Completed', color: AppColors.success, onTap: () => context.push('/orders/detail')),
             const SizedBox(height: 12),
-            const _OrderTile(
-              orderNo: 'R2W-240701-002',
-              provider: 'Vodafone EU',
-              package: '200GB · 30 Days',
-              customer: 'Ali Demir',
-              phone: '+90 532 888 1122',
-              amount: '\$40.00',
-              status: 'Processing',
-              color: AppColors.warning,
-            ),
+            _OrderTile(flag: '🇺🇸', title: 'T-Mobile · USA', date: 'Yesterday, 14:20', amount: '\$25.00', status: 'Completed', color: AppColors.success, onTap: () => context.push('/orders/detail')),
             const SizedBox(height: 12),
-            const _OrderTile(
-              orderNo: 'R2W-240701-003',
-              provider: 'TGT Balkans',
-              package: '60GB · 60 Days',
-              customer: 'Ayse Kaya',
-              phone: '+90 542 777 3344',
-              amount: '\$30.00',
-              status: 'Failed',
-              color: AppColors.danger,
-            ),
+            _OrderTile(flag: '🇬🇧', title: 'Vodafone · UK', date: '05 Aug 2026', amount: '\$19.00', status: 'Pending', color: AppColors.warning, onTap: () => context.push('/orders/detail')),
+            const SizedBox(height: 12),
+            _OrderTile(flag: '🇫🇷', title: 'Orange · France', date: '04 Aug 2026', amount: '\$17.00', status: 'Failed', color: AppColors.danger, onTap: () => context.push('/orders/detail')),
           ],
         ),
       ),
@@ -151,216 +53,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 }
 
-class _OrderSummaryCard extends StatelessWidget {
-  const _OrderSummaryCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.navy,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: const Row(
-        children: [
-          Expanded(
-            child: _SummaryItem(label: 'Today', value: '24'),
-          ),
-          Expanded(
-            child: _SummaryItem(label: 'Completed', value: '19'),
-          ),
-          Expanded(
-            child: _SummaryItem(label: 'Revenue', value: '\$840'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _SummaryItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white60)),
-      ],
-    );
-  }
-}
-
 class _OrderTile extends StatelessWidget {
-  final String orderNo;
-  final String provider;
-  final String package;
-  final String customer;
-  final String phone;
+  final String flag;
+  final String title;
+  final String date;
   final String amount;
   final String status;
   final Color color;
-
-  const _OrderTile({
-    required this.orderNo,
-    required this.provider,
-    required this.package,
-    required this.customer,
-    required this.phone,
-    required this.amount,
-    required this.status,
-    required this.color,
-  });
-
+  final VoidCallback onTap;
+  const _OrderTile({required this.flag, required this.title, required this.date, required this.amount, required this.status, required this.color, required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+  Widget build(BuildContext context) => Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppColors.border.withOpacity(0.7)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                height: 52,
-                width: 52,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(Icons.receipt_long_rounded, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      package,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                amount,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-            ],
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+            child: Row(children: [
+              Container(height: 48, width: 48, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(16)), child: Text(flag, style: const TextStyle(fontSize: 24))),
+              const SizedBox(width: 13),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 5), Text(date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(amount, style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 7), Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: color.withOpacity(.1), borderRadius: BorderRadius.circular(999)), child: Text(status, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)))]),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+            ]),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.person_outline_rounded,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        customer,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.phone_outlined,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        phone,
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.tag_rounded,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        orderNo,
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
 }
