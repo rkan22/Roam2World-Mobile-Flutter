@@ -65,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBody() {
     if (_loading && _data == null) {
-      return const ContentLoadingState(message: 'Loading your workspace...');
+      return const ContentLoadingState(label: 'Loading your workspace...');
     }
     if (_error != null && _data == null) {
       return ContentErrorState(
@@ -106,7 +106,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class _Header extends StatelessWidget {
   const _Header({required this.onNotificationsTap});
-
   final VoidCallback onNotificationsTap;
 
   @override
@@ -134,7 +133,6 @@ class _Header extends StatelessWidget {
 
 class _BalanceCard extends StatelessWidget {
   const _BalanceCard({required this.data});
-
   final DashboardData data;
 
   @override
@@ -274,6 +272,7 @@ class _RecentOrders extends StatelessWidget {
   Widget build(BuildContext context) {
     if (orders.isEmpty) {
       return ContentEmptyState(
+        icon: Icons.receipt_long_outlined,
         title: 'No recent orders',
         message: 'Your latest mobile orders will appear here.',
         actionLabel: 'Browse packages',
