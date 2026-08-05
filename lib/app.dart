@@ -5,7 +5,9 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/esims/esims_screen.dart';
+import 'features/orders/order_detail_screen.dart';
 import 'features/orders/orders_screen.dart';
+import 'features/packages/package_detail_screen.dart';
 import 'features/packages/packages_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/wallet/wallet_screen.dart';
@@ -18,34 +20,15 @@ class Roam2WorldApp extends StatelessWidget {
     final router = GoRouter(
       initialLocation: '/login',
       routes: [
-        GoRoute(
-          path: '/login',
-          builder: (context, state) => const LoginScreen(),
-        ),
-        GoRoute(
-          path: '/dashboard',
-          builder: (context, state) => const DashboardScreen(),
-        ),
-        GoRoute(
-          path: '/packages',
-          builder: (context, state) => const PackagesScreen(),
-        ),
-        GoRoute(
-          path: '/esims',
-          builder: (context, state) => const EsimsScreen(),
-        ),
-        GoRoute(
-          path: '/orders',
-          builder: (context, state) => const OrdersScreen(),
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
-        ),
-        GoRoute(
-          path: '/wallet',
-          builder: (context, state) => const WalletScreen(),
-        ),
+        GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+        GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+        GoRoute(path: '/packages', builder: (context, state) => const PackagesScreen()),
+        GoRoute(path: '/packages/detail', builder: (context, state) => const PackageDetailScreen()),
+        GoRoute(path: '/esims', builder: (context, state) => const EsimsScreen()),
+        GoRoute(path: '/orders', builder: (context, state) => const OrdersScreen()),
+        GoRoute(path: '/orders/detail', builder: (context, state) => const OrderDetailScreen()),
+        GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+        GoRoute(path: '/wallet', builder: (context, state) => const WalletScreen()),
       ],
     );
 
