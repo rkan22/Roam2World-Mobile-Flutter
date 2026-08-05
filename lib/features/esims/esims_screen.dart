@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
@@ -13,119 +13,61 @@ class EsimsScreen extends StatefulWidget {
 
 class _EsimsScreenState extends State<EsimsScreen> {
   int selectedTab = 0;
-  final tabs = ['Active', 'Pending', 'Expired'];
+  final tabs = ['All', 'Active', 'Expired', 'Installed'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const R2WBottomNav(selectedIndex: 3),
+      bottomNavigationBar: const R2WBottomNav(selectedIndex: 2),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.qr_code_scanner_rounded),
+      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             const Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'My eSIMs',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                _IconBox(icon: Icons.qr_code_scanner_rounded),
+                Expanded(child: Text('eSIMs', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900))),
+                Badge(child: Icon(Icons.notifications_none_rounded)),
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Track profiles, QR codes, ICCID and usage in one place.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search ICCID, customer or package',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.filter_list_rounded,
-                    color: AppColors.primary,
-                  ),
+            const Text('Track installation, usage and expiration.', style: TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 18),
+            const TextField(decoration: InputDecoration(hintText: 'Search customer, ICCID or package', prefixIcon: Icon(Icons.search_rounded))),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 42,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: tabs.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) => ChoiceChip(
+                  label: Text(tabs[index]),
+                  selected: selectedTab == index,
+                  onSelected: (_) => setState(() => selectedTab = index),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-            SizedBox(
-              height: 46,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: tabs.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  final selected = selectedTab == index;
-                  return GestureDetector(
-                    onTap: () => setState(() => selectedTab = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 11,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary : Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.border,
-                        ),
-                      ),
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          color: selected
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+            _EsimCard(
+              country: '🇹🇷', provider: 'Orange · Turkey', state: 'Installed', status: 'Active',
+              usage: '1.6 GB / 10 GB', progress: .16, expires: '04 Sep 2026',
+              onTap: () => context.push('/esims/detail'),
             ),
-            const SizedBox(height: 22),
-            const _EsimCard(
-              provider: 'Orange Europe',
-              packageName: '100GB · 30 Days',
-              customer: 'Mehmet Yilmaz',
-              iccid: '89330175521000462050',
-              used: '23.4GB',
-              total: '100GB',
-              remaining: '76.6GB',
-              progress: 0.234,
-              status: 'Active',
-              color: AppColors.success,
+            const SizedBox(height: 12),
+            _EsimCard(
+              country: '🇺🇸', provider: 'T-Mobile · USA', state: 'Installed', status: 'Active',
+              usage: '7.9 GB / 20 GB', progress: .395, expires: '18 Sep 2026',
+              onTap: () => context.push('/esims/detail'),
             ),
-            const SizedBox(height: 14),
-            const _EsimCard(
-              provider: 'Vodafone EU',
-              packageName: '200GB · 30 Days',
-              customer: 'Ali Demir',
-              iccid: '89970000000000000012',
-              used: '0GB',
-              total: '200GB',
-              remaining: '200GB',
-              progress: 0.0,
-              status: 'Pending',
-              color: AppColors.warning,
+            const SizedBox(height: 12),
+            _EsimCard(
+              country: '🇬🇧', provider: 'Vodafone · UK', state: 'Not installed', status: 'Ready',
+              usage: '0 GB / 15 GB', progress: 0, expires: 'Not started',
+              onTap: () => context.push('/esims/detail'),
             ),
           ],
         ),
@@ -134,221 +76,43 @@ class _EsimsScreenState extends State<EsimsScreen> {
   }
 }
 
-class _IconBox extends StatelessWidget {
-  final IconData icon;
-
-  const _IconBox({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      width: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Icon(icon),
-    );
-  }
-}
-
 class _EsimCard extends StatelessWidget {
+  final String country;
   final String provider;
-  final String packageName;
-  final String customer;
-  final String iccid;
-  final String used;
-  final String total;
-  final String remaining;
-  final double progress;
+  final String state;
   final String status;
-  final Color color;
+  final String usage;
+  final double progress;
+  final String expires;
+  final VoidCallback onTap;
 
-  const _EsimCard({
-    required this.provider,
-    required this.packageName,
-    required this.customer,
-    required this.iccid,
-    required this.used,
-    required this.total,
-    required this.remaining,
-    required this.progress,
-    required this.status,
-    required this.color,
-  });
+  const _EsimCard({required this.country, required this.provider, required this.state, required this.status, required this.usage, required this.progress, required this.expires, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border.withOpacity(0.7)),
-      ),
-      child: Column(
-        children: [
-          Row(
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border)),
+          child: Column(
             children: [
-              Container(
-                height: 56,
-                width: 56,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(Icons.sim_card_rounded, color: color),
+              Row(
+                children: [
+                  Text(country, style: const TextStyle(fontSize: 28)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(provider, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)), const SizedBox(height: 3), Text(state, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700))])),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: AppColors.successSoft, borderRadius: BorderRadius.circular(999)), child: Text(status, style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w900, fontSize: 12))),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$packageName · $customer',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
+              const SizedBox(height: 16),
+              Row(children: [Text(usage, style: const TextStyle(fontWeight: FontWeight.w800)), const Spacer(), const Icon(Icons.network_cell_rounded, size: 17, color: AppColors.textSecondary), const SizedBox(width: 4), const Text('5G', style: TextStyle(color: AppColors.textSecondary))]),
+              const SizedBox(height: 9),
+              ClipRRect(borderRadius: BorderRadius.circular(999), child: LinearProgressIndicator(value: progress, minHeight: 8, backgroundColor: AppColors.primaryLight)),
+              const SizedBox(height: 10),
+              Row(children: [const Text('Expires', style: TextStyle(color: AppColors.textSecondary)), const Spacer(), Text(expires, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(width: 6), const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary)]),
             ],
           ),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                QrImageView(
-                  data: 'LPA:1\$rsp.truphone.com\$EXAMPLE-ACTIVATION-CODE',
-                  size: 74,
-                  backgroundColor: Colors.white,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ICCID',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        iccid,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.copy_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Copy activation',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(
-                '$used used',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '$remaining remaining',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              minHeight: 10,
-              value: progress,
-              backgroundColor: AppColors.primaryLight,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Total data: $total',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
 }
