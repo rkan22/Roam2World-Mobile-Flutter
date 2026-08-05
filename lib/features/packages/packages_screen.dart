@@ -6,17 +6,13 @@ import '../../shared/widgets/r2w_bottom_nav.dart';
 
 class PackagesScreen extends StatefulWidget {
   const PackagesScreen({super.key});
-
   @override
   State<PackagesScreen> createState() => _PackagesScreenState();
 }
 
 class _PackagesScreenState extends State<PackagesScreen> {
-  int selectedProvider = 0;
-  int selectedRegion = 0;
-
-  final providers = ['All', 'Orange', 'Vodafone', 'TGT', 'Flexnet'];
-  final regions = ['Europe', 'Turkey', 'Balkans', 'Global'];
+  int selectedFilter = 0;
+  final filters = ['All', 'Data', 'Voice', 'Data + Voice'];
 
   @override
   Widget build(BuildContext context) {
@@ -24,115 +20,44 @@ class _PackagesScreenState extends State<PackagesScreen> {
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 1),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
           children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => context.go('/dashboard'),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: Text(
-                    'Store',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.tune_rounded),
-                ),
-              ],
-            ),
+            Row(children: [
+              const Expanded(child: Text('Packages', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900))),
+              IconButton.filledTonal(onPressed: () {}, icon: const Icon(Icons.notifications_none_rounded)),
+            ]),
             const SizedBox(height: 18),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search country, package or provider',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.public_rounded,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            _HorizontalChips(
-              items: providers,
-              selectedIndex: selectedProvider,
-              onSelected: (index) {
-                setState(() => selectedProvider = index);
-              },
-            ),
-            const SizedBox(height: 14),
-            _HorizontalChips(
-              items: regions,
-              selectedIndex: selectedRegion,
-              compact: true,
-              onSelected: (index) {
-                setState(() => selectedRegion = index);
-              },
-            ),
+            const TextField(decoration: InputDecoration(hintText: 'Search countries or packages', prefixIcon: Icon(Icons.search_rounded))),
             const SizedBox(height: 22),
-            const _FeaturedCard(),
-            const SizedBox(height: 24),
-            const Text(
-              'Popular packages',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+            Row(children: [const Text('Popular Countries', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)), const Spacer(), TextButton(onPressed: () {}, child: const Text('View All'))]),
+            const SizedBox(height: 10),
+            const SizedBox(height: 76, child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              _Country(flag: '🇹🇷', name: 'Turkey'),
+              _Country(flag: '🇺🇸', name: 'USA'),
+              _Country(flag: '🇬🇧', name: 'UK'),
+              _Country(flag: '🇫🇷', name: 'France'),
+              _Country(flag: '🇩🇪', name: 'Germany'),
+            ])),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 42,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: filters.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  if (index == filters.length) return IconButton.filledTonal(onPressed: () {}, icon: const Icon(Icons.tune_rounded));
+                  final selected = selectedFilter == index;
+                  return ChoiceChip(label: Text(filters[index]), selected: selected, onSelected: (_) => setState(() => selectedFilter = index));
+                },
               ),
             ),
-            const SizedBox(height: 14),
-            const _PackageCard(
-              provider: 'Orange Europe',
-              region: 'Europe · 41 Countries',
-              data: '100GB',
-              validity: '30 Days',
-              cost: '\$28.00',
-              sell: '\$35.00',
-              profit: '\$7.00',
-              color: AppColors.orange,
-            ),
-            const SizedBox(height: 14),
-            const _PackageCard(
-              provider: 'Vodafone EU',
-              region: 'Europe · Premium Network',
-              data: '200GB',
-              validity: '30 Days',
-              cost: '\$34.00',
-              sell: '\$40.00',
-              profit: '\$6.00',
-              color: AppColors.vodafone,
-            ),
-            const SizedBox(height: 14),
-            const _PackageCard(
-              provider: 'Flexnet Europe',
-              region: 'Europe · Big Data',
-              data: '300GB',
-              validity: '30 Days',
-              cost: '\$42.00',
-              sell: '\$50.00',
-              profit: '\$8.00',
-              color: AppColors.primary,
-            ),
+            const SizedBox(height: 18),
+            _PackageTile(flag: '🇹🇷', country: 'Turkey', provider: 'Orange', data: '10 GB', validity: '30 Days', price: '\$15.00', onTap: () => context.push('/packages/detail')),
+            const SizedBox(height: 12),
+            _PackageTile(flag: '🇺🇸', country: 'USA', provider: 'T-Mobile', data: '20 GB', validity: '30 Days', price: '\$25.00', onTap: () => context.push('/packages/detail')),
+            const SizedBox(height: 12),
+            _PackageTile(flag: '🇬🇧', country: 'United Kingdom', provider: 'Vodafone', data: '15 GB', validity: '30 Days', price: '\$19.00', onTap: () => context.push('/packages/detail')),
           ],
         ),
       ),
@@ -140,277 +65,41 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 }
 
-class _HorizontalChips extends StatelessWidget {
-  final List<String> items;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-  final bool compact;
-
-  const _HorizontalChips({
-    required this.items,
-    required this.selectedIndex,
-    required this.onSelected,
-    this.compact = false,
-  });
-
+class _Country extends StatelessWidget {
+  final String flag;
+  final String name;
+  const _Country({required this.flag, required this.name});
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: compact ? 42 : 48,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final selected = selectedIndex == index;
-          return GestureDetector(
-            onTap: () => onSelected(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? 16 : 18,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.border,
-                ),
-              ),
-              child: Text(
-                items[index],
-                style: TextStyle(
-                  color: selected ? Colors.white : AppColors.textSecondary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Column(children: [Container(height: 48, width: 48, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)), child: Text(flag, style: const TextStyle(fontSize: 24))), const SizedBox(height: 6), Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))]);
 }
 
-class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.navy,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Text(
-                    'Featured',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Europe Big Data',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  '300GB · 30 days · Best seller',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 72,
-            width: 72,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              color: Colors.white,
-              size: 36,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PackageCard extends StatelessWidget {
+class _PackageTile extends StatelessWidget {
+  final String flag;
+  final String country;
   final String provider;
-  final String region;
   final String data;
   final String validity;
-  final String cost;
-  final String sell;
-  final String profit;
-  final Color color;
-
-  const _PackageCard({
-    required this.provider,
-    required this.region,
-    required this.data,
-    required this.validity,
-    required this.cost,
-    required this.sell,
-    required this.profit,
-    required this.color,
-  });
-
+  final String price;
+  final VoidCallback onTap;
+  const _PackageTile({required this.flag, required this.country, required this.provider, required this.data, required this.validity, required this.price, required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+  Widget build(BuildContext context) => Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppColors.border.withOpacity(0.7)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                height: 54,
-                width: 54,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(Icons.public_rounded, color: color),
-              ),
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: AppColors.border)),
+            child: Row(children: [
+              Container(height: 52, width: 52, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(17)), child: Text(flag, style: const TextStyle(fontSize: 27))),
               const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      region,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    data,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    validity,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              _PriceBox(label: 'Cost', value: cost),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(country, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)), const SizedBox(height: 3), Text(provider, style: const TextStyle(color: AppColors.textSecondary)), const SizedBox(height: 8), Row(children: [const Icon(Icons.data_usage_rounded, size: 15, color: AppColors.textSecondary), const SizedBox(width: 4), Text(data, style: const TextStyle(fontWeight: FontWeight.w800)), const SizedBox(width: 12), const Icon(Icons.schedule_rounded, size: 15, color: AppColors.textSecondary), const SizedBox(width: 4), Text(validity, style: const TextStyle(fontWeight: FontWeight.w800))])])),
               const SizedBox(width: 10),
-              _PriceBox(label: 'Sell', value: sell),
-              const SizedBox(width: 10),
-              _PriceBox(label: 'Profit', value: profit, highlight: true),
-            ],
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(price, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)), const SizedBox(height: 10), FilledButton(onPressed: onTap, style: FilledButton.styleFrom(minimumSize: const Size(76, 38), padding: const EdgeInsets.symmetric(horizontal: 16)), child: const Text('Buy'))]),
+            ]),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(onPressed: () {}, child: const Text('Buy Now')),
-        ],
-      ),
-    );
-  }
-}
-
-class _PriceBox extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool highlight;
-
-  const _PriceBox({
-    required this.label,
-    required this.value,
-    this.highlight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: highlight ? AppColors.primaryLight : AppColors.background,
-          borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                color: highlight ? AppColors.primary : AppColors.textPrimary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+      );
 }
