@@ -6,6 +6,7 @@ import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
@@ -68,7 +69,11 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       ),
       GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
       GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
-      GoRoute(path: AppRoutes.esimDetail, builder: (context, state) => const EsimDetailScreen()),
+      GoRoute(
+        path: AppRoutes.esimDetail,
+        redirect: (context, state) => state.extra is MobileEsim ? null : AppRoutes.esims,
+        builder: (context, state) => EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
+      ),
       GoRoute(path: AppRoutes.orders, builder: (context, state) => const OrdersScreen()),
       GoRoute(path: AppRoutes.orderDetail, builder: (context, state) => const OrderDetailScreen()),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
