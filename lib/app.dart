@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
-import 'features/packages/packages_screen.dart';
-import 'features/orders/orders_screen.dart';
 import 'features/esims/esims_screen.dart';
+import 'features/orders/orders_screen.dart';
+import 'features/packages/packages_screen.dart';
+import 'features/profile/profile_screen.dart';
 import 'features/wallet/wallet_screen.dart';
 
 class Roam2WorldApp extends StatelessWidget {
@@ -30,12 +31,16 @@ class Roam2WorldApp extends StatelessWidget {
           builder: (context, state) => const PackagesScreen(),
         ),
         GoRoute(
+          path: '/esims',
+          builder: (context, state) => const EsimsScreen(),
+        ),
+        GoRoute(
           path: '/orders',
           builder: (context, state) => const OrdersScreen(),
         ),
         GoRoute(
-          path: '/esims',
-          builder: (context, state) => const EsimsScreen(),
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
           path: '/wallet',
@@ -46,7 +51,7 @@ class Roam2WorldApp extends StatelessWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Roam2World B2B',
+      title: 'Roam2World',
       theme: AppTheme.light(),
       routerConfig: router,
     );
