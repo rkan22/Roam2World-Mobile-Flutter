@@ -1,17 +1,30 @@
-# roam2world_mobile_flutter
+# Roam2World Mobile Flutter
 
-A new Flutter project.
+Premium mobile experience for Roam2World B2B eSIM operations.
 
-## Getting Started
+## Current UI prototype
 
-This project is a starting point for a Flutter application.
+- Login
+- Home dashboard
+- Package discovery
+- Package detail and checkout sheet
+- Orders
+- Order detail with eSIM QR actions
+- eSIM list
+- Wallet
+- Profile
 
-A few resources to get you started if this is your first Flutter project:
+## Prototype navigation
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+The app currently starts at `/login`. The UI uses static demo data while API integration is being prepared.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Validation
+
+Run locally with:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
