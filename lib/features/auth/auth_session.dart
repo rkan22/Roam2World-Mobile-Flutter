@@ -33,12 +33,30 @@ class AuthSession {
       userId: user['id']?.toString() ?? '',
       email: user['email']?.toString() ?? '',
       role: user['role']?.toString() ?? responseData['role']?.toString() ?? '',
-      displayName: fullName.isEmpty
-          ? user['name']?.toString()
-          : fullName,
+      displayName: fullName.isEmpty ? user['name']?.toString() : fullName,
       account: account.isEmpty ? null : account,
     );
   }
+
+  factory AuthSession.fromStoredProfile(Map<String, dynamic> json) {
+    return AuthSession(
+      accessToken: '',
+      refreshToken: '',
+      userId: json['user_id']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      role: json['role']?.toString() ?? '',
+      displayName: json['display_name']?.toString(),
+      account: _asMap(json['account']).isEmpty ? null : _asMap(json['account']),
+    );
+  }
+
+  Map<String, dynamic> toStoredProfile() => {
+        'user_id': userId,
+        'email': email,
+        'role': role,
+        'display_name': displayName,
+        'account': account,
+      };
 
   static Map<String, dynamic> _asMap(Object? value) {
     if (value is Map<String, dynamic>) return value;
