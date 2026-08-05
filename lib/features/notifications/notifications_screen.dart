@@ -21,7 +21,7 @@ class NotificationsScreen extends StatelessWidget {
           SizedBox(height: 10),
           _NotificationTile(icon: Icons.check_circle_rounded, color: AppColors.success, title: 'Order completed', message: 'Order #ORD-2026-000124 is ready. The eSIM QR code can now be shared.', time: '8 min ago', unread: true),
           SizedBox(height: 10),
-          _NotificationTile(icon: Icons.account_balance_wallet_rounded, color: AppColors.primary, title: 'Wallet updated', message: 'Your top-up request for $1,000 has been approved.', time: '42 min ago', unread: true),
+          _NotificationTile(icon: Icons.account_balance_wallet_rounded, color: AppColors.primary, title: 'Wallet updated', message: 'Your top-up request for \$1,000 has been approved.', time: '42 min ago', unread: true),
           SizedBox(height: 20),
           _SectionLabel('Earlier'),
           SizedBox(height: 10),
