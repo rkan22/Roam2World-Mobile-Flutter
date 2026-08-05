@@ -1,101 +1,113 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import 'dashboard_data.dart';
+import 'dashboard_repository.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key, this.repository});
+
+  final DashboardRepository? repository;
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final DashboardRepository _repository;
+  DashboardData? _data;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? DashboardRepository();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
+
+    try {
+      final result = await _repository.fetchDashboard();
+      if (!mounted) return;
+      setState(() => _data = result);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 0),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showQuickActions(context),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add_rounded, size: 30),
+        onPressed: () => context.go('/packages'),
+        child: const Icon(Icons.add_rounded),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {},
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
-            children: [
-              _Header(onNotificationsTap: () {}),
-              const SizedBox(height: 20),
-              const _BalanceCard(),
-              const SizedBox(height: 24),
-              const _SectionTitle(title: 'Quick actions'),
-              const SizedBox(height: 12),
-              const _QuickActions(),
-              const SizedBox(height: 24),
-              const _SectionTitle(title: "Today's statistics", action: 'View all'),
-              const SizedBox(height: 12),
-              const _StatsGrid(),
-              const SizedBox(height: 24),
-              const _SectionTitle(title: 'Recent orders', action: 'View all'),
-              const SizedBox(height: 12),
-              const _RecentOrders(),
-            ],
-          ),
-        ),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Create new',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 16),
-              _QuickSheetTile(
-                icon: Icons.shopping_bag_outlined,
-                title: 'New order',
-                onTap: () => context.go('/packages'),
-              ),
-              _QuickSheetTile(
-                icon: Icons.search_rounded,
-                title: 'Search packages',
-                onTap: () => context.go('/packages'),
-              ),
-              const _QuickSheetTile(
-                icon: Icons.qr_code_scanner_rounded,
-                title: 'Scan QR',
-              ),
-              const _QuickSheetTile(
-                icon: Icons.person_add_alt_1_outlined,
-                title: 'Add customer',
-              ),
-            ],
-          ),
-        ),
+  Widget _buildBody() {
+    if (_loading && _data == null) {
+      return const ContentLoadingState(message: 'Loading your workspace...');
+    }
+    if (_error != null && _data == null) {
+      return ContentErrorState(
+        message: _error is ApiException
+            ? (_error! as ApiException).message
+            : 'Dashboard could not be loaded.',
+        onRetry: _load,
+      );
+    }
+
+    final data = _data!;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+        children: [
+          _Header(onNotificationsTap: () => context.push('/notifications')),
+          const SizedBox(height: 20),
+          _BalanceCard(data: data),
+          const SizedBox(height: 24),
+          const _SectionTitle(title: 'Quick actions'),
+          const SizedBox(height: 12),
+          const _QuickActions(),
+          const SizedBox(height: 24),
+          const _SectionTitle(title: "Today's statistics"),
+          const SizedBox(height: 12),
+          _StatsGrid(data: data),
+          const SizedBox(height: 24),
+          const _SectionTitle(title: 'Recent orders'),
+          const SizedBox(height: 12),
+          _RecentOrders(orders: data.recentOrders, currency: data.currency),
+        ],
       ),
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  final VoidCallback onNotificationsTap;
-
   const _Header({required this.onNotificationsTap});
+
+  final VoidCallback onNotificationsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -105,39 +117,15 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Merhaba,', style: TextStyle(color: AppColors.textSecondary)),
+              Text('Welcome back', style: TextStyle(color: AppColors.textSecondary)),
               SizedBox(height: 2),
-              Text(
-                'Erkan 👋',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
+              Text('Roam2World', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
             ],
           ),
         ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton.filledTonal(
-              onPressed: onNotificationsTap,
-              icon: const Icon(Icons.notifications_none_rounded),
-            ),
-            Positioned(
-              right: 7,
-              top: 7,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.danger,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+        IconButton.filledTonal(
+          onPressed: onNotificationsTap,
+          icon: const Icon(Icons.notifications_none_rounded),
         ),
       ],
     );
@@ -145,52 +133,34 @@ class _Header extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  const _BalanceCard();
+  const _BalanceCard({required this.data});
+
+  final DashboardData data;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.navy]),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x332563EB),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Available balance', style: TextStyle(color: Colors.white70)),
+          Text('${data.role.toUpperCase()} · Available balance', style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 8),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '\$12,450.00',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  '${data.currency} ${data.balance.toStringAsFixed(2)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800),
                 ),
               ),
               FilledButton.tonalIcon(
                 onPressed: () => context.push('/wallet'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.primary,
-                ),
-                icon: const Icon(Icons.add_rounded, size: 18),
+                icon: const Icon(Icons.add_rounded),
                 label: const Text('Top up'),
               ),
             ],
@@ -202,26 +172,11 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
   final String title;
-  final String? action;
-
-  const _SectionTitle({required this.title, this.action});
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-        ),
-        if (action != null)
-          Text(action!, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800));
 }
 
 class _QuickActions extends StatelessWidget {
@@ -230,21 +185,20 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.inventory_2_outlined, 'Buy package', '/packages'),
-      (Icons.shopping_bag_outlined, 'Create order', '/packages'),
-      (Icons.qr_code_scanner_rounded, 'Scan QR', ''),
-      (Icons.groups_outlined, 'Customers', ''),
+      (Icons.inventory_2_outlined, 'Packages', '/packages'),
+      (Icons.shopping_bag_outlined, 'Orders', '/orders'),
+      (Icons.sim_card_outlined, 'eSIMs', '/esims'),
+      (Icons.groups_outlined, 'Customers', '/customers'),
     ];
-
     return Row(
       children: [
-        for (var index = 0; index < items.length; index++) ...[
+        for (var i = 0; i < items.length; i++) ...[
           Expanded(
             child: InkWell(
+              onTap: () => context.go(items[i].$3),
               borderRadius: BorderRadius.circular(18),
-              onTap: items[index].$3.isEmpty ? null : () => context.go(items[index].$3),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: AppColors.border),
@@ -252,28 +206,15 @@ class _QuickActions extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: Icon(items[index].$1, color: AppColors.primary),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      items[index].$2,
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                    ),
+                    Icon(items[i].$1, color: AppColors.primary),
+                    const SizedBox(height: 8),
+                    Text(items[i].$2, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
             ),
           ),
-          if (index != items.length - 1) const SizedBox(width: 10),
+          if (i < items.length - 1) const SizedBox(width: 10),
         ],
       ],
     );
@@ -281,150 +222,86 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _StatsGrid extends StatelessWidget {
-  const _StatsGrid();
+  const _StatsGrid({required this.data});
+  final DashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        Row(
-          children: [
-            Expanded(child: _StatCard(label: 'Orders', value: '124', delta: '+12%', positive: true)),
-            SizedBox(width: 12),
-            Expanded(child: _StatCard(label: 'Revenue', value: '\$8,920', delta: '+8.2%', positive: true)),
-          ],
-        ),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: _StatCard(label: 'Active eSIMs', value: '248', delta: '+18%', positive: true)),
-            SizedBox(width: 12),
-            Expanded(child: _StatCard(label: 'Pending orders', value: '16', delta: '-4%', positive: false)),
-          ],
-        ),
+        Row(children: [
+          Expanded(child: _StatCard(label: 'Today sales', value: '${data.currency} ${data.todaySales.toStringAsFixed(2)}')),
+          const SizedBox(width: 12),
+          Expanded(child: _StatCard(label: 'Monthly sales', value: '${data.currency} ${data.monthlySales.toStringAsFixed(2)}')),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: _StatCard(label: 'Active eSIMs', value: '${data.activeEsimCount}')),
+          const SizedBox(width: 12),
+          Expanded(child: _StatCard(label: 'Expired eSIMs', value: '${data.expiredEsimCount}')),
+        ]),
       ],
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.value});
   final String label;
   final String value;
-  final String delta;
-  final bool positive;
-
-  const _StatCard({required this.label, required this.value, required this.delta, required this.positive});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                ),
-                Text(
-                  delta,
-                  style: TextStyle(
-                    color: positive ? AppColors.success : AppColors.danger,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: const TextStyle(color: AppColors.textSecondary)),
+          const SizedBox(height: 12),
+          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        ]),
       ),
     );
   }
 }
 
 class _RecentOrders extends StatelessWidget {
-  const _RecentOrders();
+  const _RecentOrders({required this.orders, required this.currency});
+  final List<DashboardOrderSummary> orders;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    if (orders.isEmpty) {
+      return ContentEmptyState(
+        title: 'No recent orders',
+        message: 'Your latest mobile orders will appear here.',
+        actionLabel: 'Browse packages',
+        onAction: () => context.go('/packages'),
+      );
+    }
+    return Card(
       child: Column(
         children: [
-          _OrderTile(flag: '🇹🇷', title: 'Orange · Turkey', amount: '\$15.00', status: 'Completed'),
-          Divider(height: 1),
-          _OrderTile(flag: '🇺🇸', title: 'T-Mobile · USA', amount: '\$25.00', status: 'Completed'),
-          Divider(height: 1),
-          _OrderTile(flag: '🇬🇧', title: 'Vodafone · UK', amount: '\$19.00', status: 'Processing'),
-        ],
-      ),
-    );
-  }
-}
-
-class _OrderTile extends StatelessWidget {
-  final String flag;
-  final String title;
-  final String amount;
-  final String status;
-
-  const _OrderTile({required this.flag, required this.title, required this.amount, required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final completed = status == 'Completed';
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Text(flag, style: const TextStyle(fontSize: 24)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: const Text('Today'),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(amount, style: const TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 3),
-          Text(
-            status,
-            style: TextStyle(
-              color: completed ? AppColors.success : AppColors.warning,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          for (var i = 0; i < orders.length; i++) ...[
+            ListTile(
+              onTap: () => context.push('/orders/detail'),
+              leading: const CircleAvatar(child: Icon(Icons.receipt_long_outlined)),
+              title: Text(orders[i].productName, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(orders[i].orderNumber),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('$currency ${orders[i].totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(orders[i].status, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                ],
+              ),
             ),
-          ),
+            if (i < orders.length - 1) const Divider(height: 1),
+          ],
         ],
       ),
-    );
-  }
-}
-
-class _QuickSheetTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback? onTap;
-
-  const _QuickSheetTile({required this.icon, required this.title, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: AppColors.primary),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      trailing: const Icon(Icons.chevron_right_rounded),
     );
   }
 }
