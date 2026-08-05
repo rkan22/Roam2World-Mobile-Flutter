@@ -6,6 +6,7 @@ import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/esims/esim_detail_screen.dart';
 import 'features/esims/esims_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 import 'features/orders/order_detail_screen.dart';
 import 'features/orders/orders_screen.dart';
 import 'features/packages/package_detail_screen.dart';
@@ -23,6 +24,7 @@ class Roam2WorldApp extends StatelessWidget {
       routes: [
         GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
         GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+        GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
         GoRoute(path: '/packages', builder: (context, state) => const PackagesScreen()),
         GoRoute(path: '/packages/detail', builder: (context, state) => const PackageDetailScreen()),
         GoRoute(path: '/esims', builder: (context, state) => const EsimsScreen()),
