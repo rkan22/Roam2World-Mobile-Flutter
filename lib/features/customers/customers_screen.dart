@@ -8,6 +8,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../orders/order_history.dart';
 import '../orders/orders_repository.dart';
+import 'widgets/customers_adaptive_grid.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -75,9 +76,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       0,
       (sum, customer) => sum + customer.totalSpend,
     );
-    final currency = visibleCustomers.isEmpty
-        ? 'USD'
-        : visibleCustomers.first.currency;
+    final currency = visibleCustomers.isEmpty ? 'USD' : visibleCustomers.first.currency;
 
     return Scaffold(
       appBar: AppBar(
@@ -139,15 +138,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
             else if (visibleCustomers.isEmpty)
               ContentEmptyState(
                 icon: Icons.people_outline_rounded,
-                title: _customers.isEmpty
-                    ? 'No customers yet'
-                    : 'No matching customers',
+                title: _customers.isEmpty ? 'No customers yet' : 'No matching customers',
                 message: _customers.isEmpty
                     ? 'Customers will appear after their first order.'
                     : 'Try another company or customer name.',
-                actionLabel: _customers.isEmpty
-                    ? 'Browse packages'
-                    : 'Clear search',
+                actionLabel: _customers.isEmpty ? 'Browse packages' : 'Clear search',
                 onAction: _customers.isEmpty
                     ? () => context.go('/packages')
                     : _searchController.clear,
@@ -155,25 +150,24 @@ class _CustomersScreenState extends State<CustomersScreen> {
             else ...[
               Row(
                 children: [
-                  Text(
-                    'Companies',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('Companies', style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
                   Text(
                     '${visibleCustomers.length} results',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w700,
                         ),
                   ),
                 ],
               ),
               const SizedBox(height: B2BSpacing.sm),
-              for (final customer in visibleCustomers) ...[
-                _CustomerCard(customer: customer),
-                const SizedBox(height: B2BSpacing.sm),
-              ],
+              CustomersAdaptiveGrid(
+                children: [
+                  for (final customer in visibleCustomers)
+                    _CustomerCard(customer: customer),
+                ],
+              ),
             ],
           ],
         ),
@@ -203,19 +197,9 @@ class _CustomerOverview extends StatelessWidget {
       padding: const EdgeInsets.all(B2BSpacing.lg),
       child: Row(
         children: [
-          Expanded(
-            child: _OverviewValue(
-              label: 'Customers',
-              value: '$customerCount',
-            ),
-          ),
+          Expanded(child: _OverviewValue(label: 'Customers', value: '$customerCount')),
           Container(width: 1, height: 44, color: Colors.white24),
-          Expanded(
-            child: _OverviewValue(
-              label: 'Orders',
-              value: '$orderCount',
-            ),
-          ),
+          Expanded(child: _OverviewValue(label: 'Orders', value: '$orderCount')),
           Container(width: 1, height: 44, color: Colors.white24),
           Expanded(
             child: _OverviewValue(
@@ -317,6 +301,7 @@ class _CustomerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initials = _initials(customer.name);
+    final scheme = Theme.of(context).colorScheme;
     return B2BSurface(
       padding: const EdgeInsets.all(B2BSpacing.md),
       child: Column(
@@ -365,39 +350,36 @@ class _CustomerCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: B2BSpacing.xs),
-                        Text(
-                          'Active · ${_formatDate(customer.lastOrderAt)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                        Expanded(
+                          child: Text(
+                            'Active · ${_formatDate(customer.lastOrderAt)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
           const SizedBox(height: B2BSpacing.md),
-          Container(height: 1, color: AppColors.border),
+          Divider(height: 1, color: scheme.outlineVariant),
           const SizedBox(height: B2BSpacing.md),
           Row(
             children: [
               Expanded(
-                child: _CustomerMetric(
-                  label: 'Orders',
-                  value: '${customer.orders}',
-                ),
+                child: _CustomerMetric(label: 'Orders', value: '${customer.orders}'),
               ),
               Expanded(
                 child: _CustomerMetric(
                   label: 'Total spend',
-                  value:
-                      '${customer.currency} ${customer.totalSpend.toStringAsFixed(2)}',
+                  value: '${customer.currency} ${customer.totalSpend.toStringAsFixed(2)}',
                   alignEnd: true,
                 ),
               ),
@@ -423,13 +405,12 @@ class _CustomerMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
         const SizedBox(height: B2BSpacing.xxs),
