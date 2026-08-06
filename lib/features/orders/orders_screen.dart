@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_surface.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'order_history.dart';
@@ -82,35 +84,32 @@ class _OrdersScreenState extends State<OrdersScreen> {
           onRefresh: _load,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            padding: const EdgeInsets.fromLTRB(
+              B2BSpacing.lg,
+              B2BSpacing.md,
+              B2BSpacing.lg,
+              B2BSpacing.xxl,
+            ),
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text('Orders', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900)),
-                  ),
-                  IconButton.filledTonal(
-                    onPressed: _load,
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
+              _OrdersHeader(onRefresh: _load),
+              const SizedBox(height: B2BSpacing.lg),
               TextField(
                 controller: _searchController,
                 onChanged: _onSearchChanged,
                 decoration: const InputDecoration(
-                  hintText: 'Search order or customer',
+                  hintText: 'Search order, package or customer',
                   prefixIcon: Icon(Icons.search_rounded),
+                  suffixIcon: Icon(Icons.tune_rounded),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: B2BSpacing.md),
               SizedBox(
                 height: 42,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _tabs.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: B2BSpacing.xs),
                   itemBuilder: (context, index) => ChoiceChip(
                     label: Text(_tabs[index]),
                     selected: _selectedTab == index,
@@ -121,7 +120,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: B2BSpacing.lg),
+              if (!_loading && _error == null && _orders.isNotEmpty) ...[
+                _OrdersSummary(
+                  label: _tabs[_selectedTab],
+                  count: _orders.length,
+                  total: _orders.fold<double>(0, (sum, order) => sum + order.amount),
+                  currency: _orders.first.currency,
+                ),
+                const SizedBox(height: B2BSpacing.md),
+              ],
               if (_loading)
                 const ContentLoadingState(label: 'Loading orders...')
               else if (_error != null)
@@ -136,11 +144,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 )
               else
                 for (var index = 0; index < _orders.length; index++) ...[
-                  _OrderTile(
+                  _OrderCard(
                     order: _orders[index],
-                    onTap: () => context.push('/orders/detail', extra: _orders[index]),
+                    onTap: () => context.push(
+                      '/orders/detail',
+                      extra: _orders[index],
+                    ),
                   ),
-                  if (index != _orders.length - 1) const SizedBox(height: 12),
+                  if (index != _orders.length - 1)
+                    const SizedBox(height: B2BSpacing.sm),
                 ],
             ],
           ),
@@ -150,8 +162,108 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 }
 
-class _OrderTile extends StatelessWidget {
-  const _OrderTile({required this.order, required this.onTap});
+class _OrdersHeader extends StatelessWidget {
+  const _OrdersHeader({required this.onRefresh});
+
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Orders',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              const SizedBox(height: B2BSpacing.xxs),
+              Text(
+                'Track partner purchases and eSIM delivery status.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrdersSummary extends StatelessWidget {
+  const _OrdersSummary({
+    required this.label,
+    required this.count,
+    required this.total,
+    required this.currency,
+  });
+
+  final String label;
+  final int count;
+  final double total;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return B2BSurface(
+      backgroundColor: AppColors.navy,
+      borderColor: AppColors.navy,
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(B2BRadius.md),
+            ),
+            child: const Icon(Icons.receipt_long_rounded, color: Colors.white),
+          ),
+          const SizedBox(width: B2BSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$label orders',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: B2BSpacing.xxs),
+                Text(
+                  '$count records',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '$currency ${total.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderCard extends StatelessWidget {
+  const _OrderCard({required this.order, required this.onTap});
 
   final MobileOrderSummary order;
   final VoidCallback onTap;
@@ -159,37 +271,49 @@ class _OrderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _statusColor(order.status);
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
+    final customer = order.customerName.trim().isEmpty
+        ? 'Direct customer'
+        : order.customerName.trim();
+
+    return B2BSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.all(B2BSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: 48,
-                width: 48,
+                height: 46,
+                width: 46,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(16)),
-                child: const Icon(Icons.sim_card_outlined, color: AppColors.primary),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(B2BRadius.md),
+                ),
+                child: const Icon(
+                  Icons.sim_card_outlined,
+                  color: AppColors.primary,
+                ),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: B2BSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(order.packageName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 5),
                     Text(
-                      order.orderNumber.isEmpty ? _formatDate(order.createdAt) : '${order.orderNumber} · ${_formatDate(order.createdAt)}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      customer,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: B2BSpacing.xxs),
+                    Text(
+                      order.packageName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -197,22 +321,84 @@ class _OrderTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(order.formattedAmount, style: const TextStyle(fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 7),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                    decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(999)),
-                    child: Text(
-                      _titleCase(order.status),
-                      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
-                    ),
+                  Text(
+                    order.formattedAmount,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
+                  const SizedBox(height: B2BSpacing.xs),
+                  _StatusBadge(status: order.status, color: color),
                 ],
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
             ],
           ),
+          const SizedBox(height: B2BSpacing.md),
+          const Divider(height: 1),
+          const SizedBox(height: B2BSpacing.sm),
+          Row(
+            children: [
+              const Icon(
+                Icons.tag_rounded,
+                size: 16,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(width: B2BSpacing.xs),
+              Expanded(
+                child: Text(
+                  order.orderNumber.isEmpty ? 'Order ${order.id}' : order.orderNumber,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 15,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(width: B2BSpacing.xs),
+              Text(
+                _formatDate(order.createdAt),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: B2BSpacing.xs),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status, required this.color});
+
+  final String status;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(B2BRadius.pill),
+      ),
+      child: Text(
+        _titleCase(status),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
