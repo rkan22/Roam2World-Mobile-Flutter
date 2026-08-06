@@ -10,6 +10,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'wallet_data.dart';
 import 'wallet_repository.dart';
+import 'widgets/wallet_adaptive_sections.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -232,7 +233,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   onRetry: () => _load(forceRefresh: true),
                 )
               else if (_wallet != null)
-                ..._content(_wallet!),
+                _content(_wallet!),
             ],
           ),
         ),
@@ -240,60 +241,70 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  List<Widget> _content(WalletData wallet) {
+  Widget _content(WalletData wallet) {
     final transactions = _visibleTransactions(wallet);
-    return [
-      _BalanceHero(
-        wallet: wallet,
-        amount: _money(wallet.availableAmount, wallet.currency),
-        onTopUp: () => _showTopUpRequest(wallet),
-      ),
-      const SizedBox(height: B2BSpacing.md),
-      Row(
+
+    return WalletAdaptiveSections(
+      summary: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: B2BMetricCard(
-              label: wallet.isDealer ? 'Current balance' : 'Current credit',
-              value: _money(wallet.currentAmount, wallet.currency),
-              icon: Icons.account_balance_wallet_outlined,
-            ),
+          _BalanceHero(
+            wallet: wallet,
+            amount: _money(wallet.availableAmount, wallet.currency),
+            onTopUp: () => _showTopUpRequest(wallet),
           ),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(
-            child: B2BMetricCard(
-              label: wallet.secondaryLabel,
-              value: _money(wallet.secondaryAmount, wallet.currency),
-              icon: wallet.isDealer
-                  ? Icons.trending_down_rounded
-                  : Icons.credit_score_rounded,
-            ),
+          const SizedBox(height: B2BSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: B2BMetricCard(
+                  label: wallet.isDealer ? 'Current balance' : 'Current credit',
+                  value: _money(wallet.currentAmount, wallet.currency),
+                  icon: Icons.account_balance_wallet_outlined,
+                ),
+              ),
+              const SizedBox(width: B2BSpacing.sm),
+              Expanded(
+                child: B2BMetricCard(
+                  label: wallet.secondaryLabel,
+                  value: _money(wallet.secondaryAmount, wallet.currency),
+                  icon: wallet.isDealer
+                      ? Icons.trending_down_rounded
+                      : Icons.credit_score_rounded,
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      const SizedBox(height: B2BSpacing.xl),
-      const _SectionHeader(
-        title: 'Recent transactions',
-        subtitle: 'Your latest wallet credits and debits',
-      ),
-      const SizedBox(height: B2BSpacing.sm),
-      _TransactionFilters(
-        selectedIndex: _selectedFilter,
-        onSelected: (index) => setState(() => _selectedFilter = index),
-      ),
-      const SizedBox(height: B2BSpacing.md),
-      if (transactions.isEmpty)
-        const ContentEmptyState(
-          icon: Icons.receipt_long_outlined,
-          title: 'No transactions found',
-          message: 'Wallet activity matching this filter will appear here.',
-        )
-      else
-        for (var index = 0; index < transactions.length; index++) ...[
-          _TransactionTile(transaction: transactions[index]),
-          if (index != transactions.length - 1)
-            const SizedBox(height: B2BSpacing.sm),
+      transactions: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _SectionHeader(
+            title: 'Recent transactions',
+            subtitle: 'Your latest wallet credits and debits',
+          ),
+          const SizedBox(height: B2BSpacing.sm),
+          _TransactionFilters(
+            selectedIndex: _selectedFilter,
+            onSelected: (index) => setState(() => _selectedFilter = index),
+          ),
+          const SizedBox(height: B2BSpacing.md),
+          if (transactions.isEmpty)
+            const ContentEmptyState(
+              icon: Icons.receipt_long_outlined,
+              title: 'No transactions found',
+              message: 'Wallet activity matching this filter will appear here.',
+            )
+          else
+            for (var index = 0; index < transactions.length; index++) ...[
+              _TransactionTile(transaction: transactions[index]),
+              if (index != transactions.length - 1)
+                const SizedBox(height: B2BSpacing.sm),
+            ],
         ],
-    ];
+      ),
+    );
   }
 }
 
@@ -372,7 +383,9 @@ class _BalanceHero extends StatelessWidget {
                   borderRadius: BorderRadius.circular(B2BRadius.pill),
                 ),
                 child: Text(
-                  wallet.role.isEmpty ? 'BUSINESS WALLET' : wallet.role.toUpperCase(),
+                  wallet.role.isEmpty
+                      ? 'BUSINESS WALLET'
+                      : wallet.role.toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
@@ -577,6 +590,9 @@ String _titleCase(String value) {
   return normalized
       .split(' ')
       .where((part) => part.isNotEmpty)
-      .map((part) => '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+      .map(
+        (part) =>
+            '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+      )
       .join(' ');
 }
