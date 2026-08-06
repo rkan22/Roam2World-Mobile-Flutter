@@ -23,6 +23,7 @@ require_file ios/Flutter/Release.xcconfig
 require_file ios/Runner/Info.plist
 require_file ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
 require_file lib/core/config/app_environment.dart
+require_file lib/core/storage/token_storage.dart
 require_file .gitignore
 
 for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -44,6 +45,9 @@ require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.b2b' ios/Flutter/Relea
 require_match '<string>Roam2World B2B</string>' ios/Runner/Info.plist
 require_match 'Icon-App-1024x1024@1x\.png' ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
 require_match "static const String appName = 'Roam2World B2B';" lib/core/config/app_environment.dart
+require_match "storageNamespace: 'roam2world_b2b_auth'" lib/core/storage/token_storage.dart
+require_match 'KeychainAccessibility\.unlocked_this_device' lib/core/storage/token_storage.dart
+require_match "accountName: 'com\.roam2world\.b2b\.auth'" lib/core/storage/token_storage.dart
 require_match '^/android/key\.properties$' .gitignore
 require_match '^\*\.jks$' .gitignore
 require_match '^\*\.keystore$' .gitignore
