@@ -45,3 +45,7 @@
 - [ ] Production API smoke test is signed off.
 - [ ] Signed Android and iOS artifacts are reproducible.
 - [ ] Version name and build number are incremented before each subsequent upload.
+
+## Current blocker
+
+GitHub Actions is active, but new push and pull-request events are not creating workflow runs. Do not consider a release candidate verified until formatting, analysis, tests, and the Android build run successfully on the latest commit.
