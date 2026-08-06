@@ -22,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   DashboardData? _data;
   Object? _error;
   bool _loading = true;
+  bool _showingStaleData = false;
 
   @override
   void initState() {
@@ -30,18 +31,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     if (mounted) {
       setState(() {
-        _loading = true;
+        _loading = _data == null;
         _error = null;
       });
     }
 
     try {
-      final result = await _repository.fetchDashboard();
+      final result = await _repository.fetchDashboard(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
-      setState(() => _data = result);
+      setState(() {
+        _data = result;
+        _showingStaleData = _repository.lastFetchUsedStale;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = error);
@@ -72,17 +78,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         message: _error is ApiException
             ? (_error! as ApiException).message
             : 'Dashboard could not be loaded.',
-        onRetry: _load,
+        onRetry: () => _load(forceRefresh: true),
       );
     }
 
     final data = _data!;
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
         children: [
+          if (_showingStaleData) ...[
+            const _StaleDataBanner(),
+            const SizedBox(height: 14),
+          ],
           _Header(onNotificationsTap: () => context.push('/notifications')),
           const SizedBox(height: 20),
           _BalanceCard(data: data),
@@ -102,6 +112,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+}
+
+class _StaleDataBanner extends StatelessWidget {
+  const _StaleDataBanner();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Could not refresh. Showing the last available data.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      );
 }
 
 class _Header extends StatelessWidget {
