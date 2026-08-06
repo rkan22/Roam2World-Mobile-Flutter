@@ -1,4 +1,4 @@
 storePassword=CHANGE_ME
 keyPassword=CHANGE_ME
-keyAlias=upload
-storeFile=../keystore/roam2world-upload.jks
+keyAlias=roam2world_b2b_upload
+storeFile=../keystores/roam2world-b2b-upload.jks
