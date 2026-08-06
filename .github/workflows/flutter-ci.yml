@@ -1,12 +1,12 @@
 name: Flutter CI
 
 on:
-  workflow_dispatch:
   pull_request:
   push:
     branches:
       - main
       - 'agent/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
