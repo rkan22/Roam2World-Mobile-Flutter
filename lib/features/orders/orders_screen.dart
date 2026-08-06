@@ -11,6 +11,7 @@ import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'order_history.dart';
 import 'orders_repository.dart';
+import 'widgets/orders_adaptive_grid.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -125,7 +126,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 _OrdersSummary(
                   label: _tabs[_selectedTab],
                   count: _orders.length,
-                  total: _orders.fold<double>(0, (sum, order) => sum + order.amount),
+                  total: _orders.fold<double>(
+                    0,
+                    (sum, order) => sum + order.amount,
+                  ),
                   currency: _orders.first.currency,
                 ),
                 const SizedBox(height: B2BSpacing.md),
@@ -143,17 +147,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   onAction: () => context.go('/packages'),
                 )
               else
-                for (var index = 0; index < _orders.length; index++) ...[
-                  _OrderCard(
-                    order: _orders[index],
-                    onTap: () => context.push(
-                      '/orders/detail',
-                      extra: _orders[index],
-                    ),
-                  ),
-                  if (index != _orders.length - 1)
-                    const SizedBox(height: B2BSpacing.sm),
-                ],
+                OrdersAdaptiveGrid(
+                  children: [
+                    for (final order in _orders)
+                      _OrderCard(
+                        order: order,
+                        onTap: () => context.push(
+                          '/orders/detail',
+                          extra: order,
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -274,6 +279,7 @@ class _OrderCard extends StatelessWidget {
     final customer = order.customerName.trim().isEmpty
         ? 'Direct customer'
         : order.customerName.trim();
+    final scheme = Theme.of(context).colorScheme;
 
     return B2BSurface(
       onTap: onTap,
@@ -289,12 +295,12 @@ class _OrderCard extends StatelessWidget {
                 width: 46,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
+                  color: scheme.primaryContainer,
                   borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.sim_card_outlined,
-                  color: AppColors.primary,
+                  color: scheme.primary,
                 ),
               ),
               const SizedBox(width: B2BSpacing.sm),
@@ -313,7 +319,7 @@ class _OrderCard extends StatelessWidget {
                       order.packageName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.textSecondary),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
@@ -336,40 +342,38 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: B2BSpacing.sm),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.tag_rounded,
                 size: 16,
-                color: AppColors.textMuted,
+                color: scheme.onSurfaceVariant,
               ),
               const SizedBox(width: B2BSpacing.xs),
               Expanded(
                 child: Text(
-                  order.orderNumber.isEmpty ? 'Order ${order.id}' : order.orderNumber,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  order.orderNumber.isEmpty
+                      ? 'Order ${order.id}'
+                      : order.orderNumber,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.calendar_today_outlined,
                 size: 15,
-                color: AppColors.textMuted,
+                color: scheme.onSurfaceVariant,
               ),
               const SizedBox(width: B2BSpacing.xs),
               Text(
                 _formatDate(order.createdAt),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
               const SizedBox(width: B2BSpacing.xs),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: scheme.onSurfaceVariant,
               ),
             ],
           ),

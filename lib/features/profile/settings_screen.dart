@@ -37,8 +37,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Account preferences', style: Theme.of(context).textTheme.bodyMedium),
-                      Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
+                      Text(
+                        'Account preferences',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        'Settings',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -84,7 +90,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Order updates',
                     subtitle: 'Status and delivery events',
                     value: orderNotifications,
-                    onChanged: (value) => setState(() => orderNotifications = value),
+                    onChanged: (value) =>
+                        setState(() => orderNotifications = value),
                   ),
                   const Divider(height: 1),
                   _PreferenceSwitch(
@@ -92,7 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Wallet updates',
                     subtitle: 'Top-up and balance activity',
                     value: walletNotifications,
-                    onChanged: (value) => setState(() => walletNotifications = value),
+                    onChanged: (value) =>
+                        setState(() => walletNotifications = value),
                   ),
                   const Divider(height: 1),
                   _PreferenceSwitch(
@@ -100,7 +108,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Product announcements',
                     subtitle: 'New packages and platform news',
                     value: productNotifications,
-                    onChanged: (value) => setState(() => productNotifications = value),
+                    onChanged: (value) =>
+                        setState(() => productNotifications = value),
                   ),
                 ],
               ),
@@ -140,23 +149,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final item in const ['English', 'Türkçe', 'Deutsch'])
-              RadioListTile<String>(
-                value: item,
-                groupValue: language,
-                title: Text(item),
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() => language = value);
-                  Navigator.pop(context);
-                },
-              ),
-            const SizedBox(height: 12),
-          ],
+      builder: (sheetContext) => SafeArea(
+        child: RadioGroup<String>(
+          groupValue: language,
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => language = value);
+            Navigator.pop(sheetContext);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final item in const ['English', 'Türkçe', 'Deutsch'])
+                RadioListTile<String>(
+                  value: item,
+                  title: Text(item),
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -166,30 +177,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeController.mode,
-          builder: (context, selected, child) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final mode in ThemeMode.values)
-                RadioListTile<ThemeMode>(
-                  value: mode,
-                  groupValue: selected,
-                  title: Text(ThemeController.label(mode)),
-                  subtitle: Text(
-                    mode == ThemeMode.system
-                        ? 'Follow device appearance'
-                        : 'Always use ${ThemeController.label(mode).toLowerCase()} mode',
+          builder: (context, selected, child) => RadioGroup<ThemeMode>(
+            groupValue: selected,
+            onChanged: (value) {
+              if (value == null) return;
+              ThemeController.setMode(value);
+              Navigator.pop(sheetContext);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final mode in ThemeMode.values)
+                  RadioListTile<ThemeMode>(
+                    value: mode,
+                    title: Text(ThemeController.label(mode)),
+                    subtitle: Text(
+                      mode == ThemeMode.system
+                          ? 'Follow device appearance'
+                          : 'Always use ${ThemeController.label(mode).toLowerCase()} mode',
+                    ),
                   ),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    ThemeController.setMode(value);
-                    Navigator.pop(context);
-                  },
-                ),
-              const SizedBox(height: 12),
-            ],
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         ),
       ),

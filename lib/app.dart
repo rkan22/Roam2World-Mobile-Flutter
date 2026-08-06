@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
+import 'shared/widgets/adaptive_app_frame.dart';
 
 class Roam2WorldApp extends StatefulWidget {
   final String initialLocation;
@@ -36,6 +37,9 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeMode,
+          builder: (context, child) => AdaptiveAppFrame(
+            child: child ?? const SizedBox.shrink(),
+          ),
           routerConfig: router,
         );
       },

@@ -70,7 +70,9 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
-        shadowColor: isDark ? Colors.black.withOpacity(.24) : const Color(0x140F172A),
+        shadowColor: isDark
+            ? Colors.black.withValues(alpha: .24)
+            : const Color(0x140F172A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(B2BRadius.lg),
           side: BorderSide(color: border),
@@ -80,7 +82,9 @@ class AppTheme {
         height: 72,
         backgroundColor: surface,
         elevation: 8,
-        shadowColor: isDark ? Colors.black.withOpacity(.32) : const Color(0x140F172A),
+        shadowColor: isDark
+            ? Colors.black.withValues(alpha: .32)
+            : const Color(0x140F172A),
         indicatorColor: primarySoft,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
