@@ -18,7 +18,7 @@ class WalletAdaptiveSections extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveSplitView(
       breakpoint: 920,
-      spacing: 20,
+      gap: 20,
       primaryFlex: 5,
       secondaryFlex: 7,
       primary: summary,
