@@ -91,6 +91,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => context.push(AppRoutes.wallet),
               ),
               _SettingsTile(
+                icon: Icons.analytics_outlined,
+                title: 'Business reports',
+                trailing: 'Live',
+                onTap: () => context.push(AppRoutes.reports),
+              ),
+              _SettingsTile(
                 icon: Icons.tune_rounded,
                 title: 'App settings',
                 trailing: 'English',
@@ -118,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const _SettingsTile(
                 icon: Icons.info_outline_rounded,
-                title: 'About Roam2World',
+                title: 'About Roam2World B2B',
                 trailing: 'v1.0.0',
               ),
             ],
@@ -142,7 +148,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = session?.displayName?.trim();
-    final title = name?.isNotEmpty == true ? name! : 'Roam2World Account';
+    final title = name?.isNotEmpty == true ? name! : 'Roam2World B2B Account';
     final email = session?.email.isNotEmpty == true ? session!.email : 'Business mobile workspace';
     final initials = title
         .split(RegExp(r'\s+'))
