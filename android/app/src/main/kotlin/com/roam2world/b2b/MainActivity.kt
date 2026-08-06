@@ -1,4 +1,4 @@
-package com.example.roam2world_mobile_flutter
+package com.roam2world.b2b
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -19,6 +19,7 @@ import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
+import '../../features/reports/reports_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/wallet/wallet_screen.dart';
 
@@ -38,6 +39,7 @@ abstract final class AppRoutes {
   static const orderDetail = '/orders/detail';
   static const profile = '/profile';
   static const wallet = '/wallet';
+  static const reports = '/reports';
   static const notifications = '/notifications';
   static const settings = '/settings';
   static const support = '/support';
@@ -78,6 +80,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.orderDetail, builder: (context, state) => const OrderDetailScreen()),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
       GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
+      GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
       GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
       GoRoute(path: AppRoutes.support, builder: (context, state) => const SupportScreen()),

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_surface.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../orders/order_history.dart';
 import '../orders/orders_repository.dart';
@@ -65,6 +67,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     final visibleCustomers = _visibleCustomers;
+    final totalOrders = visibleCustomers.fold<int>(
+      0,
+      (sum, customer) => sum + customer.orders,
+    );
+    final totalSpend = visibleCustomers.fold<double>(
+      0,
+      (sum, customer) => sum + customer.totalSpend,
+    );
+    final currency = visibleCustomers.isEmpty
+        ? 'USD'
+        : visibleCustomers.first.currency;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -73,23 +87,51 @@ class _CustomersScreenState extends State<CustomersScreen> {
         ),
         title: const Text('Customers'),
         actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+          IconButton.filledTonal(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+          const SizedBox(width: B2BSpacing.sm),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.xs,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
+            Text(
+              'Your business network',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: B2BSpacing.xs),
+            Text(
+              'Track customer activity generated from live order history.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: B2BSpacing.lg),
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: 'Search customer name',
+                hintText: 'Search company or customer',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: B2BSpacing.md),
+            if (!_loading && _error == null && visibleCustomers.isNotEmpty)
+              _CustomerOverview(
+                customerCount: visibleCustomers.length,
+                orderCount: totalOrders,
+                totalSpend: totalSpend,
+                currency: currency,
+              ),
+            if (!_loading && _error == null && visibleCustomers.isNotEmpty)
+              const SizedBox(height: B2BSpacing.lg),
             if (_loading)
               const ContentLoadingState(label: 'Loading customers...')
             else if (_error != null)
@@ -102,7 +144,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     : 'No matching customers',
                 message: _customers.isEmpty
                     ? 'Customers will appear after their first order.'
-                    : 'Try another customer name.',
+                    : 'Try another company or customer name.',
                 actionLabel: _customers.isEmpty
                     ? 'Browse packages'
                     : 'Clear search',
@@ -113,26 +155,108 @@ class _CustomersScreenState extends State<CustomersScreen> {
             else ...[
               Row(
                 children: [
-                  const Text(
-                    'Order customers',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  Text(
+                    'Companies',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Spacer(),
                   Text(
-                    '${visibleCustomers.length} customers',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    '${visibleCustomers.length} results',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: B2BSpacing.sm),
               for (final customer in visibleCustomers) ...[
                 _CustomerCard(customer: customer),
-                const SizedBox(height: 10),
+                const SizedBox(height: B2BSpacing.sm),
               ],
             ],
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CustomerOverview extends StatelessWidget {
+  const _CustomerOverview({
+    required this.customerCount,
+    required this.orderCount,
+    required this.totalSpend,
+    required this.currency,
+  });
+
+  final int customerCount;
+  final int orderCount;
+  final double totalSpend;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return B2BSurface(
+      backgroundColor: AppColors.navy,
+      borderColor: AppColors.navy,
+      padding: const EdgeInsets.all(B2BSpacing.lg),
+      child: Row(
+        children: [
+          Expanded(
+            child: _OverviewValue(
+              label: 'Customers',
+              value: '$customerCount',
+            ),
+          ),
+          Container(width: 1, height: 44, color: Colors.white24),
+          Expanded(
+            child: _OverviewValue(
+              label: 'Orders',
+              value: '$orderCount',
+            ),
+          ),
+          Container(width: 1, height: 44, color: Colors.white24),
+          Expanded(
+            child: _OverviewValue(
+              label: 'Volume',
+              value: '$currency ${totalSpend.toStringAsFixed(0)}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewValue extends StatelessWidget {
+  const _OverviewValue({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+        const SizedBox(height: B2BSpacing.xxs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+      ],
     );
   }
 }
@@ -147,11 +271,15 @@ List<_CustomerSummary> _aggregateCustomers(List<MobileOrderSummary> orders) {
     grouped[key] = _CustomerSummary(
       name: name,
       orders: (existing?.orders ?? 0) + 1,
+      totalSpend: (existing?.totalSpend ?? 0) + order.amount,
+      currency: existing?.currency ?? order.currency,
       lastOrderAt: _latest(existing?.lastOrderAt, order.createdAt),
     );
   }
   final customers = grouped.values.toList();
   customers.sort((a, b) {
+    final spendCompare = b.totalSpend.compareTo(a.totalSpend);
+    if (spendCompare != 0) return spendCompare;
     final left = a.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
     final right = b.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
     return right.compareTo(left);
@@ -169,79 +297,108 @@ class _CustomerSummary {
   const _CustomerSummary({
     required this.name,
     required this.orders,
+    required this.totalSpend,
+    required this.currency,
     required this.lastOrderAt,
   });
 
   final String name;
   final int orders;
+  final double totalSpend;
+  final String currency;
   final DateTime? lastOrderAt;
 }
 
 class _CustomerCard extends StatelessWidget {
   const _CustomerCard({required this.customer});
+
   final _CustomerSummary customer;
 
   @override
   Widget build(BuildContext context) {
-    final parts = customer.name
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty);
-    final initials = parts.take(2).map((part) => part[0].toUpperCase()).join();
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
+    final initials = _initials(customer.name);
+    return B2BSurface(
+      padding: const EdgeInsets.all(B2BSpacing.md),
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: AppColors.primaryLight,
-            child: Text(
-              initials.isEmpty ? '?' : initials,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  customer.name,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: B2BGradients.primary,
+                  borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Created from live order history',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${customer.orders}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+              ),
+              const SizedBox(width: B2BSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customer.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: B2BSpacing.xxs),
+                    Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: B2BSpacing.xs),
+                        Text(
+                          'Active · ${_formatDate(customer.lastOrderAt)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const Text(
-                'orders',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.md),
+          Container(height: 1, color: AppColors.border),
+          const SizedBox(height: B2BSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _CustomerMetric(
+                  label: 'Orders',
+                  value: '${customer.orders}',
+                ),
+              ),
+              Expanded(
+                child: _CustomerMetric(
+                  label: 'Total spend',
+                  value:
+                      '${customer.currency} ${customer.totalSpend.toStringAsFixed(2)}',
+                  alignEnd: true,
                 ),
               ),
             ],
@@ -250,4 +407,56 @@ class _CustomerCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CustomerMetric extends StatelessWidget {
+  const _CustomerMetric({
+    required this.label,
+    required this.value,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final String value;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+        ),
+        const SizedBox(height: B2BSpacing.xxs),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+String _initials(String name) {
+  final parts = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return '?';
+  return parts.take(2).map((part) => part[0].toUpperCase()).join();
+}
+
+String _formatDate(DateTime? date) {
+  if (date == null) return 'No recent activity';
+  final local = date.toLocal();
+  return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
 }

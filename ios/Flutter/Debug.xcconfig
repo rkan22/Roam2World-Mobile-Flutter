@@ -1,1 +1,3 @@
 #include "Generated.xcconfig"
+PRODUCT_BUNDLE_IDENTIFIER=com.roam2world.b2b
+PRODUCT_NAME=Roam2World B2B
