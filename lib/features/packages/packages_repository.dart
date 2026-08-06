@@ -8,6 +8,7 @@ class PackagesRepository {
 
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
   final ApiClient _apiClient;
+  bool lastFetchUsedStale = false;
 
   Future<PackageCatalog> fetchPackages({
     String? search,
@@ -16,6 +17,7 @@ class PackagesRepository {
     int limit = 100,
     bool forceRefresh = false,
   }) async {
+    lastFetchUsedStale = false;
     final normalizedSearch = search?.trim() ?? '';
     final normalizedDestination = destination?.trim() ?? '';
     final normalizedType = packageType?.trim() ?? '';
@@ -50,7 +52,10 @@ class PackagesRepository {
       return catalog;
     } catch (_) {
       final stale = cache.staleValue;
-      if (stale != null) return stale;
+      if (stale != null) {
+        lastFetchUsedStale = true;
+        return stale;
+      }
       rethrow;
     }
   }
