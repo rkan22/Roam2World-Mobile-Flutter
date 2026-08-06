@@ -3,19 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roam2world_mobile_flutter/features/dashboard/widgets/dashboard_adaptive_sections.dart';
 
 void main() {
-  Widget buildSubject({required Size size, required Widget child}) {
+  Widget buildSubject(Widget child) {
     return MaterialApp(
-      home: MediaQuery(
-        data: MediaQueryData(size: size),
-        child: Scaffold(
-          body: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: child,
-          ),
-        ),
-      ),
+      home: Scaffold(body: SizedBox.expand(child: child)),
     );
+  }
+
+  Future<void> setViewport(WidgetTester tester, Size size) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = size;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
   }
 
   List<Widget> tiles(int count) => List.generate(
@@ -28,11 +28,9 @@ void main() {
       );
 
   testWidgets('KPI layout wraps to two columns on phone widths', (tester) async {
+    await setViewport(tester, const Size(430, 900));
     await tester.pumpWidget(
-      buildSubject(
-        size: const Size(430, 900),
-        child: DashboardKpiLayout(children: tiles(4)),
-      ),
+      buildSubject(DashboardKpiLayout(children: tiles(4))),
     );
 
     final first = tester.getTopLeft(find.byKey(const ValueKey('tile-0')));
@@ -44,11 +42,9 @@ void main() {
   });
 
   testWidgets('KPI layout renders four columns on tablet widths', (tester) async {
+    await setViewport(tester, const Size(1180, 900));
     await tester.pumpWidget(
-      buildSubject(
-        size: const Size(1180, 900),
-        child: DashboardKpiLayout(children: tiles(4)),
-      ),
+      buildSubject(DashboardKpiLayout(children: tiles(4))),
     );
 
     final yPositions = [
@@ -60,11 +56,9 @@ void main() {
   });
 
   testWidgets('quick actions wrap safely on compact widths', (tester) async {
+    await setViewport(tester, const Size(360, 800));
     await tester.pumpWidget(
-      buildSubject(
-        size: const Size(360, 800),
-        child: DashboardQuickActionsLayout(children: tiles(4)),
-      ),
+      buildSubject(DashboardQuickActionsLayout(children: tiles(4))),
     );
 
     final first = tester.getTopLeft(find.byKey(const ValueKey('tile-0')));
