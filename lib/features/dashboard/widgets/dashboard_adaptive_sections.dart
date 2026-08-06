@@ -18,7 +18,7 @@ class DashboardKpiLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptiveGrid(
-      minItemWidth: 210,
+      minItemWidth: 190,
       spacing: B2BSpacing.md,
       runSpacing: B2BSpacing.md,
       children: children,
