@@ -1,101 +1,172 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/content_state.dart';
+import 'esim_catalog.dart';
+import 'esims_repository.dart';
 
-class EsimDetailScreen extends StatelessWidget {
-  const EsimDetailScreen({super.key});
+class EsimDetailScreen extends StatefulWidget {
+  const EsimDetailScreen({super.key, required this.initialEsim});
+
+  final MobileEsim initialEsim;
+
+  @override
+  State<EsimDetailScreen> createState() => _EsimDetailScreenState();
+}
+
+class _EsimDetailScreenState extends State<EsimDetailScreen> {
+  final _repository = EsimsRepository();
+
+  late MobileEsim _esim;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _esim = widget.initialEsim;
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await _repository.fetchEsimDetail(widget.initialEsim.id);
+      if (!mounted) return;
+      setState(() => _esim = result);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'eSIM details could not be loaded.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _copy(String value, String label) async {
+    if (value.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label copied.')));
+  }
+
+  String _date(DateTime? value) {
+    if (value == null) return 'Not available';
+    final local = value.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          children: [
-            Row(
-              children: [
-                IconButton.filledTonal(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                const Expanded(
-                  child: Text(
-                    'eSIM Detail',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                  ),
-                ),
-                IconButton.filledTonal(
-                  onPressed: () {},
-                  icon: const Icon(Icons.more_horiz_rounded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.navy],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            children: [
+              Row(
                 children: [
-                  Row(
+                  IconButton.filledTonal(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
+                  const Expanded(child: Text('eSIM Detail', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900))),
+                  IconButton.filledTonal(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (_loading)
+                const ContentLoadingState(label: 'Loading eSIM details...')
+              else if (_error != null)
+                ContentErrorState(message: _error!, onRetry: _load)
+              else ...[
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.navy], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text('Orange · Turkey', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                      Row(children: [
+                        Expanded(child: Text(_esim.packageName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900))),
+                        _StatusBadge(status: _esim.status),
+                      ]),
+                      const SizedBox(height: 8),
+                      Text(_esim.provider, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 22),
+                      Text(_esim.hasQr ? 'Installation ready' : 'Provisioning in progress', style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 7),
+                      Text(
+                        _esim.isInstalled ? 'This eSIM is installed on a device.' : 'Install when the QR or activation code is available.',
+                        style: const TextStyle(color: Colors.white70, height: 1.4),
                       ),
-                      _StatusBadge(),
                     ],
                   ),
-                  SizedBox(height: 6),
-                  Text('10 GB · 30 Days · 5G', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 24),
-                  Text('8.4 GB remaining', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
-                  SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
-                    child: LinearProgressIndicator(value: .16, minHeight: 10, backgroundColor: Colors.white24, color: Colors.white),
-                  ),
-                  SizedBox(height: 8),
-                  Text('1.6 GB used of 10 GB', style: TextStyle(color: Colors.white70)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border)),
-              child: Column(
-                children: [
-                  const Text('Installation QR', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 8),
-                  const Text('Scan on the device where this eSIM will be installed.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 20),
-                  QrImageView(data: r'LPA:1$sm-v4-070-a-gtm.pr.go-esim.com$R2W-ESIM-001', size: 190),
-                  const SizedBox(height: 18),
-                  Row(
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border)),
+                  child: Column(
                     children: [
-                      Expanded(child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.download_rounded), label: const Text('Download'))),
-                      const SizedBox(width: 10),
-                      Expanded(child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.share_rounded), label: const Text('Share'))),
+                      Text(_esim.hasQr ? 'Installation QR' : 'Installation pending', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 8),
+                      Text(
+                        _esim.hasQr ? 'Scan this code on the device where the eSIM will be installed.' : 'The provider has not returned installation details yet. Pull down to refresh.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 20),
+                      if (_esim.hasQr)
+                        QrImageView(data: _esim.qrCode.isNotEmpty ? _esim.qrCode : _esim.activationCode, size: 190)
+                      else
+                        Container(
+                          height: 170,
+                          width: 170,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(24)),
+                          child: const Icon(Icons.hourglass_top_rounded, size: 56, color: AppColors.textSecondary),
+                        ),
+                      if (_esim.hasQr) ...[
+                        const SizedBox(height: 18),
+                        Row(children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _copy(_esim.qrCode.isNotEmpty ? _esim.qrCode : _esim.activationCode, 'QR data'),
+                              icon: const Icon(Icons.qr_code_rounded),
+                              label: const Text('Copy QR data'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: OutlinedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Refresh'))),
+                        ]),
+                      ],
                     ],
                   ),
+                ),
+                const SizedBox(height: 16),
+                _InfoCard(esim: _esim, expiryLabel: _date(_esim.expiresAt)),
+                if (_esim.activationCode.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _copy(_esim.activationCode, 'Activation details'),
+                    icon: const Icon(Icons.copy_rounded),
+                    label: const Text('Copy activation details'),
+                  ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            const _InfoCard(),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: () {}, icon: const Icon(Icons.copy_rounded), label: const Text('Copy activation details')),
-          ],
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -103,41 +174,53 @@ class EsimDetailScreen extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge();
+  const _StatusBadge({required this.status});
+
+  final String status;
+
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-        decoration: BoxDecoration(color: Colors.white.withOpacity(.18), borderRadius: BorderRadius.circular(999)),
-        child: const Text('Active', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .18), borderRadius: BorderRadius.circular(999)),
+        child: Text(status, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
       );
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard();
+  const _InfoCard({required this.esim, required this.expiryLabel});
+
+  final MobileEsim esim;
+  final String expiryLabel;
+
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border)),
-        child: const Column(
-          children: [
-            _InfoRow(label: 'Customer', value: 'Mehmet Yılmaz'),
-            _InfoRow(label: 'ICCID', value: '8944501234567890123'),
-            _InfoRow(label: 'Installed', value: '05 Aug 2026'),
-            _InfoRow(label: 'Expires', value: '04 Sep 2026', last: true),
-          ],
-        ),
+        child: Column(children: [
+          _InfoRow(label: 'Customer', value: esim.customerName.isEmpty ? 'Not assigned' : esim.customerName),
+          _InfoRow(label: 'ICCID', value: esim.iccid.isEmpty ? 'Pending' : esim.iccid),
+          _InfoRow(label: 'Provider', value: esim.provider),
+          _InfoRow(label: 'Install status', value: esim.installStatus.isEmpty ? 'Unknown' : esim.installStatus),
+          _InfoRow(label: 'Expires', value: expiryLabel, last: true),
+        ]),
       );
 }
 
 class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value, this.last = false});
+
   final String label;
   final String value;
   final bool last;
-  const _InfoRow({required this.label, required this.value, this.last = false});
+
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(vertical: 13),
         decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: AppColors.border))),
-        child: Row(children: [Text(label, style: const TextStyle(color: AppColors.textSecondary)), const Spacer(), Flexible(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w900)))]),
+        child: Row(children: [
+          Text(label, style: const TextStyle(color: AppColors.textSecondary)),
+          const Spacer(),
+          Flexible(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w900))),
+        ]),
       );
 }

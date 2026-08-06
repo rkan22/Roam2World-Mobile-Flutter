@@ -1,4 +1,5 @@
 import '../../core/api/api_client.dart';
+import '../../core/api/api_endpoints.dart';
 import '../../core/storage/token_storage.dart';
 import 'auth_session.dart';
 
@@ -15,24 +16,27 @@ class AuthRepository {
     required String password,
   }) async {
     final session = await _apiClient.post<AuthSession>(
-      '/auth/login',
+      ApiEndpoints.mobileLogin,
       data: {
         'email': email.trim(),
         'password': password,
       },
-      parser: (data) => AuthSession.fromJson(
+      parser: (data) => AuthSession.fromMobileLoginResponse(
         Map<String, dynamic>.from(data as Map),
       ),
     );
 
-    if (session.accessToken.isEmpty) {
-      throw const FormatException('Login response did not include a token.');
+    if (session.accessToken.isEmpty || session.refreshToken.isEmpty) {
+      throw const FormatException(
+        'Login response did not include valid access and refresh tokens.',
+      );
     }
 
     await _tokenStorage.saveTokens(
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
     );
+    await _tokenStorage.saveProfile(session.toStoredProfile());
     return session;
   }
 
@@ -41,5 +45,10 @@ class AuthRepository {
   Future<bool> hasSession() async {
     final token = await _tokenStorage.readAccessToken();
     return token != null && token.isNotEmpty;
+  }
+
+  Future<AuthSession?> readStoredProfile() async {
+    final profile = await _tokenStorage.readProfile();
+    return profile == null ? null : AuthSession.fromStoredProfile(profile);
   }
 }
