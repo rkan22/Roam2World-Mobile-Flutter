@@ -2,24 +2,115 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-class ContentLoadingState extends StatelessWidget {
+class ContentLoadingState extends StatefulWidget {
   final String label;
   const ContentLoadingState({super.key, this.label = 'Loading...'});
 
   @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+  State<ContentLoadingState> createState() => _ContentLoadingStateState();
+}
+
+class _ContentLoadingStateState extends State<ContentLoadingState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final shimmer = Color.lerp(
+            AppColors.surfaceMuted,
+            AppColors.primaryLight,
+            (_controller.value - .5).abs() * 2,
+          )!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircularProgressIndicator(),
+              _SkeletonBlock(height: 28, widthFactor: .48, color: shimmer),
+              const SizedBox(height: 10),
+              _SkeletonBlock(height: 14, widthFactor: .72, color: shimmer),
+              const SizedBox(height: 22),
+              _SkeletonBlock(height: 150, color: shimmer, radius: 24),
               const SizedBox(height: 16),
-              Text(label, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SkeletonBlock(height: 104, color: shimmer),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SkeletonBlock(height: 104, color: shimmer),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _SkeletonBlock(height: 84, color: shimmer),
+              const SizedBox(height: 12),
+              _SkeletonBlock(height: 84, color: shimmer),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  widget.label,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
-          ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SkeletonBlock extends StatelessWidget {
+  const _SkeletonBlock({
+    required this.height,
+    required this.color,
+    this.widthFactor = 1,
+    this.radius = 18,
+  });
+
+  final double height;
+  final double widthFactor;
+  final double radius;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: AppColors.border),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class ContentEmptyState extends StatelessWidget {
@@ -106,16 +197,33 @@ class _StateCard extends StatelessWidget {
               Container(
                 height: 64,
                 width: 64,
-                decoration: BoxDecoration(color: iconColor.withOpacity(.12), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Icon(icon, size: 32, color: iconColor),
               ),
               const SizedBox(height: 18),
-              Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 8),
-              Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textSecondary, height: 1.45)),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  height: 1.45,
+                ),
+              ),
               if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 20),
-                ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+                ElevatedButton(
+                  onPressed: onAction,
+                  child: Text(actionLabel!),
+                ),
               ],
             ],
           ),
