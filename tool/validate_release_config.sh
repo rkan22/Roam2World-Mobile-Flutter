@@ -38,6 +38,8 @@ require_match 'isMinifyEnabled = true' android/app/build.gradle.kts
 require_match 'isShrinkResources = true' android/app/build.gradle.kts
 require_match 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
 require_match 'android:label="Roam2World B2B"' android/app/src/main/AndroidManifest.xml
+require_match 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+require_match 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
 require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.b2b' ios/Flutter/Release.xcconfig
 require_match '<string>Roam2World B2B</string>' ios/Runner/Info.plist
 require_match 'Icon-App-1024x1024@1x\.png' ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
