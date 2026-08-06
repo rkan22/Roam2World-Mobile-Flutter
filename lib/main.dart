@@ -5,6 +5,7 @@ import 'app.dart';
 import 'core/config/app_environment.dart';
 import 'core/routing/app_router.dart';
 import 'core/storage/token_storage.dart';
+import 'core/theme/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,8 +15,14 @@ Future<void> main() async {
   }
 
   final storage = TokenStorage();
-  final accessToken = await storage.readAccessToken();
-  final completedOnboarding = await storage.hasCompletedOnboarding();
+  final results = await Future.wait<Object?>([
+    storage.readAccessToken(),
+    storage.hasCompletedOnboarding(),
+    ThemeController.initialize(),
+  ]);
+
+  final accessToken = results[0] as String?;
+  final completedOnboarding = results[1] as bool;
 
   final initialLocation = accessToken != null && accessToken.isNotEmpty
       ? AppRoutes.dashboard
