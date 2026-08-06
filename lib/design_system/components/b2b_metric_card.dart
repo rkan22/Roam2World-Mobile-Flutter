@@ -24,8 +24,10 @@ class B2BMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final trendColor = trendPositive == null
-        ? AppColors.textSecondary
+        ? scheme.onSurfaceVariant
         : trendPositive!
             ? AppColors.success
             : AppColors.danger;
@@ -40,9 +42,10 @@ class B2BMetricCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               if (icon != null)
@@ -50,10 +53,10 @@ class B2BMetricCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
+                    color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(B2BRadius.sm),
                   ),
-                  child: Icon(icon, size: 19, color: AppColors.primary),
+                  child: Icon(icon, size: 19, color: scheme.onPrimaryContainer),
                 ),
             ],
           ),
@@ -62,19 +65,20 @@ class B2BMetricCard extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: scheme.onSurface,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           if (trend != null) ...[
             const SizedBox(height: B2BSpacing.xs),
             Text(
               trend!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: trendColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: trendColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ],
