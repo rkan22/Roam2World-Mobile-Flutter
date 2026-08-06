@@ -33,6 +33,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
   int _selectedFilter = 0;
   int _selectedDestination = 0;
   bool _loading = true;
+  bool _showingStaleData = false;
   String? _error;
 
   @override
@@ -48,9 +49,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
-      _loading = true;
+      _loading = _packages.isEmpty;
       _error = null;
     });
     try {
@@ -58,9 +59,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
         search: _searchController.text,
         destination: _destinations[_selectedDestination].$3,
         packageType: _packageType,
+        forceRefresh: forceRefresh,
       );
       if (!mounted) return;
-      setState(() => _packages = catalog.packages);
+      setState(() {
+        _packages = catalog.packages;
+        _showingStaleData = _repository.lastFetchUsedStale;
+      });
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -90,11 +95,15 @@ class _PackagesScreenState extends State<PackagesScreen> {
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 1),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _load,
+          onRefresh: () => _load(forceRefresh: true),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
             children: [
+              if (_showingStaleData) ...[
+                const _StaleDataBanner(),
+                const SizedBox(height: 14),
+              ],
               Row(
                 children: [
                   const Expanded(
@@ -158,8 +167,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
               const SizedBox(height: 18),
               if (_loading)
                 const ContentLoadingState(label: 'Loading packages...')
-              else if (_error != null)
-                ContentErrorState(message: _error!, onRetry: _load)
+              else if (_error != null && _packages.isEmpty)
+                ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
               else if (_packages.isEmpty)
                 ContentEmptyState(
                   icon: Icons.inventory_2_outlined,
@@ -191,9 +200,29 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 }
 
+class _StaleDataBanner extends StatelessWidget {
+  const _StaleDataBanner();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+            SizedBox(width: 10),
+            Expanded(child: Text('Could not refresh. Showing the last available packages.', style: TextStyle(fontWeight: FontWeight.w700))),
+          ],
+        ),
+      );
+}
+
 class _Country extends StatelessWidget {
   const _Country({required this.flag, required this.name, required this.selected, required this.onTap});
-
   final String flag;
   final String name;
   final bool selected;
@@ -225,7 +254,6 @@ class _Country extends StatelessWidget {
 
 class _PackageTile extends StatelessWidget {
   const _PackageTile({required this.package, required this.onTap});
-
   final MobilePackage package;
   final VoidCallback onTap;
 
