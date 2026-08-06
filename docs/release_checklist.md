@@ -7,6 +7,8 @@
 - [x] App display name is `Roam2World B2B`.
 - [x] Production API URL uses HTTPS and is not a local address.
 - [x] Android release builds include internet access.
+- [x] Android backups are disabled for sensitive B2B app data.
+- [x] Android cleartext HTTP traffic is disabled.
 - [x] Android release signing, minification, and resource shrinking are configured.
 - [x] Signing secrets and keystores are ignored and must not be committed.
 - [x] Android launcher icon density files exist.
