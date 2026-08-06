@@ -12,6 +12,7 @@
 - [x] Android launcher icon density files exist.
 - [x] iOS AppIcon manifest includes the 1024x1024 marketing icon.
 - [x] Flutter formatting, analysis, tests, and Android debug build are part of CI.
+- [x] A signed Android App Bundle build script validates signing inputs and outputs an artifact checksum.
 
 ## Required before an internal store upload
 
@@ -19,8 +20,10 @@
 - [ ] Confirm the launch screen uses approved brand artwork and background colors.
 - [ ] Create and securely store the production Android upload keystore.
 - [ ] Configure `android/key.properties` locally or through CI secrets.
+- [ ] Run `tool/build_android_release.sh` and archive the generated AAB checksum.
 - [ ] Build and install a signed release APK/AAB on a physical Android device.
 - [ ] Configure the Apple distribution certificate, App Store provisioning profile, and team.
+- [ ] Review app and dependency usage for Apple required-reason APIs, then add or update `PrivacyInfo.xcprivacy` with accurate declarations.
 - [ ] Archive and install a TestFlight build on a physical iPhone and iPad.
 - [ ] Verify login, dashboard, package purchase, order history, wallet, eSIM details, and logout against production API configuration.
 - [ ] Verify Light, Dark, and System appearance modes on phone and tablet.
@@ -48,4 +51,4 @@
 
 ## Current blocker
 
-GitHub Actions is active, but new push and pull-request events are not creating workflow runs. Do not consider a release candidate verified until formatting, analysis, tests, and the Android build run successfully on the latest commit.
+GitHub Actions is active, but commits and pull-request events created through the connected GitHub App are not creating workflow runs. Trigger CI with a user-authored push or run the workflow manually from GitHub Actions. Do not consider a release candidate verified until formatting, analysis, tests, and the Android build run successfully on the latest commit.
