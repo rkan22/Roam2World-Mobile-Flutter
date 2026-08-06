@@ -12,8 +12,10 @@ class WalletRepository {
   );
 
   final ApiClient _apiClient;
+  bool lastFetchUsedStale = false;
 
   Future<WalletData> fetchWallet({bool forceRefresh = false}) async {
+    lastFetchUsedStale = false;
     if (!forceRefresh) {
       final cached = _cache.value;
       if (cached != null) return cached;
@@ -28,7 +30,10 @@ class WalletRepository {
       return data;
     } catch (_) {
       final stale = _cache.staleValue;
-      if (stale != null) return stale;
+      if (stale != null) {
+        lastFetchUsedStale = true;
+        return stale;
+      }
       rethrow;
     }
   }
