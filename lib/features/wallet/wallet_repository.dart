@@ -19,12 +19,18 @@ class WalletRepository {
       if (cached != null) return cached;
     }
 
-    final data = await _apiClient.get<WalletData>(
-      ApiEndpoints.mobileWallet,
-      parser: WalletData.fromResponse,
-    );
-    _cache.set(data);
-    return data;
+    try {
+      final data = await _apiClient.get<WalletData>(
+        ApiEndpoints.mobileWallet,
+        parser: WalletData.fromResponse,
+      );
+      _cache.set(data);
+      return data;
+    } catch (_) {
+      final stale = _cache.staleValue;
+      if (stale != null) return stale;
+      rethrow;
+    }
   }
 
   Future<WalletRequest> createTopUpRequest({
