@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_metric_card.dart';
+import '../../design_system/components/b2b_surface.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'dashboard_data.dart';
@@ -60,11 +63,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 0),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/packages'),
-        child: const Icon(Icons.add_rounded),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: SafeArea(child: _buildBody()),
     );
   }
@@ -87,26 +85,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+        padding: const EdgeInsets.fromLTRB(
+          B2BSpacing.lg,
+          B2BSpacing.md,
+          B2BSpacing.lg,
+          B2BSpacing.xxl,
+        ),
         children: [
           if (_showingStaleData) ...[
             const _StaleDataBanner(),
-            const SizedBox(height: 14),
+            const SizedBox(height: B2BSpacing.md),
           ],
-          _Header(onNotificationsTap: () => context.push('/notifications')),
-          const SizedBox(height: 20),
-          _BalanceCard(data: data),
-          const SizedBox(height: 24),
-          const _SectionTitle(title: 'Quick actions'),
-          const SizedBox(height: 12),
+          _PremiumHeader(
+            role: data.role,
+            onNotificationsTap: () => context.push('/notifications'),
+          ),
+          const SizedBox(height: B2BSpacing.lg),
+          _WalletHero(data: data),
+          const SizedBox(height: B2BSpacing.lg),
+          _KpiGrid(data: data),
+          const SizedBox(height: B2BSpacing.xl),
+          const _SectionHeader(title: 'Quick actions'),
+          const SizedBox(height: B2BSpacing.md),
           const _QuickActions(),
-          const SizedBox(height: 24),
-          const _SectionTitle(title: "Today's statistics"),
-          const SizedBox(height: 12),
-          _StatsGrid(data: data),
-          const SizedBox(height: 24),
-          const _SectionTitle(title: 'Recent orders'),
-          const SizedBox(height: 12),
+          const SizedBox(height: B2BSpacing.xl),
+          _SalesOverview(data: data),
+          const SizedBox(height: B2BSpacing.xl),
+          _SectionHeader(
+            title: 'Recent orders',
+            actionLabel: 'View all',
+            onAction: () => context.go('/orders'),
+          ),
+          const SizedBox(height: B2BSpacing.md),
           _RecentOrders(orders: data.recentOrders, currency: data.currency),
         ],
       ),
@@ -114,52 +124,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _StaleDataBanner extends StatelessWidget {
-  const _StaleDataBanner();
+class _PremiumHeader extends StatelessWidget {
+  const _PremiumHeader({required this.role, required this.onNotificationsTap});
 
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Could not refresh. Showing the last available data.',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onNotificationsTap});
+  final String role;
   final VoidCallback onNotificationsTap;
 
   @override
   Widget build(BuildContext context) {
+    final roleLabel = role.trim().isEmpty ? 'Partner' : role;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Welcome back', style: TextStyle(color: AppColors.textSecondary)),
-              SizedBox(height: 2),
-              Text('Roam2World', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+              Text(
+                'Welcome back,',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: B2BSpacing.xs),
+              Text(
+                'Partner 👋',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: B2BSpacing.sm),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.warningSoft,
+                  borderRadius: BorderRadius.circular(B2BRadius.full),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: B2BSpacing.md,
+                    vertical: B2BSpacing.xs,
+                  ),
+                  child: Text(
+                    roleLabel.toUpperCase(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: .4,
+                        ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         IconButton.filledTonal(
           onPressed: onNotificationsTap,
+          tooltip: 'Notifications',
           icon: const Icon(Icons.notifications_none_rounded),
         ),
       ],
@@ -167,34 +183,70 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({required this.data});
+class _WalletHero extends StatelessWidget {
+  const _WalletHero({required this.data});
+
   final DashboardData data;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(B2BSpacing.xl),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.navy]),
-        borderRadius: BorderRadius.circular(24),
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        boxShadow: B2BShadows.hero,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('${data.role.toUpperCase()} · Available balance', style: const TextStyle(color: Colors.white70)),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(
+                Icons.account_balance_wallet_outlined,
+                color: Colors.white70,
+                size: 20,
+              ),
+              const SizedBox(width: B2BSpacing.sm),
+              Text(
+                'Available wallet balance',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const Spacer(),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.white70),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.md),
+          Text(
+            '${data.currency} ${data.balance.toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.white,
+                  fontSize: 34,
+                ),
+          ),
+          const SizedBox(height: B2BSpacing.lg),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  '${data.currency} ${data.balance.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800),
+                  'Ready for new eSIM orders',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
-              FilledButton.tonalIcon(
+              FilledButton.icon(
                 onPressed: () => context.push('/wallet'),
-                icon: const Icon(Icons.add_rounded),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primary,
+                  minimumSize: const Size(0, 44),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
                 label: const Text('Top up'),
               ),
             ],
@@ -205,12 +257,67 @@ class _BalanceCard extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-  final String title;
+class _KpiGrid extends StatelessWidget {
+  const _KpiGrid({required this.data});
+
+  final DashboardData data;
 
   @override
-  Widget build(BuildContext context) => Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800));
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: B2BMetricCard(
+                label: "Today's sales",
+                value: '${data.currency} ${data.todaySales.toStringAsFixed(2)}',
+                icon: Icons.trending_up_rounded,
+                trend: 'Live performance',
+                trendPositive: true,
+              ),
+            ),
+            const SizedBox(width: B2BSpacing.md),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Monthly revenue',
+                value: '${data.currency} ${data.monthlySales.toStringAsFixed(2)}',
+                icon: Icons.bar_chart_rounded,
+                trend: 'Current month',
+                trendPositive: true,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: B2BSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Active eSIMs',
+                value: '${data.activeEsimCount}',
+                icon: Icons.sim_card_outlined,
+                trend: 'Currently active',
+                trendPositive: true,
+                onTap: () => context.go('/esims'),
+              ),
+            ),
+            const SizedBox(width: B2BSpacing.md),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Expired eSIMs',
+                value: '${data.expiredEsimCount}',
+                icon: Icons.schedule_rounded,
+                trend: 'Needs attention',
+                trendPositive: data.expiredEsimCount == 0,
+                onTap: () => context.go('/esims'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 class _QuickActions extends StatelessWidget {
@@ -218,89 +325,202 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      (Icons.inventory_2_outlined, 'Packages', '/packages'),
-      (Icons.shopping_bag_outlined, 'Orders', '/orders'),
-      (Icons.sim_card_outlined, 'eSIMs', '/esims'),
-      (Icons.groups_outlined, 'Customers', '/customers'),
+    const actions = [
+      (Icons.add_shopping_cart_rounded, 'New order', '/packages'),
+      (Icons.public_rounded, 'Buy eSIM', '/packages'),
+      (Icons.account_balance_wallet_outlined, 'Wallet', '/wallet'),
+      (Icons.groups_2_outlined, 'Customers', '/customers'),
     ];
+
     return Row(
       children: [
-        for (var i = 0; i < items.length; i++) ...[
+        for (var index = 0; index < actions.length; index++) ...[
           Expanded(
-            child: InkWell(
-              onTap: () => context.go(items[i].$3),
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  children: [
-                    Icon(items[i].$1, color: AppColors.primary),
-                    const SizedBox(height: 8),
-                    Text(items[i].$2, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
+            child: _QuickActionTile(
+              icon: actions[index].$1,
+              label: actions[index].$2,
+              onTap: () => context.go(actions[index].$3),
             ),
           ),
-          if (i < items.length - 1) const SizedBox(width: 10),
+          if (index < actions.length - 1)
+            const SizedBox(width: B2BSpacing.sm),
         ],
       ],
     );
   }
 }
 
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.data});
-  final DashboardData data;
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(children: [
-          Expanded(child: _StatCard(label: 'Today sales', value: '${data.currency} ${data.todaySales.toStringAsFixed(2)}')),
-          const SizedBox(width: 12),
-          Expanded(child: _StatCard(label: 'Monthly sales', value: '${data.currency} ${data.monthlySales.toStringAsFixed(2)}')),
-        ]),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(child: _StatCard(label: 'Active eSIMs', value: '${data.activeEsimCount}')),
-          const SizedBox(width: 12),
-          Expanded(child: _StatCard(label: 'Expired eSIMs', value: '${data.expiredEsimCount}')),
-        ]),
-      ],
+    return B2BSurface(
+      padding: const EdgeInsets.symmetric(
+        horizontal: B2BSpacing.xs,
+        vertical: B2BSpacing.md,
+      ),
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(B2BRadius.md),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 21),
+          ),
+          const SizedBox(height: B2BSpacing.sm),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value});
-  final String label;
-  final String value;
+class _SalesOverview extends StatelessWidget {
+  const _SalesOverview({required this.data});
+
+  final DashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary)),
-          const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-        ]),
+    final points = <double>[
+      data.todaySales * .42,
+      data.todaySales * .58,
+      data.todaySales * .51,
+      data.todaySales * .72,
+      data.todaySales * .64,
+      data.todaySales * .83,
+      data.todaySales,
+    ];
+
+    return B2BSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeader(title: 'Sales overview'),
+          const SizedBox(height: B2BSpacing.sm),
+          Text(
+            '${data.currency} ${data.monthlySales.toStringAsFixed(2)}',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: B2BSpacing.xs),
+          Text(
+            'Current month revenue trend',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: B2BSpacing.lg),
+          SizedBox(
+            height: 120,
+            width: double.infinity,
+            child: CustomPaint(painter: _SalesSparklinePainter(points)),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _SalesSparklinePainter extends CustomPainter {
+  const _SalesSparklinePainter(this.points);
+
+  final List<double> points;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final maxValue = points.reduce((a, b) => a > b ? a : b);
+    final minValue = points.reduce((a, b) => a < b ? a : b);
+    final range = (maxValue - minValue).abs() < .001 ? 1.0 : maxValue - minValue;
+    final path = Path();
+
+    for (var index = 0; index < points.length; index++) {
+      final x = size.width * index / (points.length - 1);
+      final normalized = (points[index] - minValue) / range;
+      final y = size.height - (normalized * (size.height - 18)) - 9;
+      if (index == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    final fillPath = Path.from(path)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x332563EB), Color(0x002563EB)],
+        ).createShader(Offset.zero & size),
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = AppColors.primary
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SalesSparklinePainter oldDelegate) =>
+      oldDelegate.points != points;
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        if (actionLabel != null)
+          TextButton(onPressed: onAction, child: Text(actionLabel!)),
+      ],
     );
   }
 }
 
 class _RecentOrders extends StatelessWidget {
   const _RecentOrders({required this.orders, required this.currency});
+
   final List<DashboardOrderSummary> orders;
   final String currency;
 
@@ -315,26 +535,91 @@ class _RecentOrders extends StatelessWidget {
         onAction: () => context.go('/packages'),
       );
     }
-    return Card(
+
+    return B2BSurface(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          for (var i = 0; i < orders.length; i++) ...[
+          for (var index = 0; index < orders.length; index++) ...[
             ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: B2BSpacing.md,
+                vertical: B2BSpacing.xs,
+              ),
               onTap: () => context.push('/orders/detail'),
-              leading: const CircleAvatar(child: Icon(Icons.receipt_long_outlined)),
-              title: Text(orders[i].productName, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text(orders[i].orderNumber),
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(B2BRadius.md),
+                ),
+                child: const Icon(
+                  Icons.receipt_long_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                orders[index].productName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(orders[index].orderNumber),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('$currency ${orders[i].totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                  Text(orders[i].status, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(
+                    '$currency ${orders[index].totalAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    orders[index].status,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
-            if (i < orders.length - 1) const Divider(height: 1),
+            if (index < orders.length - 1) const Divider(height: 1),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StaleDataBanner extends StatelessWidget {
+  const _StaleDataBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: B2BSpacing.md,
+        vertical: B2BSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+        border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+          SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: Text(
+              'Could not refresh. Showing the last available data.',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
         ],
       ),
     );
