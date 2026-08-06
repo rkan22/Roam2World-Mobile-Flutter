@@ -19,12 +19,18 @@ class DashboardRepository {
       if (cached != null) return cached;
     }
 
-    final data = await _apiClient.get<DashboardData>(
-      ApiEndpoints.mobileDashboard,
-      parser: DashboardData.fromResponse,
-    );
-    _cache.set(data);
-    return data;
+    try {
+      final data = await _apiClient.get<DashboardData>(
+        ApiEndpoints.mobileDashboard,
+        parser: DashboardData.fromResponse,
+      );
+      _cache.set(data);
+      return data;
+    } catch (_) {
+      final stale = _cache.staleValue;
+      if (stale != null) return stale;
+      rethrow;
+    }
   }
 
   void invalidateCache() => _cache.clear();
