@@ -28,7 +28,7 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Roam2World',
+      title: 'Roam2World B2B',
       theme: AppTheme.light(),
       routerConfig: router,
     );
