@@ -31,14 +31,16 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
           final shimmer = Color.lerp(
-            AppColors.surfaceMuted,
-            AppColors.primaryLight,
+            scheme.surfaceContainerHighest,
+            scheme.primaryContainer,
             (_controller.value - .5).abs() * 2,
           )!;
           return Column(
@@ -52,13 +54,9 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: _SkeletonBlock(height: 104, color: shimmer),
-                  ),
+                  Expanded(child: _SkeletonBlock(height: 104, color: shimmer)),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: _SkeletonBlock(height: 104, color: shimmer),
-                  ),
+                  Expanded(child: _SkeletonBlock(height: 104, color: shimmer)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -69,8 +67,8 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
               Center(
                 child: Text(
                   widget.label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -106,7 +104,7 @@ class _SkeletonBlock extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         ),
       ),
     );
@@ -132,7 +130,7 @@ class ContentEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _StateCard(
         icon: icon,
-        iconColor: AppColors.primary,
+        iconColor: Theme.of(context).colorScheme.primary,
         title: title,
         message: message,
         actionLabel: actionLabel,
@@ -181,52 +179,56 @@ class _StateCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Center(
-        child: Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(28),
-          constraints: const BoxConstraints(maxWidth: 420),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 64,
-                width: 64,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(icon, size: 32, color: iconColor),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  height: 1.45,
-                ),
-              ),
-              if (actionLabel != null && onAction != null) ...[
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: onAction,
-                  child: Text(actionLabel!),
-                ),
-              ],
-            ],
-          ),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(28),
+        constraints: const BoxConstraints(maxWidth: 420),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: scheme.outlineVariant),
         ),
-      );
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 64,
+              width: 64,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(icon, size: 32, color: iconColor),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
