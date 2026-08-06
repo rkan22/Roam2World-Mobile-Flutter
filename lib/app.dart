@@ -30,6 +30,8 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
       debugShowCheckedModeBanner: false,
       title: 'Roam2World B2B',
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
       routerConfig: router,
     );
   }
