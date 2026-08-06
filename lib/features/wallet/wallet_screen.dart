@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_metric_card.dart';
+import '../../design_system/components/b2b_surface.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'wallet_data.dart';
 import 'wallet_repository.dart';
@@ -21,6 +24,7 @@ class _WalletScreenState extends State<WalletScreen> {
   bool _showingStaleData = false;
   String? _error;
   WalletData? _wallet;
+  int _selectedFilter = 0;
 
   @override
   void initState() {
@@ -57,6 +61,14 @@ class _WalletScreenState extends State<WalletScreen> {
     return NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
   }
 
+  List<WalletTransaction> _visibleTransactions(WalletData wallet) {
+    return switch (_selectedFilter) {
+      1 => wallet.transactions.where((item) => item.isCredit).toList(),
+      2 => wallet.transactions.where((item) => !item.isCredit).toList(),
+      _ => wallet.transactions,
+    };
+  }
+
   Future<void> _showTopUpRequest(WalletData wallet) async {
     final amountController = TextEditingController();
     final noteController = TextEditingController();
@@ -71,7 +83,9 @@ class _WalletScreenState extends State<WalletScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false) || submitting) return;
+            if (!(formKey.currentState?.validate() ?? false) || submitting) {
+              return;
+            }
             setSheetState(() {
               submitting = true;
               submitError = null;
@@ -94,7 +108,9 @@ class _WalletScreenState extends State<WalletScreen> {
             } on ApiException catch (error) {
               setSheetState(() => submitError = error.message);
             } catch (_) {
-              setSheetState(() => submitError = 'Top-up request could not be created.');
+              setSheetState(
+                () => submitError = 'Top-up request could not be created.',
+              );
             } finally {
               if (sheetContext.mounted) {
                 setSheetState(() => submitting = false);
@@ -104,10 +120,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
-              20,
-              4,
-              20,
-              MediaQuery.viewInsetsOf(context).bottom + 24,
+              B2BSpacing.lg,
+              B2BSpacing.xxs,
+              B2BSpacing.lg,
+              MediaQuery.viewInsetsOf(context).bottom + B2BSpacing.xl,
             ),
             child: Form(
               key: formKey,
@@ -115,40 +131,62 @@ class _WalletScreenState extends State<WalletScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Request wallet top-up', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 8),
+                  Text(
+                    'Request wallet top-up',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: B2BSpacing.xs),
                   const Text(
-                    'Your balance will change only after the request is approved.',
+                    'Your available balance changes after the request is approved.',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: B2BSpacing.lg),
                   TextFormField(
                     controller: amountController,
                     enabled: !submitting,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Amount', prefixText: '${wallet.currency} '),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '${wallet.currency} ',
+                    ),
                     validator: (value) {
                       final amount = double.tryParse(value?.trim() ?? '');
-                      if (amount == null || amount <= 0) return 'Enter an amount greater than zero.';
+                      if (amount == null || amount <= 0) {
+                        return 'Enter an amount greater than zero.';
+                      }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: B2BSpacing.md),
                   TextFormField(
                     controller: noteController,
                     enabled: !submitting,
                     maxLines: 3,
-                    decoration: const InputDecoration(labelText: 'Note (optional)'),
+                    decoration: const InputDecoration(
+                      labelText: 'Note (optional)',
+                    ),
                   ),
                   if (submitError != null) ...[
-                    const SizedBox(height: 12),
-                    Text(submitError!, style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: B2BSpacing.sm),
+                    Text(
+                      submitError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
-                  const SizedBox(height: 18),
+                  const SizedBox(height: B2BSpacing.lg),
                   ElevatedButton(
                     onPressed: submitting ? null : submit,
                     child: submitting
-                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('Send request'),
                   ),
                 ],
@@ -165,75 +203,266 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
-        title: const Text('Wallet'),
-        actions: [IconButton(onPressed: () => _load(forceRefresh: true), icon: const Icon(Icons.refresh_rounded))],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _load(forceRefresh: true),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-          children: [
-            if (_showingStaleData) ...[
-              const _StaleDataBanner(),
-              const SizedBox(height: 14),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () => _load(forceRefresh: true),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              B2BSpacing.lg,
+              B2BSpacing.md,
+              B2BSpacing.lg,
+              B2BSpacing.xxl,
+            ),
+            children: [
+              _Header(
+                onBack: () => context.pop(),
+                onRefresh: () => _load(forceRefresh: true),
+              ),
+              if (_showingStaleData) ...[
+                const SizedBox(height: B2BSpacing.md),
+                const _StaleDataBanner(),
+              ],
+              const SizedBox(height: B2BSpacing.lg),
+              if (_loading)
+                const ContentLoadingState(label: 'Loading wallet...')
+              else if (_error != null && _wallet == null)
+                ContentErrorState(
+                  message: _error!,
+                  onRetry: () => _load(forceRefresh: true),
+                )
+              else if (_wallet != null)
+                ..._content(_wallet!),
             ],
-            if (_loading)
-              const ContentLoadingState(label: 'Loading wallet...')
-            else if (_error != null && _wallet == null)
-              ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
-            else if (_wallet != null)
-              ..._content(_wallet!),
-          ],
+          ),
         ),
       ),
     );
   }
 
   List<Widget> _content(WalletData wallet) {
+    final transactions = _visibleTransactions(wallet);
     return [
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.navy, AppColors.primary], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(wallet.isDealer ? 'Available balance' : 'Available credit', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 10),
-            Text(_money(wallet.availableAmount, wallet.currency), style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(child: _Metric(label: wallet.isDealer ? 'Current balance' : 'Current credit', value: _money(wallet.currentAmount, wallet.currency))),
-                const SizedBox(width: 10),
-                Expanded(child: _Metric(label: wallet.secondaryLabel, value: _money(wallet.secondaryAmount, wallet.currency))),
-              ],
+      _BalanceHero(
+        wallet: wallet,
+        amount: _money(wallet.availableAmount, wallet.currency),
+        onTopUp: () => _showTopUpRequest(wallet),
+      ),
+      const SizedBox(height: B2BSpacing.md),
+      Row(
+        children: [
+          Expanded(
+            child: B2BMetricCard(
+              label: wallet.isDealer ? 'Current balance' : 'Current credit',
+              value: _money(wallet.currentAmount, wallet.currency),
+              icon: Icons.account_balance_wallet_outlined,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: B2BMetricCard(
+              label: wallet.secondaryLabel,
+              value: _money(wallet.secondaryAmount, wallet.currency),
+              icon: wallet.isDealer
+                  ? Icons.trending_down_rounded
+                  : Icons.credit_score_rounded,
+            ),
+          ),
+        ],
       ),
-      const SizedBox(height: 16),
-      ElevatedButton.icon(
-        onPressed: () => _showTopUpRequest(wallet),
-        icon: const Icon(Icons.add_card_rounded),
-        label: const Text('Request top-up'),
+      const SizedBox(height: B2BSpacing.xl),
+      const _SectionHeader(
+        title: 'Recent transactions',
+        subtitle: 'Your latest wallet credits and debits',
       ),
-      const SizedBox(height: 26),
-      const Text('Recent transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 12),
-      if (wallet.transactions.isEmpty)
-        const ContentEmptyState(icon: Icons.receipt_long_outlined, title: 'No transactions yet', message: 'Wallet activity will appear here.')
+      const SizedBox(height: B2BSpacing.sm),
+      _TransactionFilters(
+        selectedIndex: _selectedFilter,
+        onSelected: (index) => setState(() => _selectedFilter = index),
+      ),
+      const SizedBox(height: B2BSpacing.md),
+      if (transactions.isEmpty)
+        const ContentEmptyState(
+          icon: Icons.receipt_long_outlined,
+          title: 'No transactions found',
+          message: 'Wallet activity matching this filter will appear here.',
+        )
       else
-        for (var index = 0; index < wallet.transactions.length; index++) ...[
-          _TransactionTile(transaction: wallet.transactions[index]),
-          if (index != wallet.transactions.length - 1) const SizedBox(height: 10),
+        for (var index = 0; index < transactions.length; index++) ...[
+          _TransactionTile(transaction: transactions[index]),
+          if (index != transactions.length - 1)
+            const SizedBox(height: B2BSpacing.sm),
         ],
     ];
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack, required this.onRefresh});
+
+  final VoidCallback onBack;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        const SizedBox(width: B2BSpacing.sm),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Wallet',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
+              ),
+              SizedBox(height: B2BSpacing.xxs),
+              Text(
+                'Manage your business funds and transaction history',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _BalanceHero extends StatelessWidget {
+  const _BalanceHero({
+    required this.wallet,
+    required this.amount,
+    required this.onTopUp,
+  });
+
+  final WalletData wallet;
+  final String amount;
+  final VoidCallback onTopUp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        boxShadow: B2BShadows.elevated,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: B2BSpacing.sm,
+                  vertical: B2BSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(B2BRadius.pill),
+                ),
+                child: Text(
+                  wallet.role.isEmpty ? 'BUSINESS WALLET' : wallet.role.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .8,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.shield_outlined, color: Colors.white70),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.xl),
+          Text(
+            wallet.isDealer ? 'Available balance' : 'Available credit',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: B2BSpacing.xs),
+          Text(
+            amount,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: B2BSpacing.xl),
+          FilledButton.tonalIcon(
+            onPressed: onTopUp,
+            icon: const Icon(Icons.add_card_rounded),
+            label: const Text('Request top-up'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: B2BSpacing.xxs),
+        Text(subtitle, style: const TextStyle(color: AppColors.textSecondary)),
+      ],
+    );
+  }
+}
+
+class _TransactionFilters extends StatelessWidget {
+  const _TransactionFilters({
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['All', 'Credits', 'Debits'];
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: labels.length,
+        separatorBuilder: (_, _) => const SizedBox(width: B2BSpacing.xs),
+        itemBuilder: (context, index) => ChoiceChip(
+          label: Text(labels[index]),
+          selected: selectedIndex == index,
+          onSelected: (_) => onSelected(index),
+        ),
+      ),
+    );
   }
 }
 
@@ -241,42 +470,28 @@ class _StaleDataBanner extends StatelessWidget {
   const _StaleDataBanner();
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
-        ),
+  Widget build(BuildContext context) => B2BSurface(
+        showShadow: false,
+        backgroundColor: AppColors.warning.withValues(alpha: .1),
+        borderColor: AppColors.warning.withValues(alpha: .35),
         child: const Row(
           children: [
-            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(child: Text('Could not refresh. Showing the last available wallet data.', style: TextStyle(fontWeight: FontWeight.w700))),
+            Icon(Icons.cloud_off_rounded, color: AppColors.warning),
+            SizedBox(width: B2BSpacing.sm),
+            Expanded(
+              child: Text(
+                'Could not refresh. Showing the last available wallet data.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
           ],
         ),
       );
 }
 
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(18)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
-        ]),
-      );
-}
-
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.transaction});
+
   final WalletTransaction transaction;
 
   @override
@@ -284,20 +499,84 @@ class _TransactionTile extends StatelessWidget {
     final positive = transaction.isCredit;
     final color = positive ? AppColors.success : AppColors.danger;
     final sign = positive ? '+' : '-';
-    final date = transaction.createdAt == null ? transaction.status : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal());
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AppColors.border)),
-      child: Row(children: [
-        Container(height: 46, width: 46, decoration: BoxDecoration(color: color.withValues(alpha: .1), borderRadius: BorderRadius.circular(15)), child: Icon(positive ? Icons.add_rounded : Icons.remove_rounded, color: color)),
-        const SizedBox(width: 13),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(transaction.description.isEmpty ? transaction.type : transaction.description, style: const TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4),
-          Text(date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-        ])),
-        Text('$sign${transaction.currency} ${transaction.amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontWeight: FontWeight.w900)),
-      ]),
+    final date = transaction.createdAt == null
+        ? transaction.status
+        : DateFormat('dd MMM yyyy, HH:mm')
+            .format(transaction.createdAt!.toLocal());
+    final title = transaction.description.isEmpty
+        ? _titleCase(transaction.type)
+        : transaction.description;
+
+    return B2BSurface(
+      child: Row(
+        children: [
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(B2BRadius.md),
+            ),
+            child: Icon(
+              positive ? Icons.south_west_rounded : Icons.north_east_rounded,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: B2BSpacing.xxs),
+                Text(
+                  date.isEmpty ? 'Recently' : date,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: B2BSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$sign${transaction.currency} ${transaction.amount.toStringAsFixed(2)}',
+                style: TextStyle(color: color, fontWeight: FontWeight.w900),
+              ),
+              if (transaction.status.isNotEmpty) ...[
+                const SizedBox(height: B2BSpacing.xxs),
+                Text(
+                  _titleCase(transaction.status),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
+}
+
+String _titleCase(String value) {
+  final normalized = value.trim().replaceAll('_', ' ');
+  if (normalized.isEmpty) return 'Transaction';
+  return normalized
+      .split(' ')
+      .where((part) => part.isNotEmpty)
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+      .join(' ');
 }
