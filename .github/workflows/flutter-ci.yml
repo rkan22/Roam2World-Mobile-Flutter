@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - agent/release-hardening-v1
+      - agent/polish-adaptive-v1
 
 permissions:
   contents: read
