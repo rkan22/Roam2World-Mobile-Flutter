@@ -35,18 +35,24 @@ class PackagesRepository {
       if (cached != null) return cached;
     }
 
-    final catalog = await _apiClient.get<PackageCatalog>(
-      ApiEndpoints.mobilePackages,
-      queryParameters: {
-        'limit': limit,
-        if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
-        if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
-        if (normalizedType.isNotEmpty) 'package_type': normalizedType,
-      },
-      parser: PackageCatalog.fromResponse,
-    );
-    cache.set(catalog);
-    return catalog;
+    try {
+      final catalog = await _apiClient.get<PackageCatalog>(
+        ApiEndpoints.mobilePackages,
+        queryParameters: {
+          'limit': limit,
+          if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
+          if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
+          if (normalizedType.isNotEmpty) 'package_type': normalizedType,
+        },
+        parser: PackageCatalog.fromResponse,
+      );
+      cache.set(catalog);
+      return catalog;
+    } catch (_) {
+      final stale = cache.staleValue;
+      if (stale != null) return stale;
+      rethrow;
+    }
   }
 
   void invalidateCache() {
