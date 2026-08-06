@@ -12,8 +12,10 @@ class DashboardRepository {
   );
 
   final ApiClient _apiClient;
+  bool lastFetchUsedStale = false;
 
   Future<DashboardData> fetchDashboard({bool forceRefresh = false}) async {
+    lastFetchUsedStale = false;
     if (!forceRefresh) {
       final cached = _cache.value;
       if (cached != null) return cached;
@@ -28,7 +30,10 @@ class DashboardRepository {
       return data;
     } catch (_) {
       final stale = _cache.staleValue;
-      if (stale != null) return stale;
+      if (stale != null) {
+        lastFetchUsedStale = true;
+        return stale;
+      }
       rethrow;
     }
   }
