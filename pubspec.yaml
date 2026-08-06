@@ -1,5 +1,5 @@
 name: roam2world_mobile_flutter
-description: "Roam2World mobile workspace for eSIM sales, orders, wallet and activation management."
+description: "Roam2World B2B mobile application for reseller and dealer operations."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.8
   dio: ^5.10.0
   flutter_secure_storage: ^10.3.1
