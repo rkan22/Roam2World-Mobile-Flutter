@@ -8,11 +8,16 @@ class TimedCache<T> {
   T? get value {
     final storedAt = _storedAt;
     if (_value == null || storedAt == null) return null;
-    if (DateTime.now().difference(storedAt) > ttl) {
-      clear();
-      return null;
-    }
+    if (DateTime.now().difference(storedAt) > ttl) return null;
     return _value;
+  }
+
+  T? get staleValue => _value;
+
+  bool get isExpired {
+    final storedAt = _storedAt;
+    if (_value == null || storedAt == null) return true;
+    return DateTime.now().difference(storedAt) > ttl;
   }
 
   void set(T value) {
