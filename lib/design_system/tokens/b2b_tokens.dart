@@ -19,6 +19,7 @@ abstract final class B2BRadius {
   static const double lg = 20;
   static const double xl = 24;
   static const double pill = 999;
+  static const double full = pill;
 }
 
 abstract final class B2BMotion {
@@ -42,6 +43,8 @@ abstract final class B2BShadows {
       offset: Offset(0, 14),
     ),
   ];
+
+  static const List<BoxShadow> hero = elevated;
 }
 
 abstract final class B2BGradients {
