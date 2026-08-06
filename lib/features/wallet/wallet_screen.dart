@@ -18,6 +18,7 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final _repository = WalletRepository();
   bool _loading = true;
+  bool _showingStaleData = false;
   String? _error;
   WalletData? _wallet;
 
@@ -27,15 +28,20 @@ class _WalletScreenState extends State<WalletScreen> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
-      _loading = true;
+      _loading = _wallet == null;
       _error = null;
     });
     try {
-      final wallet = await _repository.fetchWallet();
+      final wallet = await _repository.fetchWallet(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
-      setState(() => _wallet = wallet);
+      setState(() {
+        _wallet = wallet;
+        _showingStaleData = _repository.lastFetchUsedStale;
+      });
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -162,18 +168,22 @@ class _WalletScreenState extends State<WalletScreen> {
       appBar: AppBar(
         leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
         title: const Text('Wallet'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [IconButton(onPressed: () => _load(forceRefresh: true), icon: const Icon(Icons.refresh_rounded))],
       ),
       body: RefreshIndicator(
-        onRefresh: _load,
+        onRefresh: () => _load(forceRefresh: true),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
+            if (_showingStaleData) ...[
+              const _StaleDataBanner(),
+              const SizedBox(height: 14),
+            ],
             if (_loading)
               const ContentLoadingState(label: 'Loading wallet...')
-            else if (_error != null)
-              ContentErrorState(message: _error!, onRetry: _load)
+            else if (_error != null && _wallet == null)
+              ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
             else if (_wallet != null)
               ..._content(_wallet!),
           ],
@@ -225,6 +235,27 @@ class _WalletScreenState extends State<WalletScreen> {
         ],
     ];
   }
+}
+
+class _StaleDataBanner extends StatelessWidget {
+  const _StaleDataBanner();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+            SizedBox(width: 10),
+            Expanded(child: Text('Could not refresh. Showing the last available wallet data.', style: TextStyle(fontWeight: FontWeight.w700))),
+          ],
+        ),
+      );
 }
 
 class _Metric extends StatelessWidget {
