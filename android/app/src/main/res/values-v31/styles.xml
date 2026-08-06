@@ -4,7 +4,6 @@
         <item name="android:windowSplashScreenBackground">@color/r2w_navy</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/r2w_navy</item>
-        <item name="android:postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 
     <style name="NormalTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
