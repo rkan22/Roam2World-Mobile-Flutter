@@ -1,0 +1,12 @@
+name: roam_lpa_core
+description: Reusable transport-neutral LPA core boundary for Roam2World and NekokoLPA2 integration.
+publish_to: 'none'
+version: 0.1.0
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  meta: ^1.16.0
+
+dev_dependencies:
+  test: ^1.25.0
