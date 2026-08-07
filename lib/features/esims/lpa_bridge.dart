@@ -38,7 +38,7 @@ class LpaBridge {
 
     try {
       final result = await _channel.invokeMethod<Map<Object?, Object?>>('getCapability');
-      if (result == null) throw const PlatformException(code: 'EMPTY_CAPABILITY');
+      if (result == null) throw PlatformException(code: 'EMPTY_CAPABILITY');
       return LpaCapability.fromMap(result);
     } on PlatformException catch (error) {
       return LpaCapability(
