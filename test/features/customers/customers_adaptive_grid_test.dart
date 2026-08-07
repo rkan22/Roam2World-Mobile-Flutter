@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:roam2world/features/customers/widgets/customers_adaptive_grid.dart';
+import 'package:roam2world_mobile_flutter/features/customers/widgets/customers_adaptive_grid.dart';
 
 void main() {
   Future<void> pumpAtWidth(
