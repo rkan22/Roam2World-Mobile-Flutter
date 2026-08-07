@@ -2,9 +2,13 @@
 library;
 
 export 'src/activation_code.dart';
+export 'src/apdu_es10_port.dart';
+export 'src/apdu_session.dart';
 export 'src/der_tlv.dart';
+export 'src/es10_command_codec.dart';
 export 'src/es10_port.dart';
 export 'src/es9_client.dart';
+export 'src/euicc_channel.dart';
 export 'src/json_rsp_codec.dart';
 export 'src/profile_download_orchestrator.dart';
 export 'src/rsp_codec.dart';
@@ -38,10 +42,4 @@ abstract interface class LpaTransport {
   LpaTransportKind get kind;
   Future<LpaCapability> capability();
   Future<LpaInstallResult> install(LpaInstallRequest request);
-}
-
-abstract interface class EuiccChannel {
-  Future<void> open();
-  Future<List<int>> transmit(List<int> apdu);
-  Future<void> close();
 }
