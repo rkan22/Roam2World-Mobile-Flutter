@@ -50,7 +50,7 @@ class AndroidOmapiEuiccChannel implements EuiccChannel {
         'getEmbeddedApduCapability',
       );
       if (response == null) {
-        throw const PlatformException(code: 'EMPTY_OMAPI_CAPABILITY');
+        throw PlatformException(code: 'EMPTY_OMAPI_CAPABILITY');
       }
       return EmbeddedApduCapability.fromMap(response);
     } on PlatformException catch (error) {
@@ -75,7 +75,7 @@ class AndroidOmapiEuiccChannel implements EuiccChannel {
   @override
   Future<void> open() async {
     if (!Platform.isAndroid) {
-      throw const UnsupportedError('Android OMAPI is only available on Android.');
+      throw UnsupportedError('Android OMAPI is only available on Android.');
     }
     await _channel.invokeMethod<Map<Object?, Object?>>('openEuiccChannel');
     _open = true;
@@ -94,7 +94,7 @@ class AndroidOmapiEuiccChannel implements EuiccChannel {
       <String, Object?>{'apdu': Uint8List.fromList(apdu)},
     );
     if (response == null) {
-      throw const PlatformException(
+      throw PlatformException(
         code: 'EMPTY_APDU_RESPONSE',
         message: 'The eUICC returned no APDU response.',
       );
