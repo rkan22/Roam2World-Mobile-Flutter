@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telephony.euicc.DownloadableSubscription
@@ -18,6 +19,7 @@ class MainActivity : FlutterActivity() {
         private const val LPA_CHANNEL = "com.roam2world.mobile/lpa"
         private const val ACTION_ESIM_DOWNLOAD = "com.roam2world.mobile.ESIM_DOWNLOAD_RESULT"
         private const val RESOLUTION_REQUEST_CODE = 4107
+        private const val NEKOKO_PACKAGE = "ee.nekoko.nlpa2"
     }
 
     private var pendingInstallResult: MethodChannel.Result? = null
@@ -60,19 +62,28 @@ class MainActivity : FlutterActivity() {
                         val switchAfterDownload = call.argument<Boolean>("switchAfterDownload") ?: false
                         installActivationCode(activationCode, switchAfterDownload, result)
                     }
+                    "handoffToNekoko" -> {
+                        val activationCode = call.argument<String>("activationCode").orEmpty().trim()
+                        handoffToNekoko(activationCode, result)
+                    }
                     else -> result.notImplemented()
                 }
             }
     }
 
     private fun getLpaCapability(): Map<String, Any> {
+        val nekokoAvailable = isNekokoAvailable()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return mapOf(
                 "platform" to "android",
                 "esimSupported" to false,
                 "directInstallSupported" to false,
-                "transport" to "none",
-                "reason" to "Android 9 or newer is required for platform eSIM support.",
+                "transport" to if (nekokoAvailable) "nekoko_deeplink" else "none",
+                "nekokoAvailable" to nekokoAvailable,
+                "reason" to if (nekokoAvailable)
+                    "Android system LPA requires Android 9 or newer. NekokoLPA2 handoff is available."
+                else
+                    "Android 9 or newer is required for platform eSIM support.",
             )
         }
 
@@ -82,12 +93,55 @@ class MainActivity : FlutterActivity() {
             "platform" to "android",
             "esimSupported" to enabled,
             "directInstallSupported" to enabled,
-            "transport" to if (enabled) "android_system_lpa" else "none",
-            "reason" to if (enabled)
-                "Android system eSIM installation is available. The system may ask for user approval."
-            else
-                "No enabled eUICC was detected on this device.",
+            "transport" to when {
+                enabled -> "android_system_lpa"
+                nekokoAvailable -> "nekoko_deeplink"
+                else -> "none"
+            },
+            "nekokoAvailable" to nekokoAvailable,
+            "reason" to when {
+                enabled && nekokoAvailable -> "Android system eSIM installation is available. NekokoLPA2 is also available as an alternate transport."
+                enabled -> "Android system eSIM installation is available. The system may ask for user approval."
+                nekokoAvailable -> "No enabled system eUICC was detected, but NekokoLPA2 can receive this activation code."
+                else -> "No enabled eUICC or NekokoLPA2 transport was detected on this device."
+            },
         )
+    }
+
+    private fun isNekokoAvailable(): Boolean {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("lpa:1\$example.invalid\$probe"))
+            .setPackage(NEKOKO_PACKAGE)
+        return intent.resolveActivity(packageManager) != null
+    }
+
+    private fun handoffToNekoko(activationCode: String, result: MethodChannel.Result) {
+        if (activationCode.isBlank()) {
+            result.error("INVALID_ACTIVATION_CODE", "Activation code is empty.", null)
+            return
+        }
+        val normalized = if (activationCode.startsWith("LPA:", ignoreCase = true)) {
+            activationCode
+        } else {
+            "LPA:$activationCode"
+        }
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalized))
+            .setPackage(NEKOKO_PACKAGE)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (intent.resolveActivity(packageManager) == null) {
+            result.error("NEKOKO_UNAVAILABLE", "NekokoLPA2 is not installed or cannot handle LPA links.", null)
+            return
+        }
+        try {
+            startActivity(intent)
+            result.success(
+                mapOf(
+                    "status" to "handed_off",
+                    "transport" to "nekoko_deeplink",
+                ),
+            )
+        } catch (error: Throwable) {
+            result.error("NEKOKO_LAUNCH_FAILED", error.message ?: error.javaClass.simpleName, null)
+        }
     }
 
     private fun installActivationCode(
