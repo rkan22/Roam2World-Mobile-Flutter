@@ -5,6 +5,7 @@
 - [x] Android application ID and namespace are `com.roam2world.b2b`.
 - [x] iOS bundle identifier is `com.roam2world.b2b`.
 - [x] App display name is `Roam2World B2B`.
+- [x] Production API default is `https://roam2world-panels-backend.onrender.com`.
 - [x] Production API URL uses HTTPS and is not a local address.
 - [x] Android release builds include internet access.
 - [x] Android backups are disabled for sensitive B2B app data.
@@ -13,8 +14,9 @@
 - [x] Signing secrets and keystores are ignored and must not be committed.
 - [x] Android launcher icon density files exist.
 - [x] iOS AppIcon manifest includes the 1024x1024 marketing icon.
-- [x] Flutter formatting, analysis, tests, and Android debug build are part of CI.
+- [x] Flutter formatting, analysis, tests, and Android production-config debug build are part of CI.
 - [x] A signed Android App Bundle build script validates signing inputs and outputs an artifact checksum.
+- [x] A production smoke-test runner keeps credentials local and supports explicit opt-in test purchase.
 
 ## Required before an internal store upload
 
@@ -27,7 +29,9 @@
 - [ ] Configure the Apple distribution certificate, App Store provisioning profile, and team.
 - [ ] Review app and dependency usage for Apple required-reason APIs, then add or update `PrivacyInfo.xcprivacy` with accurate declarations.
 - [ ] Archive and install a TestFlight build on a physical iPhone and iPad.
-- [ ] Verify login, dashboard, package purchase, order history, wallet, eSIM details, and logout against production API configuration.
+- [ ] Run `TOKEN="ACCESS_TOKEN" bash tool/smoke_test_production.sh` and verify health, provider health, wallet, categories, packages, and orders.
+- [ ] With an approved low-risk Worldmove package, run `ALLOW_PURCHASE=true PACKAGE_ID="..." TOKEN="..." bash tool/smoke_test_production.sh` and verify the returned order in the app.
+- [ ] Verify login, dashboard, package purchase, order history, wallet, eSIM details/QR-LPA, and logout against production.
 - [ ] Verify Light, Dark, and System appearance modes on phone and tablet.
 - [ ] Verify offline, expired-session, slow-network, and server-error states.
 
@@ -45,12 +49,19 @@
 
 ## Release decision
 
-- [ ] Latest `main` CI is green.
-- [ ] No unresolved P0/P1 defects.
-- [ ] Production API smoke test is signed off.
+- [x] Latest `main` CI is green on production API configuration (`Flutter CI #265`).
+- [ ] No unresolved P0/P1 defects found during physical-device smoke testing.
+- [ ] Production API smoke test is signed off with the real test account.
 - [ ] Signed Android and iOS artifacts are reproducible.
 - [ ] Version name and build number are incremented before each subsequent upload.
 
-## Current blocker
+## Remaining external prerequisites
 
-GitHub Actions is active, but commits and pull-request events created through the connected GitHub App are not creating workflow runs. Trigger CI with a user-authored push or run the workflow manually from GitHub Actions. Do not consider a release candidate verified until formatting, analysis, tests, and the Android build run successfully on the latest commit.
+The repository-side release work is complete enough for a release candidate. The remaining checks require credentials or platform assets that must stay outside source control:
+
+1. A test-account access token, generated locally after login, for the authenticated production smoke test.
+2. Android upload keystore plus `key.properties` for the signed AAB.
+3. Apple Developer distribution certificate/provisioning/team configuration for TestFlight.
+4. Final store artwork, screenshots, privacy/support URLs, and store privacy declarations.
+
+Do not commit passwords, access tokens, keystores, signing passwords, Apple certificates, or private keys.

@@ -35,6 +35,12 @@ jobs:
       - name: Parse Dart sources
         run: dart format --output=none lib test
 
+      - name: Validate release scripts
+        run: |
+          bash -n tool/validate_release_config.sh
+          bash -n tool/build_android_release.sh
+          bash -n tool/smoke_test_production.sh
+
       - name: Validate release configuration
         run: bash tool/validate_release_config.sh
 
