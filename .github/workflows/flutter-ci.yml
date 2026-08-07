@@ -5,8 +5,8 @@ on:
   push:
     branches:
       - main
-      - agent/release-hardening-v1
-      - agent/polish-adaptive-v1
+      - 'agent/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -35,29 +35,8 @@ jobs:
       - name: Parse Dart sources
         run: dart format --output=none lib test
 
-      - name: Validate release identity
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -F 'applicationId = "com.roam2world.b2b"' android/app/build.gradle.kts
-          grep -F 'namespace = "com.roam2world.b2b"' android/app/build.gradle.kts
-          grep -F 'android:label="Roam2World B2B"' android/app/src/main/AndroidManifest.xml
-          grep -F 'PRODUCT_BUNDLE_IDENTIFIER=com.roam2world.b2b' ios/Flutter/Release.xcconfig
-          grep -F '<string>Roam2World B2B</string>' ios/Runner/Info.plist
-          grep -F "static const String appName = 'Roam2World B2B';" lib/core/config/app_environment.dart
-
-      - name: Validate production API URL
-        shell: bash
-        run: |
-          set -euo pipefail
-          case "$PRODUCTION_API_BASE_URL" in
-            https://*) ;;
-            *) echo "Production API must use HTTPS" >&2; exit 1 ;;
-          esac
-          if [[ "$PRODUCTION_API_BASE_URL" =~ (localhost|127\.0\.0\.1|10\.0\.2\.2|\.local)(:|/|$) ]]; then
-            echo "Production API cannot target a local host" >&2
-            exit 1
-          fi
+      - name: Validate release configuration
+        run: bash tool/validate_release_config.sh
 
       - name: Analyze project
         run: flutter analyze --no-fatal-infos

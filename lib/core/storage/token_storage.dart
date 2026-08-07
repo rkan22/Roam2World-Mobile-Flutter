@@ -4,7 +4,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TokenStorage {
   TokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+      : _storage = storage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(
+                storageNamespace: 'roam2world_b2b_auth',
+              ),
+              iOptions: IOSOptions(
+                accessibility: KeychainAccessibility.unlocked_this_device,
+                accountName: 'com.roam2world.b2b.auth',
+              ),
+            );
 
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';

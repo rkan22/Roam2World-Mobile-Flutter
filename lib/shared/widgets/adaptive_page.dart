@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Constrains business screens on tablets and desktop-sized windows while
@@ -44,30 +46,41 @@ class AdaptiveGrid extends StatelessWidget {
     super.key,
     required this.children,
     this.minItemWidth = 220,
+    this.maxColumns,
     this.spacing = 16,
-    this.runSpacing = 16,
+    this.runSpacing,
+    this.gap,
   });
 
   final List<Widget> children;
   final double minItemWidth;
+  final int? maxColumns;
   final double spacing;
-  final double runSpacing;
+  final double? runSpacing;
+  final double? gap;
 
   @override
   Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
     return LayoutBuilder(
       builder: (context, constraints) {
+        final resolvedSpacing = gap ?? spacing;
         final availableWidth = constraints.maxWidth;
-        final columnCount = ((availableWidth + spacing) /
-                (minItemWidth + spacing))
-            .floor()
-            .clamp(1, children.length);
+        final calculatedColumns = ((availableWidth + resolvedSpacing) /
+                (minItemWidth + resolvedSpacing))
+            .floor();
+        final columnLimit = maxColumns == null
+            ? children.length
+            : math.min(children.length, maxColumns!);
+        final columnCount = calculatedColumns.clamp(1, columnLimit);
         final itemWidth =
-            (availableWidth - (spacing * (columnCount - 1))) / columnCount;
+            (availableWidth - (resolvedSpacing * (columnCount - 1))) /
+                columnCount;
 
         return Wrap(
-          spacing: spacing,
-          runSpacing: runSpacing,
+          spacing: resolvedSpacing,
+          runSpacing: runSpacing ?? resolvedSpacing,
           children: [
             for (final child in children)
               SizedBox(width: itemWidth, child: child),
