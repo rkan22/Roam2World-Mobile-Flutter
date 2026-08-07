@@ -2,7 +2,10 @@
 library;
 
 export 'src/activation_code.dart';
+export 'src/es10_port.dart';
 export 'src/es9_client.dart';
+export 'src/profile_download_orchestrator.dart';
+export 'src/rsp_codec.dart';
 
 enum LpaTransportKind { androidSystem, nekokoExternal, nekokoEmbedded }
 
