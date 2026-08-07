@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import '../roam_lpa_core.dart' show EuiccChannel;
+import 'euicc_channel.dart';
 
 class ApduResponse {
   const ApduResponse({required this.data, required this.sw1, required this.sw2});
