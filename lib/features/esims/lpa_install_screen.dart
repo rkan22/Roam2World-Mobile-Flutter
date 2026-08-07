@@ -7,6 +7,7 @@ import 'lpa_bridge.dart';
 class LpaInstallScreen extends StatefulWidget {
   const LpaInstallScreen({super.key, required this.esim});
   final MobileEsim esim;
+
   @override
   State<LpaInstallScreen> createState() => _LpaInstallScreenState();
 }
@@ -17,6 +18,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   bool _checking = true;
   bool _installing = false;
   bool _installed = false;
+  bool _handedOff = false;
   String? _installError;
 
   @override
@@ -24,6 +26,10 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     super.initState();
     _checkCapability();
   }
+
+  String get _activationCode => widget.esim.activationCode.isNotEmpty
+      ? widget.esim.activationCode
+      : widget.esim.qrCode;
 
   Future<void> _checkCapability() async {
     setState(() {
@@ -39,23 +45,32 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   }
 
   Future<void> _install() async {
-    final code = widget.esim.activationCode.isNotEmpty
-        ? widget.esim.activationCode
-        : widget.esim.qrCode;
+    await _runOperation(() => _bridge.installActivationCode(_activationCode));
+  }
+
+  Future<void> _handoffToNekoko() async {
+    await _runOperation(() => _bridge.handoffToNekoko(_activationCode));
+  }
+
+  Future<void> _runOperation(Future<LpaInstallResult> Function() action) async {
     setState(() {
       _installing = true;
       _installError = null;
+      _handedOff = false;
     });
     try {
-      final result = await _bridge.installActivationCode(code);
+      final result = await action();
       if (!mounted) return;
-      setState(() => _installed = result.installed);
+      setState(() {
+        _installed = result.installed;
+        _handedOff = result.handedOff;
+      });
     } on LpaBridgeException catch (error) {
       if (!mounted) return;
       setState(() => _installError = error.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _installError = 'eSIM profili yüklenemedi.');
+      setState(() => _installError = 'eSIM işlemi tamamlanamadı.');
     } finally {
       if (mounted) setState(() => _installing = false);
     }
@@ -99,13 +114,33 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 icon: const Icon(Icons.done_rounded),
                 label: const Text('Tamam'),
               ),
+            ] else if (_handedOff) ...[
+              const Icon(Icons.open_in_new_rounded, size: 84, color: AppColors.primary),
+              const SizedBox(height: 18),
+              const Text(
+                'NekokoLPA2 açıldı',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Aktivasyon kodu NekokoLPA2 uygulamasına aktarıldı. Kurulumun sonucunu NekokoLPA2 içinde tamamlayın. Roam2World bu aşamada profili yüklenmiş saymaz.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Roam2World’a Dön'),
+              ),
             ] else if (capability != null) ...[
               Icon(
-                capability.esimSupported
+                capability.esimSupported || capability.nekokoAvailable
                     ? Icons.sim_card_rounded
                     : Icons.info_outline_rounded,
                 size: 84,
-                color: capability.esimSupported
+                color: capability.esimSupported || capability.nekokoAvailable
                     ? AppColors.primary
                     : AppColors.textSecondary,
               ),
@@ -113,9 +148,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
               Text(
                 capability.directInstallSupported
                     ? 'eSIM kuruluma hazır'
-                    : (capability.esimSupported
-                        ? 'eSIM destekleniyor'
-                        : 'Doğrudan LPA kullanılamıyor'),
+                    : capability.nekokoAvailable
+                        ? 'NekokoLPA2 transport hazır'
+                        : 'Doğrudan LPA kullanılamıyor',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
               ),
@@ -131,7 +166,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
               if (capability.transport != 'none') ...[
                 const SizedBox(height: 10),
                 Text(
-                  'Transport: ${capability.transport}',
+                  'Önerilen transport: ${capability.transport}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
@@ -168,10 +203,18 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                         )
                       : const Icon(Icons.install_mobile_rounded),
                   label: Text(
-                    _installing ? 'Android onayı bekleniyor…' : 'Kurulumu Başlat',
+                    _installing ? 'Android onayı bekleniyor…' : 'Android ile Kur',
                   ),
-                )
-              else ...[
+                ),
+              if (capability.nekokoAvailable) ...[
+                if (capability.directInstallSupported) const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: _installing ? null : _handoffToNekoko,
+                  icon: const Icon(Icons.open_in_new_rounded),
+                  label: const Text('NekokoLPA2 ile Devam Et'),
+                ),
+              ],
+              if (!capability.directInstallSupported && !capability.nekokoAvailable) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -192,7 +235,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 ),
               ],
             ],
-            if (!_installed) ...[
+            if (!_installed && !_handedOff) ...[
               const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: _installing ? null : () => Navigator.of(context).pop(),

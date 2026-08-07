@@ -30,6 +30,11 @@
             android:value="2" />
     </application>
     <queries>
+        <package android:name="ee.nekoko.nlpa2" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="lpa" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

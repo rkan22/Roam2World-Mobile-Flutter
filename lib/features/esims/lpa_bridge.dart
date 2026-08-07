@@ -9,6 +9,7 @@ class LpaCapability {
     required this.directInstallSupported,
     required this.reason,
     this.transport = 'none',
+    this.nekokoAvailable = false,
   });
 
   final String platform;
@@ -16,6 +17,7 @@ class LpaCapability {
   final bool directInstallSupported;
   final String reason;
   final String transport;
+  final bool nekokoAvailable;
 
   factory LpaCapability.fromMap(Map<Object?, Object?> map) => LpaCapability(
         platform: map['platform']?.toString() ?? 'unknown',
@@ -23,6 +25,7 @@ class LpaCapability {
         directInstallSupported: map['directInstallSupported'] == true,
         reason: map['reason']?.toString() ?? '',
         transport: map['transport']?.toString() ?? 'none',
+        nekokoAvailable: map['nekokoAvailable'] == true,
       );
 }
 
@@ -33,6 +36,7 @@ class LpaInstallResult {
   final String transport;
 
   bool get installed => status == 'installed';
+  bool get handedOff => status == 'handed_off';
 
   factory LpaInstallResult.fromMap(Map<Object?, Object?> map) => LpaInstallResult(
         status: map['status']?.toString() ?? 'unknown',
@@ -89,30 +93,46 @@ class LpaBridge {
     String activationCode, {
     bool switchAfterDownload = false,
   }) async {
+    return _invokeInstallMethod(
+      'installActivationCode',
+      activationCode,
+      extraArguments: <String, Object?>{'switchAfterDownload': switchAfterDownload},
+    );
+  }
+
+  Future<LpaInstallResult> handoffToNekoko(String activationCode) {
+    return _invokeInstallMethod('handoffToNekoko', activationCode);
+  }
+
+  Future<LpaInstallResult> _invokeInstallMethod(
+    String method,
+    String activationCode, {
+    Map<String, Object?> extraArguments = const <String, Object?>{},
+  }) async {
     if (activationCode.trim().isEmpty) {
       throw const LpaBridgeException('INVALID_ACTIVATION_CODE', 'Activation code is empty.');
     }
 
     try {
       final result = await _channel.invokeMethod<Map<Object?, Object?>>(
-        'installActivationCode',
+        method,
         <String, Object?>{
           'activationCode': activationCode.trim(),
-          'switchAfterDownload': switchAfterDownload,
+          ...extraArguments,
         },
       );
       if (result == null) {
-        throw const LpaBridgeException('EMPTY_RESULT', 'The native LPA returned no installation result.');
+        throw const LpaBridgeException('EMPTY_RESULT', 'The native LPA returned no result.');
       }
       return LpaInstallResult.fromMap(result);
     } on PlatformException catch (error) {
       throw LpaBridgeException(
         error.code,
-        error.message ?? 'The eSIM profile could not be installed.',
+        error.message ?? 'The eSIM operation could not be completed.',
         details: error.details,
       );
     } on MissingPluginException {
-      throw const LpaBridgeException('MISSING_PLUGIN', 'Native LPA installation is not available in this build.');
+      throw const LpaBridgeException('MISSING_PLUGIN', 'Native LPA integration is not available in this build.');
     }
   }
 }
