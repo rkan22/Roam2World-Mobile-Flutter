@@ -27,9 +27,9 @@ void main() {
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
 
-    expect(find.text('System'), findsOneWidget);
-    expect(find.text('Light'), findsOneWidget);
-    expect(find.text('Dark'), findsOneWidget);
+    expect(find.widgetWithText(RadioListTile<ThemeMode>, 'System'), findsOneWidget);
+    expect(find.widgetWithText(RadioListTile<ThemeMode>, 'Light'), findsOneWidget);
+    expect(find.widgetWithText(RadioListTile<ThemeMode>, 'Dark'), findsOneWidget);
     expect(find.text('Follow device appearance'), findsOneWidget);
   });
 }
