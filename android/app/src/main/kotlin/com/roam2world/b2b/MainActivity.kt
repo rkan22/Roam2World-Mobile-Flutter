@@ -22,6 +22,7 @@ class MainActivity : FlutterActivity() {
         private const val NEKOKO_PACKAGE = "ee.nekoko.nlpa2"
     }
 
+    private val omapiBridge by lazy { OmapiEuiccBridge(this) }
     private var pendingInstallResult: MethodChannel.Result? = null
     private var callbackPendingIntent: PendingIntent? = null
 
@@ -48,6 +49,7 @@ class MainActivity : FlutterActivity() {
         pendingInstallResult?.error("ACTIVITY_CLOSED", "The installation activity was closed.", null)
         pendingInstallResult = null
         callbackPendingIntent = null
+        omapiBridge.shutdown()
         super.onDestroy()
     }
 
@@ -57,6 +59,10 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getCapability" -> result.success(getLpaCapability())
+                    "getEmbeddedApduCapability" -> omapiBridge.capability(result)
+                    "openEuiccChannel" -> omapiBridge.open(result)
+                    "transmitEuiccApdu" -> omapiBridge.transmit(call.argument<ByteArray>("apdu"), result)
+                    "closeEuiccChannel" -> omapiBridge.close(result)
                     "installActivationCode" -> {
                         val activationCode = call.argument<String>("activationCode").orEmpty().trim()
                         val switchAfterDownload = call.argument<Boolean>("switchAfterDownload") ?: false
