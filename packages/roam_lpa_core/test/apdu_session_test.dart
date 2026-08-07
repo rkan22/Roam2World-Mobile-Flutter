@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roam_lpa_core/roam_lpa_core.dart';
 
@@ -27,7 +29,9 @@ void main() {
     final channel = _FakeChannel()..response = <int>[0x01, 0x02, 0x90, 0x00];
     final session = EuiccApduSession(channel);
 
-    final result = await session.run((s) => s.transmit(Uint8List.fromList(<int>[0x80, 0xCA, 0x00, 0x00])));
+    final result = await session.run(
+      (s) => s.transmit(Uint8List.fromList(<int>[0x80, 0xCA, 0x00, 0x00])),
+    );
 
     expect(result.data, <int>[0x01, 0x02]);
     expect(result.statusWord, 0x9000);
@@ -39,7 +43,9 @@ void main() {
     final session = EuiccApduSession(channel);
 
     expect(
-      () => session.run((s) => s.transmit(Uint8List.fromList(<int>[0x00, 0xA4, 0x04, 0x00]))),
+      () => session.run(
+        (s) => s.transmit(Uint8List.fromList(<int>[0x00, 0xA4, 0x04, 0x00])),
+      ),
       throwsA(isA<ApduException>()),
     );
   });
