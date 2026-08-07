@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Constrains business screens on tablets and desktop-sized windows while
@@ -59,6 +61,8 @@ class AdaptiveGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final resolvedSpacing = gap ?? spacing;
@@ -66,11 +70,10 @@ class AdaptiveGrid extends StatelessWidget {
         final calculatedColumns = ((availableWidth + resolvedSpacing) /
                 (minItemWidth + resolvedSpacing))
             .floor();
-        final columnLimit = maxColumns ?? children.length;
-        final columnCount = calculatedColumns.clamp(
-          1,
-          children.isEmpty ? 1 : children.length.clamp(1, columnLimit),
-        );
+        final columnLimit = maxColumns == null
+            ? children.length
+            : math.min(children.length, maxColumns!);
+        final columnCount = calculatedColumns.clamp(1, columnLimit);
         final itemWidth =
             (availableWidth - (resolvedSpacing * (columnCount - 1))) /
                 columnCount;
