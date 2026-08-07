@@ -20,6 +20,7 @@ require_file pubspec.yaml
 require_file android/app/build.gradle.kts
 require_file android/app/src/main/AndroidManifest.xml
 require_file ios/Flutter/Release.xcconfig
+require_file ios/Runner.xcodeproj/project.pbxproj
 require_file ios/Runner/Info.plist
 require_file ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
 require_file lib/core/config/app_environment.dart
@@ -41,8 +42,10 @@ require_match 'android.permission.INTERNET' android/app/src/main/AndroidManifest
 require_match 'android:label="Roam2World B2B"' android/app/src/main/AndroidManifest.xml
 require_match 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
 require_match 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
-require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.b2b' ios/Flutter/Release.xcconfig
-require_match '<string>Roam2World B2B</string>' ios/Runner/Info.plist
+require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.mobile' ios/Flutter/Release.xcconfig
+require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.mobile;' ios/Runner.xcodeproj/project.pbxproj
+require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.mobile\.RunnerTests;' ios/Runner.xcodeproj/project.pbxproj
+require_match '<string>Roam2World Mobile</string>' ios/Runner/Info.plist
 require_match 'Icon-App-1024x1024@1x\.png' ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
 require_match "static const String appName = 'Roam2World B2B';" lib/core/config/app_environment.dart
 require_match "storageNamespace: 'roam2world_b2b_auth'" lib/core/storage/token_storage.dart
