@@ -1,6 +1,9 @@
 /// Transport-neutral LPA contracts shared by Roam2World transports.
 library;
 
+export 'src/activation_code.dart';
+export 'src/es9_client.dart';
+
 enum LpaTransportKind { androidSystem, nekokoExternal, nekokoEmbedded }
 
 enum LpaInstallState { unsupported, ready, handedOff, awaitingConsent, installing, installed, failed }
@@ -32,11 +35,6 @@ abstract interface class LpaTransport {
   Future<LpaInstallResult> install(LpaInstallRequest request);
 }
 
-/// Low-level eUICC channel contract used by an embedded Nekoko adapter.
-///
-/// This intentionally contains no UI, scanner, database, BLE or notification
-/// dependencies. Nekoko ProfileManager/APDU logic can be moved behind this
-/// boundary incrementally without coupling Roam2World to the full nlpa2 app.
 abstract interface class EuiccChannel {
   Future<void> open();
   Future<List<int>> transmit(List<int> apdu);
