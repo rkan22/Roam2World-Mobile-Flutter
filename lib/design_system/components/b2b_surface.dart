@@ -39,7 +39,12 @@ class B2BSurface extends StatelessWidget {
         border: Border.all(color: resolvedBorder),
         boxShadow: showShadow && !isDark ? B2BShadows.card : null,
       ),
-      child: child,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(radius),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
     );
 
     if (onTap == null) return content;
