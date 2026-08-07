@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:roam2world_mobile/features/reports/widgets/reports_adaptive_sections.dart';
+import 'package:roam2world_mobile_flutter/features/reports/widgets/reports_adaptive_sections.dart';
 
 void main() {
   Future<void> pumpAt(
@@ -17,18 +17,36 @@ void main() {
   }
 
   testWidgets('KPI cards use two columns on phone', (tester) async {
-    final children = List.generate(4, (index) => SizedBox(key: ValueKey(index), height: 80));
-    await pumpAt(tester, const Size(430, 900), ReportsKpiLayout(children: children));
+    final children = List.generate(
+      4,
+      (index) => SizedBox(key: ValueKey(index), height: 80),
+    );
+    await pumpAt(
+      tester,
+      const Size(430, 900),
+      ReportsKpiLayout(children: children),
+    );
 
-    expect(tester.getTopLeft(find.byKey(const ValueKey(0))).dy,
-        tester.getTopLeft(find.byKey(const ValueKey(1))).dy);
-    expect(tester.getTopLeft(find.byKey(const ValueKey(2))).dy,
-        greaterThan(tester.getTopLeft(find.byKey(const ValueKey(0))).dy));
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey(0))).dy,
+      tester.getTopLeft(find.byKey(const ValueKey(1))).dy,
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey(2))).dy,
+      greaterThan(tester.getTopLeft(find.byKey(const ValueKey(0))).dy),
+    );
   });
 
   testWidgets('KPI cards use four columns on tablet', (tester) async {
-    final children = List.generate(4, (index) => SizedBox(key: ValueKey(index), height: 80));
-    await pumpAt(tester, const Size(1180, 900), ReportsKpiLayout(children: children));
+    final children = List.generate(
+      4,
+      (index) => SizedBox(key: ValueKey(index), height: 80),
+    );
+    await pumpAt(
+      tester,
+      const Size(1180, 900),
+      ReportsKpiLayout(children: children),
+    );
 
     final top = tester.getTopLeft(find.byKey(const ValueKey(0))).dy;
     for (var index = 1; index < 4; index++) {
