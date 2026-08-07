@@ -3,7 +3,7 @@ class AppEnvironment {
 
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://api.roam2world.com',
+    defaultValue: 'https://roam2world-panels-backend.onrender.com',
   );
 
   static const String appName = 'Roam2World B2B';
