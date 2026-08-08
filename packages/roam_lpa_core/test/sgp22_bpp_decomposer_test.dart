@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:roam_lpa_core/roam_lpa_core.dart';
-import 'package:test/test.dart';
 
 void main() {
   const decomposer = Sgp22BppDecomposer();
