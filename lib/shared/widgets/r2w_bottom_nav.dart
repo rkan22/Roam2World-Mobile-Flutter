@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 
 class R2WBottomNav extends StatelessWidget {
