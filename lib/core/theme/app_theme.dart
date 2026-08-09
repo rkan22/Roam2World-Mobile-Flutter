@@ -78,7 +78,6 @@ class AppTheme {
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
-      fontFamily: 'SF Pro Display',
       splashFactory: InkRipple.splashFactory,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
@@ -121,7 +120,7 @@ class AppTheme {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontSize: 11.5,
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w650,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             color: selected ? primary : textSecondary,
           );
         }),
