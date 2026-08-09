@@ -63,6 +63,7 @@ class MainActivity : FlutterActivity() {
                     "openEuiccChannel" -> omapiBridge.open(result)
                     "transmitEuiccApdu" -> omapiBridge.transmit(call.argument<ByteArray>("apdu"), result)
                     "closeEuiccChannel" -> omapiBridge.close(result)
+                    "openNekoko" -> openNekoko(result)
                     "installActivationCode" -> {
                         val activationCode = call.argument<String>("activationCode").orEmpty().trim()
                         val switchAfterDownload = call.argument<Boolean>("switchAfterDownload") ?: false
@@ -118,6 +119,30 @@ class MainActivity : FlutterActivity() {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("lpa:1\$example.invalid\$probe"))
             .setPackage(NEKOKO_PACKAGE)
         return intent.resolveActivity(packageManager) != null
+    }
+
+    private fun openNekoko(result: MethodChannel.Result) {
+        val intent = packageManager.getLaunchIntentForPackage(NEKOKO_PACKAGE)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (intent == null) {
+            result.error(
+                "NEKOKO_UNAVAILABLE",
+                "NekokoLPA2 is not installed or cannot be opened.",
+                null,
+            )
+            return
+        }
+        try {
+            startActivity(intent)
+            result.success(
+                mapOf(
+                    "status" to "opened",
+                    "transport" to "nekoko_app",
+                ),
+            )
+        } catch (error: Throwable) {
+            result.error("NEKOKO_LAUNCH_FAILED", error.message ?: error.javaClass.simpleName, null)
+        }
     }
 
     private fun handoffToNekoko(activationCode: String, result: MethodChannel.Result) {
