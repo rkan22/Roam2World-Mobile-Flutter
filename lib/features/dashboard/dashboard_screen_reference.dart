@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
@@ -18,10 +21,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _primary = Color(0xFF0868F7);
-  static const _background = Color(0xFFF7F9FC);
-  static const _text = Color(0xFF0C1733);
-  static const _muted = Color(0xFF758097);
   static const _channel = MethodChannel('com.roam2world.mobile/lpa');
 
   late final DashboardRepository _repository;
@@ -64,14 +63,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
       body: SafeArea(child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (_loading && _data == null) {
-      return const ContentLoadingState(label: 'Loading your workspace...');
+      return const ContentLoadingState(label: 'Loading your dashboard...');
     }
     if (_error != null && _data == null) {
       return ContentErrorState(
@@ -87,20 +85,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
         children: [
           if (_showingStaleData) ...[
             _staleBanner(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
           ],
           _header(data),
-          const SizedBox(height: 22),
-          _walletCard(data),
-          const SizedBox(height: 18),
-          _metricsGrid(data),
           const SizedBox(height: 20),
-          _recentPurchases(data),
+          _wallet(data),
           const SizedBox(height: 18),
+          _metrics(data),
+          const SizedBox(height: 22),
+          _recentPurchases(data),
+          const SizedBox(height: 22),
           _quickActions(),
         ],
       ),
@@ -108,7 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _header(DashboardData data) {
+    final theme = Theme.of(context);
     final role = data.role.trim().isEmpty ? 'Partner' : data.role.trim();
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -116,291 +116,272 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Welcome Admin 👋',
-                style: TextStyle(
-                  color: _text,
-                  fontSize: 29,
-                  height: 1.1,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.7,
-                ),
-              ),
-              const SizedBox(height: 6),
+              Text('Dashboard', style: theme.textTheme.headlineLarge),
+              const SizedBox(height: 4),
               Text(
-                role,
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
+                'Welcome back, ${_friendlyRole(role)}',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
         ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              onPressed: () => context.push('/notifications'),
-              icon: const Icon(Icons.notifications_none_rounded, size: 30),
-              color: _text,
-            ),
-            Positioned(
-              right: 9,
-              top: 8,
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: const BoxDecoration(
-                  color: _primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+        _RoundIconButton(
+          icon: Icons.notifications_none_rounded,
+          badge: true,
+          onTap: () => context.push('/notifications'),
         ),
-        const SizedBox(width: 6),
-        InkWell(
+        const SizedBox(width: 10),
+        GestureDetector(
           onTap: () => context.push('/profile'),
-          borderRadius: BorderRadius.circular(99),
-          child: const CircleAvatar(
-            radius: 25,
-            backgroundColor: _primary,
+          child: Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: B2BGradients.primary,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: B2BShadows.card,
+            ),
             child: Text(
-              'A',
-              style: TextStyle(
+              role.characters.first.toUpperCase(),
+              style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w500,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
         ),
-        const SizedBox(width: 4),
-        const Icon(Icons.keyboard_arrow_down_rounded, color: _text),
       ],
     );
   }
 
-  Widget _walletCard(DashboardData data) {
-    final amount = '${data.currency} ${data.balance.toStringAsFixed(2)}';
-    return _surface(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+  String _friendlyRole(String role) {
+    final value = role.toLowerCase();
+    if (value.contains('admin')) return 'Admin';
+    if (value.contains('dealer')) return 'Dealer';
+    if (value.contains('reseller')) return 'Reseller';
+    if (value.contains('client')) return 'Client';
+    return role;
+  }
+
+  Widget _wallet(DashboardData data) {
+    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
+    final balance = _balanceVisible
+        ? _money(data.balance, currency)
+        : '••••••••';
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xxl),
+        boxShadow: B2BShadows.hero,
+      ),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              _iconBox(
-                icon: Icons.account_balance_wallet_rounded,
-                foreground: _primary,
-                background: const Color(0xFFEAF2FF),
-                size: 58,
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Wallet Balance',
-                      style: TextStyle(
-                        color: _muted,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _balanceVisible ? amount : '••••••••',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _primary,
-                        fontSize: 36,
-                        height: 1.08,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton.filled(
-                onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
-                style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFFF0F5FF),
-                  foregroundColor: _primary,
-                  minimumSize: const Size(52, 52),
-                ),
-                icon: Icon(
-                  _balanceVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFFE8EDF5)),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () => context.push('/wallet'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.account_balance_wallet_outlined, size: 19),
-              label: const Text(
-                'Add Money',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Positioned(
+            right: -38,
+            top: -52,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: .08),
               ),
             ),
+          ),
+          Positioned(
+            left: 90,
+            bottom: -95,
+            child: Container(
+              width: 260,
+              height: 180,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: .08),
+                  width: 24,
+                ),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .14),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Wallet balance',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
+                    icon: Icon(
+                      _balanceVisible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                balance,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 34,
+                  height: 1.05,
+                  letterSpacing: -1,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Available for new eSIM orders',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: .70),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => context.push('/wallet'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      minimumSize: const Size(0, 46),
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 19),
+                    label: const Text('Add funds'),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: .16),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      currency,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _metricsGrid(DashboardData data) {
+  Widget _metrics(DashboardData data) {
+    final items = [
+      _MetricData(
+        'Today sales',
+        _money(data.todaySales, data.currency),
+        Icons.trending_up_rounded,
+        AppColors.primary,
+        AppColors.primaryLight,
+      ),
+      _MetricData(
+        'Monthly sales',
+        _money(data.monthlySales, data.currency),
+        Icons.calendar_month_rounded,
+        AppColors.sky,
+        const Color(0xFFEAF7FE),
+      ),
+      _MetricData(
+        'Active eSIMs',
+        '${data.activeEsimCount}',
+        Icons.sim_card_rounded,
+        AppColors.success,
+        AppColors.successSoft,
+      ),
+      _MetricData(
+        'Expired eSIMs',
+        '${data.expiredEsimCount}',
+        Icons.schedule_rounded,
+        AppColors.warning,
+        AppColors.warningSoft,
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        const gap = 12.0;
-        final width = (constraints.maxWidth - gap) / 2;
+        final width = (constraints.maxWidth - 12) / 2;
         return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.trending_up_rounded,
-                iconColor: _primary,
-                iconBackground: const Color(0xFFEDF4FF),
-                label: 'Today Sales',
-                value: '${data.currency} ${_compactMoney(data.todaySales)}',
-                badge: 'Live',
-                badgeColor: _primary,
-                badgeBackground: const Color(0xFFF4F8FF),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.calendar_month_rounded,
-                iconColor: _primary,
-                iconBackground: const Color(0xFFEDF4FF),
-                label: 'Monthly Sales',
-                value: '${data.currency} ${_compactMoney(data.monthlySales)}',
-                badge: 'This month',
-                badgeColor: _primary,
-                badgeBackground: const Color(0xFFF4F8FF),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.sim_card_outlined,
-                iconColor: const Color(0xFF0BB77A),
-                iconBackground: const Color(0xFFECFBF5),
-                label: 'Active eSIMs',
-                value: '${data.activeEsimCount}',
-                badge: 'Active',
-                badgeColor: const Color(0xFF0AAE73),
-                badgeBackground: const Color(0xFFECFBF5),
-                onTap: () => context.go('/esims'),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.schedule_rounded,
-                iconColor: const Color(0xFFFF7A00),
-                iconBackground: const Color(0xFFFFF4E8),
-                label: 'Expired eSIMs',
-                value: '${data.expiredEsimCount}',
-                badge: 'Needs attention',
-                badgeColor: const Color(0xFFF27900),
-                badgeBackground: const Color(0xFFFFF5E9),
-                onTap: () => context.go('/esims'),
-              ),
-            ),
-          ],
+          spacing: 12,
+          runSpacing: 12,
+          children: [for (final item in items) SizedBox(width: width, child: _metricCard(item))],
         );
       },
     );
   }
 
-  Widget _metricCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBackground,
-    required String label,
-    required String value,
-    required String badge,
-    required Color badgeColor,
-    required Color badgeBackground,
-    VoidCallback? onTap,
-  }) {
-    return _surface(
-      onTap: onTap,
+  Widget _metricCard(_MetricData item) {
+    final theme = Theme.of(context);
+    return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.lg),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _iconCircle(icon, iconColor, iconBackground),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: badgeColor.withValues(alpha: .14)),
-                  ),
-                  child: Text(
-                    badge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: badgeColor,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: item.soft,
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: Icon(item.icon, color: item.color, size: 21),
+          ),
+          const SizedBox(height: 16),
+          Text(item.label, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 5),
+          Text(
+            item.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleLarge?.copyWith(fontSize: 19),
           ),
         ],
       ),
@@ -408,238 +389,204 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _recentPurchases(DashboardData data) {
-    return _surface(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+      ),
       child: Column(
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Recent Purchases',
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 10, 10),
+            child: Row(
+              children: [
+                Expanded(child: Text('Recent purchases', style: theme.textTheme.titleLarge)),
+                TextButton(
+                  onPressed: () => context.go('/orders'),
+                  child: const Text('View all'),
                 ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/orders'),
-                child: const Text('View All'),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
           if (data.recentOrders.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
               child: Row(
                 children: [
-                  _iconCircle(
-                    Icons.receipt_long_outlined,
-                    _primary,
-                    const Color(0xFFEDF4FF),
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.receipt_long_outlined, color: AppColors.textSecondary),
                   ),
-                  const SizedBox(width: 14),
-                  const Expanded(
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'Your latest eSIM purchases will appear here.',
-                      style: TextStyle(color: _muted, fontSize: 14),
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ),
                 ],
               ),
             )
           else
-            for (final order in data.recentOrders.take(2)) ...[
-              _purchaseRow(order, data.currency),
-              if (order != data.recentOrders.take(2).last)
-                const Divider(height: 1, color: Color(0xFFE8EDF5)),
+            for (var i = 0; i < data.recentOrders.take(4).length; i++) ...[
+              _orderRow(data.recentOrders[i], data.currency),
+              if (i != data.recentOrders.take(4).length - 1)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Divider(color: theme.colorScheme.outlineVariant),
+                ),
             ],
+          const SizedBox(height: 6),
         ],
       ),
     );
   }
 
-  Widget _purchaseRow(DashboardOrderSummary order, String currency) {
+  Widget _orderRow(DashboardOrderSummary order, String currency) {
+    final theme = Theme.of(context);
+    final completed = order.status.toLowerCase().contains('complete') ||
+        order.status.toLowerCase().contains('success');
     final date = order.createdAt == null
-        ? ''
-        : DateFormat('MMM d, yyyy • h:mm a').format(order.createdAt!.toLocal());
-    final completed = order.status.toLowerCase() == 'completed' ||
-        order.status.toLowerCase() == 'success';
-    final statusColor = completed ? const Color(0xFF0AAE73) : const Color(0xFFF27900);
-    final statusBg = completed ? const Color(0xFFECFBF5) : const Color(0xFFFFF5E9);
+        ? 'Recent'
+        : DateFormat('MMM d • HH:mm').format(order.createdAt!.toLocal());
 
-    return InkWell(
-      onTap: () => context.go('/orders'),
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            _iconCircle(
-              Icons.business_rounded,
-              const Color(0xFF7EA9EF),
-              const Color(0xFFF0F5FF),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 13, 18, 13),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(14),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: const Icon(Icons.public_rounded, color: AppColors.primary, size: 21),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  order.productName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 3),
+                Text(date, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _money(order.totalAmount, currency),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: completed ? AppColors.success : AppColors.warning,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
                   Text(
-                    order.productName.isEmpty ? 'eSIM purchase' : order.productName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 15,
+                    completed ? 'Completed' : order.status,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: completed ? AppColors.success : AppColors.warning,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    order.orderNumber.isEmpty ? 'Roam2World order' : order.orderNumber,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _muted, fontSize: 12.5),
-                  ),
-                  if (date.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(date, style: const TextStyle(color: _muted, fontSize: 11.5)),
-                  ],
                 ],
               ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '$currency ${order.totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    order.status.isEmpty ? 'Pending' : _titleCase(order.status),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _quickActions() {
-    final actions = <({IconData icon, String label, VoidCallback onTap})>[
-      (
-        icon: Icons.shopping_cart_rounded,
-        label: 'Buy eSIM',
-        onTap: () => context.go('/packages'),
-      ),
-      (
-        icon: Icons.qr_code_2_rounded,
-        label: 'NekoKopla',
-        onTap: _openNekoko,
-      ),
-      (
-        icon: Icons.history_rounded,
-        label: 'eSIM History',
-        onTap: () => context.go('/esims'),
-      ),
-      (
-        icon: Icons.account_balance_wallet_rounded,
-        label: 'Wallet Request',
-        onTap: () => context.go('/wallet'),
-      ),
-      (
-        icon: Icons.sim_card_rounded,
-        label: 'TGT SIM Recharge',
-        onTap: () => _showMessage('TGT SIM Recharge is not configured yet.'),
-      ),
+    final actions = <_ActionData>[
+      _ActionData('Buy eSIM', Icons.shopping_bag_outlined, AppColors.violet, () => context.go('/packages')),
+      _ActionData('My eSIMs', Icons.sim_card_outlined, AppColors.sky, () => context.go('/esims')),
+      _ActionData('Add funds', Icons.add_card_rounded, AppColors.success, () => context.push('/wallet')),
+      _ActionData('Orders', Icons.swap_horiz_rounded, AppColors.orange, () => context.go('/orders')),
+      _ActionData('NekoKopla', Icons.qr_code_2_rounded, AppColors.navy, _openNekoKopla),
     ];
 
-    return _surface(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              color: _text,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          Text('Quick actions', style: theme.textTheme.titleLarge),
           const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const gap = 8.0;
-              final tileWidth = (constraints.maxWidth - (gap * 4)) / 5;
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = 0; i < actions.length; i++) ...[
-                    SizedBox(
-                      width: tileWidth,
-                      child: _quickActionTile(actions[i]),
-                    ),
-                    if (i != actions.length - 1) const SizedBox(width: gap),
-                  ],
-                ],
-              );
-            },
+          Row(
+            children: [
+              for (var i = 0; i < actions.length; i++) ...[
+                Expanded(child: _actionTile(actions[i])),
+                if (i != actions.length - 1) const SizedBox(width: 8),
+              ],
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _quickActionTile(({IconData icon, String label, VoidCallback onTap}) action) {
+  Widget _actionTile(_ActionData action) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: action.onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 106),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE4EAF3)),
-        ),
+      borderRadius: BorderRadius.circular(B2BRadius.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           children: [
-            Icon(action.icon, color: _primary, size: 29),
-            const SizedBox(height: 10),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: action.color.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(action.icon, color: action.color, size: 22),
+            ),
+            const SizedBox(height: 8),
             Text(
               action.label,
-              textAlign: TextAlign.center,
               maxLines: 2,
+              textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: _text,
-                fontSize: 10.5,
-                height: 1.15,
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -648,38 +595,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<void> _openNekoko() async {
+  Future<void> _openNekoKopla() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      _message('NekoKopla is available on Android devices.');
+      return;
+    }
+
     try {
       await _channel.invokeMethod<void>('openNekoko');
     } on PlatformException catch (error) {
-      _showMessage(error.message ?? 'NekoKopla could not be opened.');
-    } on MissingPluginException {
-      _showMessage('NekoKopla launcher is available on Android.');
+      _message(error.message ?? 'NekoKopla could not be opened.');
+    } catch (_) {
+      _message('NekoKopla could not be opened.');
     }
   }
 
-  void _showMessage(String message) {
+  void _message(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   Widget _staleBanner() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5E9),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.warningSoft,
+        borderRadius: BorderRadius.circular(B2BRadius.md),
       ),
       child: const Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: Color(0xFFF27900), size: 18),
-          SizedBox(width: 8),
+          Icon(Icons.cloud_off_rounded, size: 18, color: AppColors.warning),
+          SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Showing the latest saved dashboard data.',
-              style: TextStyle(color: Color(0xFF9A5B00), fontSize: 12.5),
+              'Could not refresh. Showing the latest available data.',
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -687,71 +639,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _surface({
-    required Widget child,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
-    VoidCallback? onTap,
-  }) {
-    final content = Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE3E8F1)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0B1F3A),
-            blurRadius: 16,
-            offset: Offset(0, 5),
+  String _money(double value, String currency) {
+    final code = currency.trim().isEmpty ? 'USD' : currency.trim().toUpperCase();
+    final symbol = switch (code) {
+      'USD' => '\$',
+      'EUR' => '€',
+      'GBP' => '£',
+      'TRY' => '₺',
+      _ => '$code ',
+    };
+    return '$symbol${NumberFormat('#,##0.00').format(value)}';
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({required this.icon, required this.onTap, this.badge = false});
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Icon(icon, color: AppColors.textSecondary),
           ),
-        ],
-      ),
-      child: child,
-    );
-    if (onTap == null) return content;
-    return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: content);
-  }
-
-  Widget _iconBox({
-    required IconData icon,
-    required Color foreground,
-    required Color background,
-    double size = 54,
-  }) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Icon(icon, color: foreground, size: 29),
+        ),
+        if (badge)
+          Positioned(
+            right: 7,
+            top: 7,
+            child: Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
     );
   }
+}
 
-  Widget _iconCircle(IconData icon, Color foreground, Color background) {
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-      child: Icon(icon, color: foreground, size: 27),
-    );
-  }
+class _MetricData {
+  const _MetricData(this.label, this.value, this.icon, this.color, this.soft);
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final Color soft;
+}
 
-  String _compactMoney(double value) {
-    if (value.abs() >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value.abs() >= 1000) return NumberFormat('#,##0').format(value);
-    return value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2);
-  }
-
-  String _titleCase(String value) {
-    final clean = value.replaceAll('_', ' ').trim();
-    if (clean.isEmpty) return clean;
-    return clean
-        .split(RegExp(r'\s+'))
-        .map((part) => part.isEmpty
-            ? part
-            : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
-        .join(' ');
-  }
+class _ActionData {
+  const _ActionData(this.label, this.icon, this.color, this.onTap);
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
 }
