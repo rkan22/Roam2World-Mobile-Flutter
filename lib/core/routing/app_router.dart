@@ -12,6 +12,7 @@ import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
+import '../../features/orders/order_history.dart';
 import '../../features/orders/order_result.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/packages/package_catalog.dart';
@@ -77,7 +78,11 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
       ),
       GoRoute(path: AppRoutes.orders, builder: (context, state) => const OrdersScreen()),
-      GoRoute(path: AppRoutes.orderDetail, builder: (context, state) => const OrderDetailScreen()),
+      GoRoute(
+        path: AppRoutes.orderDetail,
+        redirect: (context, state) => state.extra is MobileOrderSummary ? null : AppRoutes.orders,
+        builder: (context, state) => OrderDetailScreen(order: state.extra! as MobileOrderSummary),
+      ),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
       GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
       GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
