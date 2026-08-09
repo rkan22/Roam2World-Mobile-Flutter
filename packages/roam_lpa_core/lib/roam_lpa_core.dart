@@ -13,6 +13,7 @@ export 'src/json_rsp_codec.dart';
 export 'src/profile_download_orchestrator.dart';
 export 'src/rsp_codec.dart';
 export 'src/sgp22_bpp_decomposer.dart';
+export 'src/sgp22_es10_bootstrap_codec.dart';
 export 'src/sgp22_store_data.dart';
 
 enum LpaTransportKind { androidSystem, nekokoExternal, nekokoEmbedded }
