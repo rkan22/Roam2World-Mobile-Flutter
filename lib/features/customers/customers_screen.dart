@@ -76,102 +76,140 @@ class _CustomersScreenState extends State<CustomersScreen> {
       0,
       (sum, customer) => sum + customer.totalSpend,
     );
-    final currency = visibleCustomers.isEmpty ? 'USD' : visibleCustomers.first.currency;
+    final currency =
+        visibleCustomers.isEmpty ? 'USD' : visibleCustomers.first.currency;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => context.pop(),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              B2BSpacing.lg,
+              B2BSpacing.md,
+              B2BSpacing.lg,
+              B2BSpacing.xxl,
+            ),
+            children: [
+              _Header(onBack: () => context.pop(), onRefresh: _load),
+              const SizedBox(height: B2BSpacing.lg),
+              if (!_loading && _error == null && visibleCustomers.isNotEmpty)
+                _CustomerOverview(
+                  customerCount: visibleCustomers.length,
+                  orderCount: totalOrders,
+                  totalSpend: totalSpend,
+                  currency: currency,
+                  onNewSale: () => context.go('/packages'),
+                ),
+              if (!_loading && _error == null && visibleCustomers.isNotEmpty)
+                const SizedBox(height: B2BSpacing.lg),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search company or customer',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: _searchController.clear,
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                ),
+              ),
+              const SizedBox(height: B2BSpacing.lg),
+              if (_loading)
+                const ContentLoadingState(label: 'Loading customers...')
+              else if (_error != null)
+                ContentErrorState(message: _error!, onRetry: _load)
+              else if (visibleCustomers.isEmpty)
+                ContentEmptyState(
+                  icon: Icons.people_outline_rounded,
+                  title: _customers.isEmpty
+                      ? 'No customers yet'
+                      : 'No matching customers',
+                  message: _customers.isEmpty
+                      ? 'Customers are created automatically from completed and pending B2B orders.'
+                      : 'Try another company or customer name.',
+                  actionLabel:
+                      _customers.isEmpty ? 'Create first sale' : 'Clear search',
+                  onAction: _customers.isEmpty
+                      ? () => context.go('/packages')
+                      : _searchController.clear,
+                )
+              else ...[
+                Row(
+                  children: [
+                    Text(
+                      'Customer portfolio',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${visibleCustomers.length} accounts',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: B2BSpacing.sm),
+                CustomersAdaptiveGrid(
+                  children: [
+                    for (final customer in visibleCustomers)
+                      _CustomerCard(
+                        customer: customer,
+                        onTap: () => context.go('/orders'),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack, required this.onRefresh});
+
+  final VoidCallback onBack;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onBack,
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: const Text('Customers'),
-        actions: [
-          IconButton.filledTonal(
-            onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          const SizedBox(width: B2BSpacing.sm),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            B2BSpacing.lg,
-            B2BSpacing.xs,
-            B2BSpacing.lg,
-            B2BSpacing.xxl,
-          ),
-          children: [
-            Text(
-              'Your business network',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(
-              'Track customer activity generated from live order history.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: B2BSpacing.lg),
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search company or customer',
-                prefixIcon: Icon(Icons.search_rounded),
+        const SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Customers',
+                style: Theme.of(context).textTheme.headlineLarge,
               ),
-            ),
-            const SizedBox(height: B2BSpacing.md),
-            if (!_loading && _error == null && visibleCustomers.isNotEmpty)
-              _CustomerOverview(
-                customerCount: visibleCustomers.length,
-                orderCount: totalOrders,
-                totalSpend: totalSpend,
-                currency: currency,
-              ),
-            if (!_loading && _error == null && visibleCustomers.isNotEmpty)
-              const SizedBox(height: B2BSpacing.lg),
-            if (_loading)
-              const ContentLoadingState(label: 'Loading customers...')
-            else if (_error != null)
-              ContentErrorState(message: _error!, onRetry: _load)
-            else if (visibleCustomers.isEmpty)
-              ContentEmptyState(
-                icon: Icons.people_outline_rounded,
-                title: _customers.isEmpty ? 'No customers yet' : 'No matching customers',
-                message: _customers.isEmpty
-                    ? 'Customers will appear after their first order.'
-                    : 'Try another company or customer name.',
-                actionLabel: _customers.isEmpty ? 'Browse packages' : 'Clear search',
-                onAction: _customers.isEmpty
-                    ? () => context.go('/packages')
-                    : _searchController.clear,
-              )
-            else ...[
-              Row(
-                children: [
-                  Text('Companies', style: Theme.of(context).textTheme.titleLarge),
-                  const Spacer(),
-                  Text(
-                    '${visibleCustomers.length} results',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: B2BSpacing.sm),
-              CustomersAdaptiveGrid(
-                children: [
-                  for (final customer in visibleCustomers)
-                    _CustomerCard(customer: customer),
-                ],
+              const SizedBox(height: B2BSpacing.xxs),
+              Text(
+                'Manage the business accounts generated by your live sales.',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
-          ],
+          ),
         ),
-      ),
+        IconButton.filledTonal(
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
     );
   }
 }
@@ -182,30 +220,93 @@ class _CustomerOverview extends StatelessWidget {
     required this.orderCount,
     required this.totalSpend,
     required this.currency,
+    required this.onNewSale,
   });
 
   final int customerCount;
   final int orderCount;
   final double totalSpend;
   final String currency;
+  final VoidCallback onNewSale;
 
   @override
   Widget build(BuildContext context) {
-    return B2BSurface(
-      backgroundColor: AppColors.navy,
-      borderColor: AppColors.navy,
-      padding: const EdgeInsets.all(B2BSpacing.lg),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        boxShadow: B2BShadows.hero,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _OverviewValue(label: 'Customers', value: '$customerCount')),
-          Container(width: 1, height: 44, color: Colors.white24),
-          Expanded(child: _OverviewValue(label: 'Orders', value: '$orderCount')),
-          Container(width: 1, height: 44, color: Colors.white24),
-          Expanded(
-            child: _OverviewValue(
-              label: 'Volume',
-              value: '$currency ${totalSpend.toStringAsFixed(0)}',
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(B2BRadius.md),
+                ),
+                child: const Icon(Icons.groups_2_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: B2BSpacing.md),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Customer portfolio',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: B2BSpacing.xxs),
+                    Text(
+                      'Live B2B customer value from order history',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.xl),
+          Row(
+            children: [
+              Expanded(
+                child: _OverviewValue(
+                  label: 'Customers',
+                  value: '$customerCount',
+                ),
+              ),
+              Expanded(
+                child: _OverviewValue(label: 'Orders', value: '$orderCount'),
+              ),
+              Expanded(
+                child: _OverviewValue(
+                  label: 'Volume',
+                  value: '$currency ${totalSpend.toStringAsFixed(0)}',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.lg),
+          FilledButton.icon(
+            onPressed: onNewSale,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
             ),
+            icon: const Icon(Icons.add_shopping_cart_rounded),
+            label: const Text('Create customer sale'),
           ),
         ],
       ),
@@ -221,26 +322,37 @@ class _OverviewValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-              ),
-        ),
-        const SizedBox(height: B2BSpacing.xxs),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-      ],
+    return Container(
+      margin: const EdgeInsets.only(right: B2BSpacing.xs),
+      padding: const EdgeInsets.all(B2BSpacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: B2BSpacing.xxs),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -294,23 +406,25 @@ class _CustomerSummary {
 }
 
 class _CustomerCard extends StatelessWidget {
-  const _CustomerCard({required this.customer});
+  const _CustomerCard({required this.customer, required this.onTap});
 
   final _CustomerSummary customer;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final initials = _initials(customer.name);
     final scheme = Theme.of(context).colorScheme;
     return B2BSurface(
+      onTap: onTap,
       padding: const EdgeInsets.all(B2BSpacing.md),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 52,
+                height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: B2BGradients.primary,
@@ -355,9 +469,10 @@ class _CustomerCard extends StatelessWidget {
                             'Active · ${_formatDate(customer.lastOrderAt)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                           ),
                         ),
                       ],
@@ -374,12 +489,16 @@ class _CustomerCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _CustomerMetric(label: 'Orders', value: '${customer.orders}'),
+                child: _CustomerMetric(
+                  label: 'Orders',
+                  value: '${customer.orders}',
+                ),
               ),
               Expanded(
                 child: _CustomerMetric(
                   label: 'Total spend',
-                  value: '${customer.currency} ${customer.totalSpend.toStringAsFixed(2)}',
+                  value:
+                      '${customer.currency} ${customer.totalSpend.toStringAsFixed(2)}',
                   alignEnd: true,
                 ),
               ),
@@ -405,7 +524,8 @@ class _CustomerMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           label,
