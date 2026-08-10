@@ -4,9 +4,10 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
+import '../../features/customers/clientS_home_screen.dart';
 import '../../features/customers/customer_detail_screen.dart';
 import '../../features/customers/customers_screen.dart';
-import '../../features/dashboard/reseller_dashboard_screen.dart';
+import '../../features/dashboard/role_dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
@@ -44,6 +45,7 @@ abstract final class AppRoutes {
   static const coverage = '/coverage';
   static const checkout = '/checkout';
   static const checkoutSuccess = '/checkout/success';
+  static const clients = '/clients';
   static const customers = '/customers';
   static const customerDetail = '/customers/detail';
   static const dealers = '/dealers';
@@ -71,7 +73,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
-      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const ResellerDashboardScreen()),
+      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const RoleDashboardScreen()),
       GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
       GoRoute(path: AppRoutes.catalogControls, builder: (context, state) => const CatalogControlsScreen()),
       GoRoute(path: AppRoutes.coverage, builder: (context, state) => const CoverageScreen()),
@@ -90,10 +92,11 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         redirect: (context, state) => state.extra is MobileOrderResult ? null : AppRoutes.orders,
         builder: (context, state) => OrderSuccessScreen(result: state.extra! as MobileOrderResult),
       ),
+      GoRoute(path: AppRoutes.clients, builder: (context, state) => const ClientsHomeScreen()),
       GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
       GoRoute(
         path: AppRoutes.customerDetail,
-        redirect: (context, state) => state.extra is CustomerDetailArgs ? null : AppRoutes.customers,
+        redirect: (context, state) => state.extra is CustomerDetailArgs ? null : AppRoutes.clients,
         builder: (context, state) => CustomerDetailScreen(customer: state.extra! as CustomerDetailArgs),
       ),
       GoRoute(path: AppRoutes.dealers, builder: (context, state) => const DealerNetworkScreen()),
