@@ -83,6 +83,14 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
               child: Column(
                 children: [
                   ListTile(
+                    leading: const Icon(Icons.monitor_heart_outlined, color: AppColors.primary),
+                    title: const Text('Provider health', style: TextStyle(fontWeight: FontWeight.w900)),
+                    subtitle: const Text('Review route availability and run verified live provider checks'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.adminProviderHealth),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.replay_circle_filled_outlined, color: AppColors.primary),
                     title: const Text('Provider retry queue', style: TextStyle(fontWeight: FontWeight.w900)),
                     subtitle: const Text('Review failed provider orders and run verified recovery actions'),
