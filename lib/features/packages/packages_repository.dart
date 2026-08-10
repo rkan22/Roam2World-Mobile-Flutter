@@ -103,6 +103,23 @@ class PackagesRepository {
         // outage must not hide the rest of Unified Catalog.
       }
 
+      for (final source in const [
+        (ApiEndpoints.airhubCatalogSources, 'airhub', 'Vodafone'),
+        (ApiEndpoints.flexnetCatalogSources, 'flexnet', 'Orange Big Data'),
+        (ApiEndpoints.tgtCatalogSources, 'tgt', 'Orange Balkans'),
+      ]) {
+        final catalog = await _fetchFirstProviderSource(
+          source.$1,
+          provider: source.$2,
+          displayProvider: source.$3,
+        );
+        for (final package in catalog.packages) {
+          if (!_providerPackageAllowed(package)) continue;
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) externalPackages.add(package);
+        }
+      }
+
       packages.addAll(await _applyCentralPricing(externalPackages));
 
       final term = normalizedSearch.toLowerCase();
@@ -203,5 +220,53 @@ class PackagesRepository {
       // cannot confirm a customer-visible price.
       return const [];
     }
+  }
+
+  Future<PackageCatalog> _fetchFirstProviderSource(
+    List<String> paths, {
+    required String provider,
+    required String displayProvider,
+  }) async {
+    for (final path in paths) {
+      try {
+        final catalog = await _apiClient.get<PackageCatalog>(
+          path,
+          parser: (response) => PackageCatalog.fromProviderResponse(
+            response,
+            provider: provider,
+            displayProvider: displayProvider,
+          ),
+        );
+        if (catalog.packages.isNotEmpty) return catalog;
+      } catch (_) {
+        // Continue with the next endpoint used by the web catalog.
+      }
+    }
+    return const PackageCatalog(packages: [], hasMore: false);
+  }
+
+  bool _providerPackageAllowed(MobilePackage package) {
+    if (package.id.isEmpty) return false;
+    if (package.provider != 'tgt') return true;
+    return const {
+      'E-185-SC-AU-EO1-T-30D/60D-1GB',
+      'E-185-SC-AU-EO1-T-30D/60D-3GB',
+      'E-185-SC-AU-EO1-T-30D/60D-5GB',
+      'E-185-SC-AU-EO1-T-30D/60D-10GB',
+      'E-185-SC-AU-EO1-T-30D/60D-20GB',
+      'E-185-SC-AU-EO1-T-30D/60D-30GB',
+      'E-185-SC-AU-EO1-T-30D/60D-50GB',
+      'E-185-ES-AU-EO1-T-30D/60D-1GB',
+      'E-185-ES-AU-EO1-T-30D/60D-3GB',
+      'E-185-ES-AU-EO1-T-30D/60D-5GB',
+      'E-185-ES-AU-EO1-T-30D/60D-10GB',
+      'E-185-ES-AU-EO1-T-30D/60D-20GB',
+      'E-185-ES-AU-EO1-T-30D/60D-30GB',
+      'E-185-ES-AU-EO1-T-30D/60D-50GB',
+      'E-185-SC-AU-EO1-T-CTM-60D/60D-20GB',
+      'E-185-SC-AU-EO1-T-CTM-60D/60D-60GB',
+      'E-185-ES-AU-EO1-T-CTM-60D/60D-20GB',
+      'E-185-ES-AU-EO1-T-CTM-60D/60D-60GB',
+    }.contains(package.id.toUpperCase());
   }
 }

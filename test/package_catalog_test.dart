@@ -103,4 +103,33 @@ void main() {
     expect(package.packageType, 'simcard');
     expect(package.dataLabel, '600 GB');
   });
+
+  test('normalizes a direct provider catalog response', () {
+    final catalog = PackageCatalog.fromProviderResponse(
+      {
+        'data': {
+          'packages': [
+            {
+              'planCode': 'AIR-EU-200',
+              'planName': 'Europe 200GB',
+              'dataAmount': 200,
+              'validityDays': 30,
+              'destination': 'Europe',
+              'price': '20.00',
+            },
+          ],
+        },
+      },
+      provider: 'airhub',
+      displayProvider: 'Vodafone',
+    );
+
+    final package = catalog.packages.single;
+    expect(package.id, 'AIR-EU-200');
+    expect(package.name, 'Europe 200GB');
+    expect(package.displayProvider, 'Vodafone');
+    expect(package.dataLabel, '200 GB');
+    expect(package.validityLabel, '30 Days');
+    expect(package.destinationKey, 'europe');
+  });
 }
