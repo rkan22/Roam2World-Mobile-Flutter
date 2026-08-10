@@ -25,6 +25,7 @@ import '../../features/packages/package_catalog.dart';
 import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
 import '../../features/partners/dealer_network_screen.dart';
+import '../../features/pricing/customer_pricing_screen.dart';
 import '../../features/pricing/dealer_pricing_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
@@ -32,7 +33,7 @@ import '../../features/reports/dealer_performance_screen.dart';
 import '../../features/reports/profitability_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/support/support_screen.dart';
-import '../../features/wallet/reseller_finance_ledger_screen.dart';
+import '../../features/wallet/role_finance_ledger_screen.dart';
 
 abstract final class AppRoutes {
   static const onboarding = '/onboarding';
@@ -50,6 +51,7 @@ abstract final class AppRoutes {
   static const customerDetail = '/customers/detail';
   static const dealers = '/dealers';
   static const dealerPricing = '/dealers/pricing';
+  static const customerPricing = '/pricing/customer';
   static const dealerPerformance = '/reports/dealers';
   static const profitability = '/reports/profitability';
   static const operations = '/operations';
@@ -101,6 +103,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       ),
       GoRoute(path: AppRoutes.dealers, builder: (context, state) => const DealerNetworkScreen()),
       GoRoute(path: AppRoutes.dealerPricing, builder: (context, state) => const DealerPricingScreen()),
+      GoRoute(path: AppRoutes.customerPricing, builder: (context, state) => const CustomerPricingScreen()),
       GoRoute(path: AppRoutes.dealerPerformance, builder: (context, state) => const DealerPerformanceScreen()),
       GoRoute(path: AppRoutes.profitability, builder: (context, state) => const ProfitabilityScreen()),
       GoRoute(path: AppRoutes.operations, builder: (context, state) => const OperationsCenterScreen()),
@@ -117,7 +120,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => OrderDetailScreen(order: state.extra! as MobileOrderSummary),
       ),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
-      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const ResellerFinanceLedgerScreen()),
+      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const RoleFinanceLedgerScreen()),
       GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
       GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: AppRoutes.notificationRules, builder: (context, state) => const NotificationRulesScreen()),
