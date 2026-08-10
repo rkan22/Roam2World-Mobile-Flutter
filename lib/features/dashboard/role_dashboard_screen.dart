@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/routing/app_role.dart';
 import '../auth/auth_repository.dart';
+import 'dashboard_screen.dart';
 import 'dealer_dashboard_screen.dart';
 import 'reseller_dashboard_screen.dart';
 
@@ -36,7 +37,10 @@ class _RoleDashboardScreenState extends State<RoleDashboardScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (role == AppRole.dealer) return const DealerDashboardScreen();
-    return const ResellerDashboardScreen();
+    return switch (role) {
+      AppRole.dealer => const DealerDashboardScreen(),
+      AppRole.client || AppRole.publicUser => const DashboardScreen(),
+      _ => const ResellerDashboardScreen(),
+    };
   }
 }
