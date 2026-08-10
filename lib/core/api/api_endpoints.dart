@@ -30,6 +30,15 @@ class ApiEndpoints {
   static const String dealerUpdateProfile =
       '/api/v1/resellers/dealers/update_profile/';
 
+  // SIM Converter: mobile only exposes real server-backed inspection/parsing
+  // flows here. Hardware programming and web simulation helpers are excluded.
+  static const String simConverterConversions =
+      '/api/v1/sim-converter/conversions/';
+  static const String simConverterStatistics =
+      '/api/v1/sim-converter/conversions/statistics/';
+  static const String simConverterParseActivationCode =
+      '/api/v1/sim-converter/conversions/parse_activation_code/';
+
   // Reseller -> dealer network endpoints used by the web B2B panel.
   static const String resellerDealers = '/api/v1/resellers/dealers/';
   static const String resellerDealerWalletHistory =
