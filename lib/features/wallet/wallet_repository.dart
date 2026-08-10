@@ -22,12 +22,24 @@ class WalletRepository {
     }
 
     try {
-      final data = await _apiClient.get<WalletData>(
+      final wallet = await _apiClient.get<WalletData>(
         ApiEndpoints.mobileWallet,
         parser: WalletData.fromResponse,
       );
-      _cache.set(data);
-      return data;
+
+      try {
+        final ledger = await _apiClient.get<WalletTransactionCatalog>(
+          ApiEndpoints.mobileTransactions,
+          queryParameters: const {'page_size': 100},
+          parser: WalletTransactionCatalog.fromResponse,
+        );
+        final enriched = wallet.copyWith(transactions: ledger.transactions);
+        _cache.set(enriched);
+        return enriched;
+      } catch (_) {
+        _cache.set(wallet);
+        return wallet;
+      }
     } catch (_) {
       final stale = _cache.staleValue;
       if (stale != null) {
