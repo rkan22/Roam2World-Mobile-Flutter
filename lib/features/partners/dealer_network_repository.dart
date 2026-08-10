@@ -4,7 +4,7 @@ import 'dealer_network_data.dart';
 
 class DealerNetworkRepository {
   DealerNetworkRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -19,17 +19,16 @@ class DealerNetworkRepository {
         final rows = data is List
             ? data
             : data is Map
-                ? (data['results'] ?? data['data'] ?? const [])
-                : const [];
+            ? (data['results'] ?? data['data'] ?? const [])
+            : const [];
         return rows is List
             ? rows
-                .whereType<Map>()
-                .map(
-                  (item) => DealerSummary.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ),
-                )
-                .toList()
+                  .whereType<Map>()
+                  .map(
+                    (item) =>
+                        DealerSummary.fromJson(Map<String, dynamic>.from(item)),
+                  )
+                  .toList()
             : const <DealerSummary>[];
       },
     );
@@ -44,18 +43,18 @@ class DealerNetworkRepository {
         final rows = data is List
             ? data
             : data is Map
-                ? (data['results'] ?? data['data'] ?? const [])
-                : const [];
+            ? (data['results'] ?? data['data'] ?? const [])
+            : const [];
         return rows is List
             ? rows
-                .whereType<Map>()
-                .map(
-                  (item) => DealerFundingRequest.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ),
-                )
-                .where((item) => item.status == 'pending')
-                .toList()
+                  .whereType<Map>()
+                  .map(
+                    (item) => DealerFundingRequest.fromJson(
+                      Map<String, dynamic>.from(item),
+                    ),
+                  )
+                  .where((item) => item.status == 'pending')
+                  .toList()
             : const <DealerFundingRequest>[];
       },
     );
@@ -78,20 +77,20 @@ class DealerNetworkRepository {
         final rows = data is List
             ? data
             : data is Map
-                ? (data['results'] ??
-                    data['transactions'] ??
-                    data['wallet_transfers'] ??
-                    const [])
-                : const [];
+            ? (data['results'] ??
+                  data['transactions'] ??
+                  data['wallet_transfers'] ??
+                  const [])
+            : const [];
         return rows is List
             ? rows
-                .whereType<Map>()
-                .map(
-                  (item) => DealerWalletTransfer.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ),
-                )
-                .toList()
+                  .whereType<Map>()
+                  .map(
+                    (item) => DealerWalletTransfer.fromJson(
+                      Map<String, dynamic>.from(item),
+                    ),
+                  )
+                  .toList()
             : const <DealerWalletTransfer>[];
       },
     );
@@ -124,14 +123,8 @@ class DealerNetworkRepository {
     await _apiClient.post<dynamic>(
       path,
       data: {
-        'dealer': dealerId,
-        'dealer_id': dealerId,
-        'amount': amount,
-        'transaction_type': credit ? 'credit' : 'debit',
-        'type': credit ? 'credit' : 'debit',
+        'amount': amount.toStringAsFixed(2),
         'direction': credit ? 'add_to_dealer' : 'refund_to_reseller',
-        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
-        if (note != null && note.trim().isNotEmpty) 'notes': note.trim(),
         if (note != null && note.trim().isNotEmpty) 'reason': note.trim(),
       },
       parser: (data) => data,

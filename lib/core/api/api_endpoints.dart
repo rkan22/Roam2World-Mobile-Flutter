@@ -10,9 +10,12 @@ class ApiEndpoints {
   static const String mobileAdminOrders = '/api/v1/mobile/admin/orders/';
   static const String mobileAdminPricing = '/api/v1/mobile/admin/pricing/';
   static const String mobileAdminReports = '/api/v1/mobile/admin/reports/';
-  static const String mobileAdminSystemHealth = '/api/v1/mobile/admin/system-health/';
-  static const String mobileAdminActivityLogs = '/api/v1/mobile/admin/activity-logs/';
-  static const String mobileAdminSupportTickets = '/api/v1/mobile/admin/support-tickets/';
+  static const String mobileAdminSystemHealth =
+      '/api/v1/mobile/admin/system-health/';
+  static const String mobileAdminActivityLogs =
+      '/api/v1/mobile/admin/activity-logs/';
+  static const String mobileAdminSupportTickets =
+      '/api/v1/mobile/admin/support-tickets/';
   static const String mobileAdminProviderRetryQueue =
       '/api/v1/mobile/admin/provider-retry-queue/';
   static const String mobileAdminProviderCallbackLogs =
@@ -40,12 +43,13 @@ class ApiEndpoints {
   static const String mobileEsimHistory = '/api/v1/mobile/esim-history/';
   static const String mobileTgtCheckGb = '/api/v1/mobile/tgt/check-gb/';
   static const String mobileWallet = '/api/v1/mobile/wallet/';
-  static const String mobileWalletRequests =
-      '/api/v1/mobile/wallet/requests/';
-  static const String mobileTransactions =
-      '/api/v1/mobile/transactions/';
-  static const String mobileNotifications =
-      '/api/v1/mobile/notifications/';
+  static const String mobileWalletRequests = '/api/v1/mobile/wallet/requests/';
+  static const String mobileTransactions = '/api/v1/mobile/transactions/';
+  static const String mobileDealerWalletRequests =
+      '/api/v1/mobile/dealer-wallet-requests/';
+  static const String mobileResellerWalletRequests =
+      '/api/v1/mobile/reseller-wallet-requests/';
+  static const String mobileNotifications = '/api/v1/mobile/notifications/';
   static const String mobileNotificationsReadAll =
       '/api/v1/mobile/notifications/read-all/';
   static const String notificationRules = '/api/v1/notifications/rules/';
@@ -54,8 +58,7 @@ class ApiEndpoints {
       '/api/v1/resellers/dealer-balance/request_balance/';
   static const String dealerBalanceRequests =
       '/api/v1/resellers/dealer-balance/balance_requests/';
-  static const String dealerProfile =
-      '/api/v1/resellers/dealers/my_profile/';
+  static const String dealerProfile = '/api/v1/resellers/dealers/my_profile/';
   static const String dealerUpdateProfile =
       '/api/v1/resellers/dealers/update_profile/';
 
@@ -130,4 +133,19 @@ class ApiEndpoints {
 
   static String mobileDealerWalletRequestApprove(Object requestId) =>
       '/api/v1/mobile/dealer-wallet-requests/$requestId/approve/';
+
+  static String mobileDealerWalletRequestReject(Object requestId) =>
+      '/api/v1/mobile/dealer-wallet-requests/$requestId/reject/';
+
+  static String mobileResellerWalletRequestApprove(Object requestId) =>
+      '/api/v1/mobile/reseller-wallet-requests/$requestId/approve/';
+
+  static String mobileResellerWalletRequestReject(Object requestId) =>
+      '/api/v1/mobile/reseller-wallet-requests/$requestId/reject/';
+
+  static String adminWalletTopUpAdjust(Object requestId) =>
+      '/api/v1/admin/wallet/topups/$requestId/adjust/';
+
+  static String adminWalletTopUpRefund(Object requestId) =>
+      '/api/v1/admin/wallet/topups/$requestId/refund/';
 }
