@@ -75,4 +75,32 @@ void main() {
     expect(catalog.packages.last.destinationKey, 'turkey');
     expect(catalog.packages.last.packageType, 'simcard');
   });
+
+  test('normalizes manual fulfillment catalog products', () {
+    final catalog = PackageCatalog.fromManualResponse({
+      'success': true,
+      'data': [
+        {
+          'id': 'database-row-id',
+          'package_id': 'MANUAL-VDF-600',
+          'operator_name': 'Vodafone',
+          'product_name': 'Vodafone 600GB',
+          'product_type': 'sim',
+          'data_gb': '600',
+          'validity_days': 30,
+          'coverage_countries': ['Europe'],
+          'base_price': '25.00',
+          'currency': 'USD',
+        },
+      ],
+    });
+
+    final package = catalog.packages.single;
+    expect(package.id, 'MANUAL-VDF-600');
+    expect(package.provider, 'manual');
+    expect(package.displayProvider, 'Vodafone');
+    expect(package.destinationKey, 'europe');
+    expect(package.packageType, 'simcard');
+    expect(package.dataLabel, '600 GB');
+  });
 }

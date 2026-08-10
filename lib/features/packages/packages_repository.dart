@@ -40,6 +40,7 @@ class PackagesRepository {
 
     try {
       final packages = <MobilePackage>[];
+      final externalPackages = <MobilePackage>[];
       final seenIds = <String>{};
       var offset = 0;
       var hasMore = true;
@@ -81,12 +82,28 @@ class PackagesRepository {
         );
         for (final package in worldmove.packages) {
           final key = '${package.provider}|${package.id}';
-          if (seenIds.add(key)) packages.add(package);
+          if (seenIds.add(key)) externalPackages.add(package);
         }
       } catch (_) {
         // Keep the remaining unified sources available if Worldmove is
         // temporarily unhealthy, matching the web catalog's partial fallback.
       }
+
+      try {
+        final manual = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.manualCatalogProducts,
+          parser: PackageCatalog.fromManualResponse,
+        );
+        for (final package in manual.packages) {
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) externalPackages.add(package);
+        }
+      } catch (_) {
+        // Manual fulfillment is an independent provider source. A temporary
+        // outage must not hide the rest of Unified Catalog.
+      }
+
+      packages.addAll(await _applyCentralPricing(externalPackages));
 
       final term = normalizedSearch.toLowerCase();
       final filtered = packages.where((package) {
@@ -132,5 +149,59 @@ class PackagesRepository {
       cache.clear();
     }
     _caches.clear();
+  }
+
+  Future<List<MobilePackage>> _applyCentralPricing(
+    List<MobilePackage> packages,
+  ) async {
+    if (packages.isEmpty) return const [];
+    try {
+      return await _apiClient.post<List<MobilePackage>>(
+        ApiEndpoints.pricingBatchPreview,
+        data: {
+          'items': packages
+              .map(
+                (package) => {
+                  'provider': package.provider,
+                  'package_id': package.id,
+                  'provider_price': package.price,
+                  'country': package.destination,
+                  'region': package.destinationKey,
+                  'currency': package.currency,
+                },
+              )
+              .toList(),
+        },
+        parser: (response) {
+          final root = Map<String, dynamic>.from(response as Map);
+          final rows = root['data'];
+          if (rows is! List) return const [];
+          final priced = <MobilePackage>[];
+          for (
+            var index = 0;
+            index < rows.length && index < packages.length;
+            index++
+          ) {
+            final row = rows[index];
+            if (row is! Map) continue;
+            final pricing = row['pricing'];
+            if (pricing is! Map || pricing['is_price_visible'] != true) {
+              continue;
+            }
+            final rawPrice =
+                pricing['charge_amount'] ??
+                pricing['after_admin'] ??
+                pricing['final_customer_price'];
+            final price = double.tryParse('$rawPrice');
+            if (price != null) priced.add(packages[index].withPrice(price));
+          }
+          return priced;
+        },
+      );
+    } catch (_) {
+      // Match web behavior: never expose provider cost when central pricing
+      // cannot confirm a customer-visible price.
+      return const [];
+    }
   }
 }

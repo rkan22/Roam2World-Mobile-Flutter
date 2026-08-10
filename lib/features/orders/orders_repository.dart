@@ -63,9 +63,12 @@ class OrdersRepository {
     String? simNumber,
   }) {
     final isWorldmove = package.provider.toLowerCase() == 'worldmove';
+    final isManual = package.provider.toLowerCase() == 'manual';
     return _apiClient.post<MobileOrderResult>(
       isWorldmove
           ? ApiEndpoints.mobileWorldmoveOrders
+          : isManual
+          ? ApiEndpoints.manualRequest
           : ApiEndpoints.mobileOrders,
       data: {
         'package_id': package.id,
@@ -76,12 +79,16 @@ class OrdersRepository {
         'customer_first_name': firstName.trim(),
         'customer_last_name': lastName.trim(),
         'customer_phone': phone.trim(),
+        if (isManual)
+          'customer_name': '${firstName.trim()} ${lastName.trim()}'.trim(),
         if (imei != null && imei.trim().isNotEmpty) 'imei': imei.trim(),
         if (simNumber != null && simNumber.trim().isNotEmpty)
           'simNum': simNumber.replaceAll(RegExp(r'\D'), ''),
       },
       parser: (response) {
-        if (!isWorldmove) return MobileOrderResult.fromResponse(response);
+        if (!isWorldmove && !isManual) {
+          return MobileOrderResult.fromResponse(response);
+        }
         final enriched = Map<String, dynamic>.from(response as Map);
         enriched.putIfAbsent('package_name', () => package.name);
         enriched.putIfAbsent('price', () => package.price);

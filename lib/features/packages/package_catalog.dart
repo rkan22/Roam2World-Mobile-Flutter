@@ -44,6 +44,33 @@ class PackageCatalog {
       hasMore: false,
     );
   }
+
+  factory PackageCatalog.fromManualResponse(dynamic response) {
+    final root = Map<String, dynamic>.from(response as Map);
+    final rawPackages = root['data'] ?? const [];
+    return PackageCatalog(
+      packages: rawPackages is List
+          ? rawPackages.whereType<Map>().map((raw) {
+              final item = Map<String, dynamic>.from(raw);
+              final coverage = item['coverage_countries'];
+              final coverageLabel = coverage is List && coverage.isNotEmpty
+                  ? coverage.join(', ')
+                  : 'Global';
+              return MobilePackage.fromJson({
+                ...item,
+                'id': item['package_id'],
+                'provider': 'manual',
+                'display_provider': item['operator_name'],
+                'name': item['product_name'],
+                'package_type': item['product_type'],
+                'destination': coverageLabel,
+                'price': item['base_price'],
+              });
+            }).toList()
+          : const [],
+      hasMore: false,
+    );
+  }
 }
 
 class MobilePackage {
@@ -141,6 +168,22 @@ class MobilePackage {
 
   String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
 
+  MobilePackage withPrice(double value) => MobilePackage(
+    id: id,
+    name: name,
+    provider: provider,
+    displayProvider: displayProvider,
+    destination: destination,
+    destinationKey: destinationKey,
+    dataLabel: dataLabel,
+    validityLabel: validityLabel,
+    price: value,
+    currency: currency,
+    packageType: packageType,
+    countryCode: countryCode,
+    isFeatured: isFeatured,
+  );
+
   String get operatorKey {
     final code = id.toUpperCase();
     if (provider.toLowerCase() == 'worldmove') {
@@ -194,7 +237,10 @@ class MobilePackage {
   }
 
   static String _destinationKey(Map<String, dynamic> json, String text) {
-    final normalized = '${json['productRegion'] ?? ''} $text'.toLowerCase();
+    final normalized =
+        '${json['productRegion'] ?? ''} '
+                '${json['destination'] ?? ''} $text'
+            .toLowerCase();
     if (normalized.contains('wm-tr-') ||
         normalized.contains('turkey') ||
         normalized.contains('turkiye')) {
@@ -216,6 +262,7 @@ class MobilePackage {
   static String _packageType(dynamic value, dynamic isEsim) {
     final normalized = value?.toString().trim().toLowerCase() ?? '';
     if (isEsim == false ||
+        normalized == 'sim' ||
         normalized == 'simcard' ||
         normalized == 'physical_sim') {
       return 'simcard';

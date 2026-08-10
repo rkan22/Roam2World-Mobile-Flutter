@@ -36,6 +36,7 @@ class ApiEndpoints {
   static const String manualCatalogProducts =
       '/api/v1/mobile/b2b/manual/products/';
   static const String manualRequest = '/api/v1/mobile/b2b/manual/request/';
+  static const String pricingBatchPreview = '/api/v1/pricing/batch-preview/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileWorldmovePackages =
       '/api/v1/mobile/worldmove/packages/';
