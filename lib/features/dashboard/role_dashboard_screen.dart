@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/routing/app_role.dart';
 import '../auth/auth_repository.dart';
-import 'admin_dashboard_screen.dart';
+import 'business_dashboard_screen.dart';
 import 'dashboard_screen_reference.dart';
-import 'partner_dashboard_screen.dart';
 
 class RoleDashboardScreen extends StatefulWidget {
   const RoleDashboardScreen({super.key, this.authRepository});
@@ -42,18 +41,15 @@ class _RoleDashboardScreenState extends State<RoleDashboardScreen> {
     }
 
     return switch (role) {
-      AppRole.reseller || AppRole.dealer => PartnerDashboardScreen(
-          key: ValueKey<String>('partner-dashboard-${role.name}'),
+      AppRole.admin || AppRole.reseller || AppRole.dealer => BusinessDashboardScreen(
+          key: ValueKey<String>('business-dashboard-${role.name}'),
           role: role,
         ),
       AppRole.client || AppRole.publicUser => const DashboardScreen(
           key: ValueKey<String>('customer-dashboard'),
         ),
-      AppRole.admin => const AdminDashboardScreen(
-          key: ValueKey<String>('admin-dashboard'),
-        ),
       AppRole.unknown => const DashboardScreen(
-          key: ValueKey<String>('business-dashboard'),
+          key: ValueKey<String>('business-dashboard-unknown'),
         ),
     };
   }
