@@ -17,6 +17,7 @@ import '../../features/orders/order_history.dart';
 import '../../features/orders/order_result.dart';
 import '../../features/orders/orders_screen.dart';
 import '../../features/packages/catalog_controls_screen.dart';
+import '../../features/packages/coverage_screen.dart';
 import '../../features/packages/package_catalog.dart';
 import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
@@ -24,6 +25,8 @@ import '../../features/partners/dealer_network_screen.dart';
 import '../../features/pricing/dealer_pricing_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
+import '../../features/reports/dealer_performance_screen.dart';
+import '../../features/reports/profitability_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/wallet/reseller_finance_ledger_screen.dart';
@@ -36,12 +39,15 @@ abstract final class AppRoutes {
   static const packages = '/packages';
   static const packageDetail = '/packages/detail';
   static const catalogControls = '/catalog-controls';
+  static const coverage = '/coverage';
   static const checkout = '/checkout';
   static const checkoutSuccess = '/checkout/success';
   static const customers = '/customers';
   static const customerDetail = '/customers/detail';
   static const dealers = '/dealers';
   static const dealerPricing = '/dealers/pricing';
+  static const dealerPerformance = '/reports/dealers';
+  static const profitability = '/reports/profitability';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -64,6 +70,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const ResellerDashboardScreen()),
       GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
       GoRoute(path: AppRoutes.catalogControls, builder: (context, state) => const CatalogControlsScreen()),
+      GoRoute(path: AppRoutes.coverage, builder: (context, state) => const CoverageScreen()),
       GoRoute(
         path: AppRoutes.packageDetail,
         redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
@@ -87,6 +94,8 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       ),
       GoRoute(path: AppRoutes.dealers, builder: (context, state) => const DealerNetworkScreen()),
       GoRoute(path: AppRoutes.dealerPricing, builder: (context, state) => const DealerPricingScreen()),
+      GoRoute(path: AppRoutes.dealerPerformance, builder: (context, state) => const DealerPerformanceScreen()),
+      GoRoute(path: AppRoutes.profitability, builder: (context, state) => const ProfitabilityScreen()),
       GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
       GoRoute(
         path: AppRoutes.esimDetail,
