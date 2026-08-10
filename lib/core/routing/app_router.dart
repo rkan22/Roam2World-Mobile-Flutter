@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_commercial_screen.dart';
 import '../../features/admin/admin_partners_screen.dart';
+import '../../features/admin/admin_routing_screen.dart';
 import '../../features/admin/provider_retry_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -50,6 +51,7 @@ abstract final class AppRoutes {
   static const adminDealers = '/admin/dealers';
   static const adminCommercial = '/admin/commercial';
   static const adminProviderRetry = '/admin/provider-retry';
+  static const adminRouting = '/admin/routing';
   static const customerPricing = '/pricing/customer';
   static const dealerPricing = '/dealers/pricing';
   static const finance = '/finance';
@@ -72,149 +74,64 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
   return GoRouter(
     initialLocation: initialLocation,
     routes: [
-      GoRoute(
-        path: AppRoutes.onboarding,
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dashboard,
-        builder: (context, state) => const RoleDashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.packages,
-        builder: (context, state) => const PackagesScreen(),
-      ),
+      GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
+      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const RoleDashboardScreen()),
+      GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
       GoRoute(
         path: AppRoutes.packageDetail,
-        redirect: (context, state) =>
-            state.extra is MobilePackage ? null : AppRoutes.packages,
-        builder: (context, state) =>
-            PackageDetailScreen(package: state.extra! as MobilePackage),
+        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) => PackageDetailScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkout,
-        redirect: (context, state) =>
-            state.extra is MobilePackage ? null : AppRoutes.packages,
-        builder: (context, state) =>
-            CheckoutScreen(package: state.extra! as MobilePackage),
+        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) => CheckoutScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkoutSuccess,
-        redirect: (context, state) =>
-            state.extra is MobileOrderResult ? null : AppRoutes.orders,
-        builder: (context, state) =>
-            OrderSuccessScreen(result: state.extra! as MobileOrderResult),
+        redirect: (context, state) => state.extra is MobileOrderResult ? null : AppRoutes.orders,
+        builder: (context, state) => OrderSuccessScreen(result: state.extra! as MobileOrderResult),
       ),
-      GoRoute(
-        path: AppRoutes.customers,
-        builder: (context, state) => const CustomersScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.clients,
-        builder: (context, state) => const CustomersScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dealerNetwork,
-        builder: (context, state) => const DealerNetworkScreen(),
-      ),
+      GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
+      GoRoute(path: AppRoutes.clients, builder: (context, state) => const CustomersScreen()),
+      GoRoute(path: AppRoutes.dealerNetwork, builder: (context, state) => const DealerNetworkScreen()),
       GoRoute(
         path: AppRoutes.adminResellers,
-        builder: (context, state) => const AdminPartnersScreen(
-          type: AdminPartnerType.resellers,
-        ),
+        builder: (context, state) => const AdminPartnersScreen(type: AdminPartnerType.resellers),
       ),
       GoRoute(
         path: AppRoutes.adminDealers,
-        builder: (context, state) => const AdminPartnersScreen(
-          type: AdminPartnerType.dealers,
-        ),
+        builder: (context, state) => const AdminPartnersScreen(type: AdminPartnerType.dealers),
       ),
-      GoRoute(
-        path: AppRoutes.adminCommercial,
-        builder: (context, state) => const AdminCommercialScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.adminProviderRetry,
-        builder: (context, state) => const ProviderRetryScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.customerPricing,
-        builder: (context, state) => const CustomerPricingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.dealerPricing,
-        builder: (context, state) => const DealerPricingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.finance,
-        builder: (context, state) => const RoleFinanceLedgerScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.esims,
-        builder: (context, state) => const EsimsScreen(),
-      ),
+      GoRoute(path: AppRoutes.adminCommercial, builder: (context, state) => const AdminCommercialScreen()),
+      GoRoute(path: AppRoutes.adminProviderRetry, builder: (context, state) => const ProviderRetryScreen()),
+      GoRoute(path: AppRoutes.adminRouting, builder: (context, state) => const AdminRoutingScreen()),
+      GoRoute(path: AppRoutes.customerPricing, builder: (context, state) => const CustomerPricingScreen()),
+      GoRoute(path: AppRoutes.dealerPricing, builder: (context, state) => const DealerPricingScreen()),
+      GoRoute(path: AppRoutes.finance, builder: (context, state) => const RoleFinanceLedgerScreen()),
+      GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
       GoRoute(
         path: AppRoutes.esimDetail,
-        redirect: (context, state) =>
-            state.extra is MobileEsim ? null : AppRoutes.esims,
-        builder: (context, state) =>
-            EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
+        redirect: (context, state) => state.extra is MobileEsim ? null : AppRoutes.esims,
+        builder: (context, state) => EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
       ),
-      GoRoute(
-        path: AppRoutes.orders,
-        builder: (context, state) => const OrdersScreen(),
-      ),
+      GoRoute(path: AppRoutes.orders, builder: (context, state) => const OrdersScreen()),
       GoRoute(
         path: AppRoutes.orderDetail,
-        redirect: (context, state) =>
-            state.extra is MobileOrderSummary ? null : AppRoutes.orders,
-        builder: (context, state) =>
-            OrderDetailScreen(order: state.extra! as MobileOrderSummary),
+        redirect: (context, state) => state.extra is MobileOrderSummary ? null : AppRoutes.orders,
+        builder: (context, state) => OrderDetailScreen(order: state.extra! as MobileOrderSummary),
       ),
-      GoRoute(
-        path: AppRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.wallet,
-        builder: (context, state) => const WalletScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.reports,
-        builder: (context, state) => const ReportsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.notificationRules,
-        builder: (context, state) => const NotificationRulesScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.operations,
-        builder: (context, state) => const OperationsCenterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.simConverter,
-        builder: (context, state) => const SimConverterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.settings,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.support,
-        builder: (context, state) => const SupportScreen(),
-      ),
+      GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
+      GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
+      GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: AppRoutes.notificationRules, builder: (context, state) => const NotificationRulesScreen()),
+      GoRoute(path: AppRoutes.operations, builder: (context, state) => const OperationsCenterScreen()),
+      GoRoute(path: AppRoutes.simConverter, builder: (context, state) => const SimConverterScreen()),
+      GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: AppRoutes.support, builder: (context, state) => const SupportScreen()),
     ],
   );
 }
