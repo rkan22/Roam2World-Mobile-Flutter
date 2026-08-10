@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/admin_commercial_screen.dart';
 import '../../features/admin/admin_partners_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -46,6 +47,7 @@ abstract final class AppRoutes {
   static const dealerNetwork = '/dealers';
   static const adminResellers = '/admin/resellers';
   static const adminDealers = '/admin/dealers';
+  static const adminCommercial = '/admin/commercial';
   static const customerPricing = '/pricing/customer';
   static const dealerPricing = '/dealers/pricing';
   static const finance = '/finance';
@@ -132,6 +134,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => const AdminPartnersScreen(
           type: AdminPartnerType.dealers,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminCommercial,
+        builder: (context, state) => const AdminCommercialScreen(),
       ),
       GoRoute(
         path: AppRoutes.customerPricing,
