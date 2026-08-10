@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -76,9 +77,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _items = next;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notification status could not be updated.'),
-        ),
+        const SnackBar(content: Text('Notification status could not be updated.')),
       );
     }
   }
@@ -98,9 +97,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _items = previous);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notifications could not be marked as read.'),
-        ),
+        const SnackBar(content: Text('Notifications could not be marked as read.')),
       );
     } finally {
       if (mounted) setState(() => _markingAll = false);
@@ -122,6 +119,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         title: const Text('Notifications'),
         actions: [
+          IconButton(
+            onPressed: () => context.push(AppRoutes.notificationRules),
+            tooltip: 'Notification rules',
+            icon: const Icon(Icons.tune_rounded),
+          ),
           IconButton(
             onPressed: _loading ? null : _load,
             tooltip: 'Refresh',
@@ -279,15 +281,9 @@ class _InboxSummary extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Business inbox',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                    Text('Business inbox', style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: B2BSpacing.xxs),
-                    Text(
-                      '$unreadCount unread · $totalCount total',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text('$unreadCount unread · $totalCount total', style: Theme.of(context).textTheme.bodyMedium),
                   ],
                 ),
               ),
@@ -307,9 +303,7 @@ class _InboxSummary extends StatelessWidget {
               const SizedBox(width: B2BSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: unreadCount == 0 || markingAll
-                      ? null
-                      : onMarkAllRead,
+                  onPressed: unreadCount == 0 || markingAll ? null : onMarkAllRead,
                   icon: markingAll
                       ? const SizedBox.square(
                           dimension: 17,
@@ -329,31 +323,20 @@ class _InboxSummary extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.title, required this.count});
-
   final String title;
   final int count;
-
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const Spacer(),
-        Text(
-          '$count',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Row(
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const Spacer(),
+          Text('$count', style: Theme.of(context).textTheme.bodySmall),
+        ],
+      );
 }
 
 class _NotificationTile extends StatelessWidget {
   const _NotificationTile({required this.item, required this.onTap});
-
   final MobileNotificationItem item;
   final VoidCallback onTap;
 
@@ -383,52 +366,22 @@ class _NotificationTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    if (!item.isRead)
-                      Container(
-                        height: 9,
-                        width: 9,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                  ],
-                ),
+                Row(children: [
+                  Expanded(child: Text(item.title, style: Theme.of(context).textTheme.titleMedium)),
+                  if (!item.isRead)
+                    Container(height: 9, width: 9, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+                ]),
                 const SizedBox(height: B2BSpacing.xs),
-                Text(
-                  item.message,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.45,
-                      ),
-                ),
+                Text(item.message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45)),
                 const SizedBox(height: B2BSpacing.sm),
-                Row(
-                  children: [
-                    Text(
-                      _timeLabel(item.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      item.isRead ? 'Mark unread' : 'Mark read',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                  ],
-                ),
+                Row(children: [
+                  Text(_timeLabel(item.createdAt), style: Theme.of(context).textTheme.bodySmall),
+                  const Spacer(),
+                  Text(
+                    item.isRead ? 'Mark unread' : 'Mark read',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
+                  ),
+                ]),
               ],
             ),
           ),
