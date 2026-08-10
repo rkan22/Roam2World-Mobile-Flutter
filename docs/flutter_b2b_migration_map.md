@@ -125,7 +125,15 @@ lib/features/
 - Pending dealer wallet requests can be approved through the existing mobile approval endpoint.
 - Dealer wallet credit/debit actions use the existing mobile allocation/modify balance endpoints and never fabricate transfer success.
 - Dealer search and Active / Suspended filters are optimized for mobile instead of reproducing the desktop table.
-- Dealer edit, suspend/delete and pricing writes remain out of this slice until their exact mobile-safe write contracts are validated.
+- Dealer edit and suspend/delete remain outside this slice until their mobile UX and confirmation behavior are completed.
+
+### Dealer Pricing & Catalog Controls
+
+- `/dealers/pricing` uses the real `/api/v1/pricing-rules/` contract for reseller-scoped dealer pricing rules.
+- Pricing rules support dealer, provider, optional package scope and markup percentage, with create, PATCH update and delete operations.
+- `ApiClient` now supports authenticated PATCH requests using the same token refresh/error handling path as the other HTTP verbs.
+- `/catalog-controls` exposes the live mobile package catalog, provider filtering and server-backed featured state for reseller review.
+- Catalog visibility/recommended writes remain intentionally read-only because the web implementation falls back to localStorage when `resellers/catalog-controls/` is unavailable; mobile will not create device-only business rules that can diverge from the server.
 
 ## Dashboard migration rule
 
