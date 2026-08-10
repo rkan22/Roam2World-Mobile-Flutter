@@ -38,16 +38,44 @@ class PackagesRepository {
     }
 
     try {
-      final catalog = await _apiClient.get<PackageCatalog>(
-        ApiEndpoints.mobilePackages,
-        queryParameters: {
-          'limit': limit,
-          if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
-          if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
-          if (normalizedType.isNotEmpty) 'package_type': normalizedType,
-        },
-        parser: PackageCatalog.fromResponse,
-      );
+      final packages = <MobilePackage>[];
+      final seenIds = <String>{};
+      var offset = 0;
+      var hasMore = true;
+      var pageCount = 0;
+
+      while (hasMore && pageCount < 20) {
+        final page = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.mobilePackages,
+          queryParameters: {
+            'limit': limit,
+            'offset': offset,
+            if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
+            if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
+            if (normalizedType.isNotEmpty) 'package_type': normalizedType,
+          },
+          parser: PackageCatalog.fromResponse,
+        );
+
+        var added = 0;
+        for (final package in page.packages) {
+          final dedupeKey = package.id.isEmpty
+              ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
+              : package.id;
+          if (seenIds.add(dedupeKey)) {
+            packages.add(package);
+            added++;
+          }
+        }
+
+        hasMore = page.hasMore;
+        if (!hasMore || page.packages.isEmpty || added == 0) break;
+
+        offset += page.packages.length;
+        pageCount++;
+      }
+
+      final catalog = PackageCatalog(packages: packages, hasMore: hasMore);
       cache.set(catalog);
       return catalog;
     } catch (_) {
