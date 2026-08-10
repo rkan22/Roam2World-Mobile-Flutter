@@ -119,6 +119,9 @@ class WalletTransaction {
     required this.reference,
     required this.provider,
     required this.orderNumber,
+    required this.packageName,
+    required this.salePrice,
+    required this.costPrice,
   });
 
   final int id;
@@ -131,11 +134,24 @@ class WalletTransaction {
   final String reference;
   final String provider;
   final String orderNumber;
+  final String packageName;
+  final double? salePrice;
+  final double? costPrice;
 
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
     final order = json['order'] is Map
         ? Map<String, dynamic>.from(json['order'] as Map)
         : const <String, dynamic>{};
+
+    double? optionalMoney(Iterable<dynamic> values) {
+      for (final value in values) {
+        if (value == null || value.toString().trim().isEmpty) continue;
+        final parsed = double.tryParse(value.toString());
+        if (parsed != null) return parsed;
+      }
+      return null;
+    }
+
     return WalletTransaction(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       type: (json['transaction_type'] ?? json['type'] ?? 'transaction').toString(),
@@ -147,6 +163,21 @@ class WalletTransaction {
       reference: (json['reference_id'] ?? json['reference'] ?? '').toString(),
       provider: (json['provider'] ?? order['provider'] ?? '').toString(),
       orderNumber: (order['order_number'] ?? json['order_number'] ?? '').toString(),
+      packageName: (order['product_name'] ?? order['package_name'] ?? json['product_name'] ?? json['package_name'] ?? '').toString(),
+      salePrice: optionalMoney([
+        order['sale_price'],
+        order['final_price'],
+        order['total_price'],
+        order['amount'],
+        json['sale_price'],
+      ]),
+      costPrice: optionalMoney([
+        order['cost_price'],
+        order['provider_cost'],
+        order['base_price'],
+        json['cost_price'],
+        json['provider_cost'],
+      ]),
     );
   }
 
@@ -178,4 +209,7 @@ class WalletTransaction {
   bool get isCredit => normalizedType == 'credit' || normalizedType == 'refund';
   bool get isDebit => normalizedType == 'debit';
   bool get isRefund => normalizedType == 'refund';
+  bool get hasProfitability => salePrice != null && costPrice != null && salePrice! > 0;
+  double? get grossMargin => hasProfitability ? salePrice! - costPrice! : null;
+  double? get grossMarginRate => hasProfitability ? ((salePrice! - costPrice!) / salePrice!) * 100 : null;
 }
