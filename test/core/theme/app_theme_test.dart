@@ -31,12 +31,13 @@ void main() {
 
     test('keeps primary actions readable in both modes', () {
       for (final theme in [AppTheme.light(), AppTheme.dark()]) {
-        final primary = theme.colorScheme.primary;
-        final onPrimary = theme.colorScheme.onPrimary;
+        final style = theme.filledButtonTheme.style!;
+        final background = style.backgroundColor!.resolve(const <WidgetState>{})!;
+        final foreground = style.foregroundColor!.resolve(const <WidgetState>{})!;
 
         expect(
-          ThemeData.estimateBrightnessForColor(primary),
-          isNot(ThemeData.estimateBrightnessForColor(onPrimary)),
+          ThemeData.estimateBrightnessForColor(background),
+          isNot(ThemeData.estimateBrightnessForColor(foreground)),
         );
       }
     });
