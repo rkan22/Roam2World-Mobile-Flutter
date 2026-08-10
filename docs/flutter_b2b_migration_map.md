@@ -117,6 +117,16 @@ lib/features/
 - Search plus All / Credits / Debits / Refunds / Failed filters match the B2B web finance workflow.
 - Top-up requests use `/api/v1/mobile/wallet/requests/` with quick amount presets, custom amount, optional note, error handling and refresh after submission.
 
+### Dealer Network & Wallet
+
+- `/dealers` adds a reseller-focused mobile dealer workspace based on the web Dealer Management and Dealer Wallet flows.
+- Dealer cards surface real status, available balance, client count and order count returned by the reseller dealer API.
+- Network KPIs include total dealers, active dealers, aggregate dealer balance and pending funding approvals.
+- Pending dealer wallet requests can be approved through the existing mobile approval endpoint.
+- Dealer wallet credit/debit actions use the existing mobile allocation/modify balance endpoints and never fabricate transfer success.
+- Dealer search and Active / Suspended filters are optimized for mobile instead of reproducing the desktop table.
+- Dealer edit, suspend/delete and pricing writes remain out of this slice until their exact mobile-safe write contracts are validated.
+
 ## Dashboard migration rule
 
 The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
