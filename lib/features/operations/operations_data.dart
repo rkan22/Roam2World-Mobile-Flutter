@@ -3,11 +3,148 @@ class OperationsData {
     required this.failedOrders,
     required this.logs,
     required this.auditEvents,
+    required this.activitySummary,
+    required this.systemHealth,
   });
 
   final List<FailedOrderItem> failedOrders;
   final List<OperationLogItem> logs;
   final List<AuditEventItem> auditEvents;
+  final AdminActivitySummary activitySummary;
+  final SystemHealthData systemHealth;
+}
+
+class AdminActivityData {
+  const AdminActivityData({required this.events, required this.summary});
+
+  final List<AuditEventItem> events;
+  final AdminActivitySummary summary;
+
+  factory AdminActivityData.fromResponse(dynamic response) {
+    final root = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
+    final rows = data['logs'] is List ? data['logs'] as List : const [];
+    final summary = data['summary'] is Map
+        ? Map<String, dynamic>.from(data['summary'] as Map)
+        : const <String, dynamic>{};
+    return AdminActivityData(
+      events: rows
+          .whereType<Map>()
+          .map(
+            (item) => AuditEventItem.fromJson(
+              Map<String, dynamic>.from(item),
+              source: 'admin',
+            ),
+          )
+          .toList(growable: false),
+      summary: AdminActivitySummary.fromJson(summary),
+    );
+  }
+}
+
+class AdminActivitySummary {
+  const AdminActivitySummary({
+    required this.users,
+    required this.orders,
+    required this.resellers,
+    required this.dealers,
+    required this.esims,
+    required this.plans,
+  });
+
+  const AdminActivitySummary.empty()
+    : users = 0,
+      orders = 0,
+      resellers = 0,
+      dealers = 0,
+      esims = 0,
+      plans = 0;
+
+  final int users;
+  final int orders;
+  final int resellers;
+  final int dealers;
+  final int esims;
+  final int plans;
+
+  factory AdminActivitySummary.fromJson(Map<String, dynamic> json) =>
+      AdminActivitySummary(
+        users: _int(json['users']),
+        orders: _int(json['orders']),
+        resellers: _int(json['resellers']),
+        dealers: _int(json['dealers']),
+        esims: _int(json['esims']),
+        plans: _int(json['plans']),
+      );
+}
+
+class SystemHealthData {
+  const SystemHealthData({
+    required this.api,
+    required this.database,
+    required this.orders,
+    required this.wallet,
+    required this.providerStatus,
+    required this.providerEndpoint,
+    required this.providerRefreshSeconds,
+  });
+
+  const SystemHealthData.empty()
+    : api = 'unknown',
+      database = 'unknown',
+      orders = 'unknown',
+      wallet = 'unknown',
+      providerStatus = 'unknown',
+      providerEndpoint = '',
+      providerRefreshSeconds = 0;
+
+  final String api;
+  final String database;
+  final String orders;
+  final String wallet;
+  final String providerStatus;
+  final String providerEndpoint;
+  final int providerRefreshSeconds;
+
+  factory SystemHealthData.fromResponse(dynamic response) {
+    final root = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
+    final provider = data['provider_health'] is Map
+        ? Map<String, dynamic>.from(data['provider_health'] as Map)
+        : const <String, dynamic>{};
+    return SystemHealthData(
+      api: (data['api'] ?? 'unknown').toString(),
+      database: (data['database'] ?? 'unknown').toString(),
+      orders: (data['orders'] ?? 'unknown').toString(),
+      wallet: (data['wallet'] ?? 'unknown').toString(),
+      providerStatus: (provider['status'] ?? 'unknown').toString(),
+      providerEndpoint: (provider['endpoint'] ?? '').toString(),
+      providerRefreshSeconds: _int(provider['refresh_seconds']),
+    );
+  }
+
+  bool get isOperational =>
+      isHealthyStatus(api) &&
+      isHealthyStatus(database) &&
+      isHealthyStatus(orders) &&
+      isHealthyStatus(wallet) &&
+      isHealthyStatus(providerStatus);
+
+  static bool isHealthyStatus(String value) {
+    final normalized = value.toLowerCase();
+    return normalized == 'operational' ||
+        normalized == 'available' ||
+        normalized == 'healthy' ||
+        normalized == 'ok';
+  }
 }
 
 class FailedOrderItem {
@@ -35,18 +172,57 @@ class FailedOrderItem {
   final String currency;
   final DateTime? createdAt;
 
-  factory FailedOrderItem.fromJson(Map<String, dynamic> json) => FailedOrderItem(
-        id: (json['id'] ?? json['order_id'] ?? json['reference'] ?? '').toString(),
-        provider: _providerLabel(json['provider'] ?? json['provider_name'] ?? json['operator']),
-        orderNumber: (json['order_no'] ?? json['order_number'] ?? json['reference'] ?? json['id'] ?? '').toString(),
-        customer: (json['client_name'] ?? json['customer_name'] ?? json['user_name'] ?? json['email'] ?? '').toString(),
-        packageName: (json['package_name'] ?? json['plan_name'] ?? json['product_name'] ?? json['name'] ?? 'Package').toString(),
-        status: (json['status'] ?? json['state'] ?? 'failed').toString(),
-        error: (json['error'] ?? json['error_message'] ?? json['message'] ?? json['failure_reason'] ?? 'Needs operations review').toString(),
-        amount: double.tryParse((json['amount'] ?? json['total_price'] ?? json['sale_price'] ?? json['price'] ?? 0).toString()) ?? 0,
-        currency: (json['currency'] ?? 'USD').toString(),
-        createdAt: DateTime.tryParse((json['created_at'] ?? json['created'] ?? json['date'] ?? '').toString()),
-      );
+  factory FailedOrderItem.fromJson(
+    Map<String, dynamic> json,
+  ) => FailedOrderItem(
+    id: (json['id'] ?? json['order_id'] ?? json['reference'] ?? '').toString(),
+    provider: _providerLabel(
+      json['provider'] ?? json['provider_name'] ?? json['operator'],
+    ),
+    orderNumber:
+        (json['order_no'] ??
+                json['order_number'] ??
+                json['reference'] ??
+                json['id'] ??
+                '')
+            .toString(),
+    customer:
+        (json['client_name'] ??
+                json['customer_name'] ??
+                json['user_name'] ??
+                json['email'] ??
+                '')
+            .toString(),
+    packageName:
+        (json['package_name'] ??
+                json['plan_name'] ??
+                json['product_name'] ??
+                json['name'] ??
+                'Package')
+            .toString(),
+    status: (json['status'] ?? json['state'] ?? 'failed').toString(),
+    error:
+        (json['error'] ??
+                json['error_message'] ??
+                json['message'] ??
+                json['failure_reason'] ??
+                'Needs operations review')
+            .toString(),
+    amount:
+        double.tryParse(
+          (json['amount'] ??
+                  json['total_price'] ??
+                  json['sale_price'] ??
+                  json['price'] ??
+                  0)
+              .toString(),
+        ) ??
+        0,
+    currency: (json['currency'] ?? 'USD').toString(),
+    createdAt: DateTime.tryParse(
+      (json['created_at'] ?? json['created'] ?? json['date'] ?? '').toString(),
+    ),
+  );
 
   String get priority {
     final text = '$status $error'.toLowerCase();
@@ -80,16 +256,56 @@ class OperationLogItem {
   final String message;
   final DateTime? createdAt;
 
-  factory OperationLogItem.fromJson(Map<String, dynamic> json, String source) => OperationLogItem(
-        id: (json['id'] ?? json['request_id'] ?? json['event_id'] ?? '').toString(),
+  factory OperationLogItem.fromJson(Map<String, dynamic> json, String source) =>
+      OperationLogItem(
+        id: (json['id'] ?? json['request_id'] ?? json['event_id'] ?? '')
+            .toString(),
         type: (json['type'] ?? json['event_type'] ?? source).toString(),
-        provider: _providerLabel(json['provider'] ?? json['provider_name'] ?? json['operator']),
-        endpoint: (json['endpoint'] ?? json['path'] ?? json['url'] ?? json['callback_url'] ?? '').toString(),
-        method: (json['method'] ?? json['http_method'] ?? (source == 'Webhook' ? 'POST' : 'GET')).toString(),
-        statusCode: int.tryParse((json['status'] ?? json['status_code'] ?? json['response_status'] ?? json['code'] ?? 0).toString()) ?? 0,
-        durationMs: int.tryParse((json['duration_ms'] ?? json['latency_ms'] ?? json['response_time_ms'] ?? 0).toString()) ?? 0,
-        message: (json['message'] ?? json['error'] ?? json['description'] ?? json['detail'] ?? '').toString(),
-        createdAt: DateTime.tryParse((json['created_at'] ?? json['timestamp'] ?? json['date'] ?? '').toString()),
+        provider: _providerLabel(
+          json['provider'] ?? json['provider_name'] ?? json['operator'],
+        ),
+        endpoint:
+            (json['endpoint'] ??
+                    json['path'] ??
+                    json['url'] ??
+                    json['callback_url'] ??
+                    '')
+                .toString(),
+        method:
+            (json['method'] ??
+                    json['http_method'] ??
+                    (source == 'Webhook' ? 'POST' : 'GET'))
+                .toString(),
+        statusCode:
+            int.tryParse(
+              (json['status'] ??
+                      json['status_code'] ??
+                      json['response_status'] ??
+                      json['code'] ??
+                      0)
+                  .toString(),
+            ) ??
+            0,
+        durationMs:
+            int.tryParse(
+              (json['duration_ms'] ??
+                      json['latency_ms'] ??
+                      json['response_time_ms'] ??
+                      0)
+                  .toString(),
+            ) ??
+            0,
+        message:
+            (json['message'] ??
+                    json['error'] ??
+                    json['description'] ??
+                    json['detail'] ??
+                    '')
+                .toString(),
+        createdAt: DateTime.tryParse(
+          (json['created_at'] ?? json['timestamp'] ?? json['date'] ?? '')
+              .toString(),
+        ),
       );
 
   bool get needsReview => statusCode == 0 || statusCode >= 400;
@@ -114,23 +330,76 @@ class AuditEventItem {
   final String description;
   final DateTime? createdAt;
 
-  factory AuditEventItem.fromJson(Map<String, dynamic> json, {String source = 'audit'}) => AuditEventItem(
-        id: (json['id'] ?? '${json['created_at'] ?? ''}-${json['action'] ?? ''}').toString(),
-        actor: (json['actor_name'] ?? json['user_name'] ?? json['reseller_name'] ?? json['dealer_name'] ?? (json['user'] is Map ? (json['user'] as Map)['email'] : null) ?? json['email'] ?? 'System').toString(),
-        action: (json['action'] ?? json['event'] ?? json['type'] ?? json['transaction_type'] ?? json['method'] ?? 'activity').toString(),
-        target: (json['target'] ?? json['resource'] ?? json['object_type'] ?? json['provider'] ?? json['reference'] ?? json['id'] ?? 'Platform').toString(),
-        source: (json['_source'] ?? json['source'] ?? json['category'] ?? source).toString(),
-        description: (json['description'] ?? json['message'] ?? json['note'] ?? json['notes'] ?? json['detail'] ?? json['status'] ?? '').toString(),
-        createdAt: DateTime.tryParse((json['created_at'] ?? json['timestamp'] ?? json['date'] ?? json['created'] ?? '').toString()),
-      );
+  factory AuditEventItem.fromJson(
+    Map<String, dynamic> json, {
+    String source = 'audit',
+  }) => AuditEventItem(
+    id: (json['id'] ?? '${json['created_at'] ?? ''}-${json['action'] ?? ''}')
+        .toString(),
+    actor:
+        (json['actor'] ??
+                json['actor_name'] ??
+                json['user_name'] ??
+                json['reseller_name'] ??
+                json['dealer_name'] ??
+                (json['user'] is Map ? (json['user'] as Map)['email'] : null) ??
+                json['email'] ??
+                'System')
+            .toString(),
+    action:
+        (json['action'] ??
+                json['event'] ??
+                json['type'] ??
+                json['transaction_type'] ??
+                json['method'] ??
+                'activity')
+            .toString(),
+    target:
+        (json['target'] ??
+                json['title'] ??
+                json['resource'] ??
+                json['object_type'] ??
+                json['provider'] ??
+                json['reference'] ??
+                json['id'] ??
+                'Platform')
+            .toString(),
+    source: (json['_source'] ?? json['source'] ?? json['category'] ?? source)
+        .toString(),
+    description:
+        (json['description'] ??
+                json['message'] ??
+                json['note'] ??
+                json['notes'] ??
+                json['detail'] ??
+                json['status'] ??
+                '')
+            .toString(),
+    createdAt: DateTime.tryParse(
+      (json['created_at'] ??
+              json['timestamp'] ??
+              json['date'] ??
+              json['created'] ??
+              '')
+          .toString(),
+    ),
+  );
 }
+
+int _int(dynamic value) => int.tryParse((value ?? 0).toString()) ?? 0;
 
 String _providerLabel(dynamic value) {
   final raw = (value ?? '').toString();
   final key = raw.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
   if (key.contains('airhub') || key.contains('vodafone')) return 'Vodafone';
-  if (key.contains('worldmove') || key.contains('orangeeurope')) return 'Orange Europe';
-  if (key.contains('flexnet') || key.contains('bigdata')) return 'Orange Big Data';
-  if (key.contains('tgt') || key.contains('tsim') || key.contains('balkan')) return 'Orange Balkans';
+  if (key.contains('worldmove') || key.contains('orangeeurope')) {
+    return 'Orange Europe';
+  }
+  if (key.contains('flexnet') || key.contains('bigdata')) {
+    return 'Orange Big Data';
+  }
+  if (key.contains('tgt') || key.contains('tsim') || key.contains('balkan')) {
+    return 'Orange Balkans';
+  }
   return raw.isEmpty ? 'System' : raw;
 }

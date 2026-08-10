@@ -7,17 +7,27 @@ import '../wallet/wallet_repository.dart';
 import 'operations_data.dart';
 
 class OperationsRepository {
-  OperationsRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  OperationsRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
   Future<OperationsData> fetchOperations() async {
+    final systemHealth =
+        await _safe<SystemHealthData>(
+          () => _apiClient.get<SystemHealthData>(
+            ApiEndpoints.mobileAdminSystemHealth,
+            parser: SystemHealthData.fromResponse,
+          ),
+        ) ??
+        const SystemHealthData.empty();
+
     final failed = await _safeList<FailedOrderItem>(
       () => _apiClient.get<List<FailedOrderItem>>(
         ApiEndpoints.failedOrders,
-        parser: (response) => _rows(response)
-            .map((item) => FailedOrderItem.fromJson(item))
-            .toList(growable: false),
+        parser: (response) => _rows(
+          response,
+        ).map((item) => FailedOrderItem.fromJson(item)).toList(growable: false),
       ),
     );
 
@@ -38,23 +48,13 @@ class OperationsRepository {
       ),
     );
 
-    final adminAudit = await _safeList<AuditEventItem>(
-      () => _apiClient.get<List<AuditEventItem>>(
+    final adminActivity = await _safe<AdminActivityData>(
+      () => _apiClient.get<AdminActivityData>(
         ApiEndpoints.mobileAdminActivityLogs,
-        parser: (response) => _rows(response)
-            .map(
-              (item) => AuditEventItem.fromJson(
-                {
-                  ...item,
-                  'action': item['type'] ?? item['title'] ?? 'activity',
-                  'target': item['title'] ?? 'Platform',
-                },
-                source: 'admin',
-              ),
-            )
-            .toList(growable: false),
+        parser: AdminActivityData.fromResponse,
       ),
     );
+    final adminAudit = adminActivity?.events ?? const <AuditEventItem>[];
 
     final dedicatedAudit = adminAudit.isNotEmpty
         ? adminAudit
@@ -72,15 +72,24 @@ class OperationsRepository {
         : await _composeAuditFallback();
 
     final logs = [...providerLogs, ...webhookLogs]
-      ..sort((a, b) => (b.createdAt ?? DateTime(1970))
-          .compareTo(a.createdAt ?? DateTime(1970)));
-    auditEvents.sort((a, b) => (b.createdAt ?? DateTime(1970))
-        .compareTo(a.createdAt ?? DateTime(1970)));
+      ..sort(
+        (a, b) => (b.createdAt ?? DateTime(1970)).compareTo(
+          a.createdAt ?? DateTime(1970),
+        ),
+      );
+    auditEvents.sort(
+      (a, b) => (b.createdAt ?? DateTime(1970)).compareTo(
+        a.createdAt ?? DateTime(1970),
+      ),
+    );
 
     return OperationsData(
       failedOrders: failed,
       logs: logs,
       auditEvents: auditEvents,
+      activitySummary:
+          adminActivity?.summary ?? const AdminActivitySummary.empty(),
+      systemHealth: systemHealth,
     );
   }
 
@@ -89,8 +98,9 @@ class OperationsRepository {
       () => OrdersRepository(apiClient: _apiClient).fetchOrders(),
     );
     final wallet = await _safe<WalletData>(
-      () => WalletRepository(apiClient: _apiClient)
-          .fetchWallet(forceRefresh: true),
+      () => WalletRepository(
+        apiClient: _apiClient,
+      ).fetchWallet(forceRefresh: true),
     );
     final dealerRows = await _safeList<Map<String, dynamic>>(
       () => _apiClient.get<List<Map<String, dynamic>>>(
@@ -102,7 +112,9 @@ class OperationsRepository {
     final events = <AuditEventItem>[];
     if (orders != null) {
       events.addAll(
-        orders.orders.take(80).map(
+        orders.orders
+            .take(80)
+            .map(
               (order) => AuditEventItem(
                 id: 'order-${order.id}',
                 actor: order.customerName.isEmpty
@@ -121,12 +133,14 @@ class OperationsRepository {
     }
     if (wallet != null) {
       events.addAll(
-        wallet.transactions.take(80).map(
+        wallet.transactions
+            .take(80)
+            .map(
               (txn) => AuditEventItem(
                 id: 'wallet-${txn.id}',
                 actor: 'System',
                 action: txn.type.trim().isEmpty ? 'wallet' : txn.type,
-                target: txn.id == 0 ? 'Wallet' : 'Wallet #${txn.id}',
+                target: txn.id.isEmpty ? 'Wallet' : 'Wallet #${txn.id}',
                 source: 'finance',
                 description: txn.description,
                 createdAt: txn.createdAt,
@@ -135,17 +149,14 @@ class OperationsRepository {
       );
     }
     events.addAll(
-      dealerRows.take(80).map(
-            (row) => AuditEventItem.fromJson(
-              {
-                ...row,
-                'action':
-                    row['action'] ?? 'dealer_${row['status'] ?? 'request'}',
-                'target':
-                    row['dealer_name'] ?? row['dealer_email'] ?? row['id'],
-              },
-              source: 'dealers',
-            ),
+      dealerRows
+          .take(80)
+          .map(
+            (row) => AuditEventItem.fromJson({
+              ...row,
+              'action': row['action'] ?? 'dealer_${row['status'] ?? 'request'}',
+              'target': row['dealer_name'] ?? row['dealer_email'] ?? row['id'],
+            }, source: 'dealers'),
           ),
     );
     return events;
@@ -179,7 +190,8 @@ List<Map<String, dynamic>> _rows(dynamic response) {
   final root = Map<String, dynamic>.from(response);
   dynamic data = root['data'] ?? root;
   if (data is Map) {
-    data = data['results'] ??
+    data =
+        data['results'] ??
         data['items'] ??
         data['logs'] ??
         data['events'] ??
