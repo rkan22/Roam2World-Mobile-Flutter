@@ -4,6 +4,7 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
+import '../../features/customers/customer_detail_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/dashboard/reseller_dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
@@ -33,6 +34,7 @@ abstract final class AppRoutes {
   static const checkout = '/checkout';
   static const checkoutSuccess = '/checkout/success';
   static const customers = '/customers';
+  static const customerDetail = '/customers/detail';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -70,6 +72,11 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => OrderSuccessScreen(result: state.extra! as MobileOrderResult),
       ),
       GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
+      GoRoute(
+        path: AppRoutes.customerDetail,
+        redirect: (context, state) => state.extra is CustomerDetailArgs ? null : AppRoutes.customers,
+        builder: (context, state) => CustomerDetailScreen(customer: state.extra! as CustomerDetailArgs),
+      ),
       GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
       GoRoute(
         path: AppRoutes.esimDetail,
