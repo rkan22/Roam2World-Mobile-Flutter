@@ -103,7 +103,7 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
   }
 
   Future<void> _assignQr(ManualTaskItem task) async {
-    final code = await _ask('Assign QR / LPA code', 'LPA:1$... or QR value', multiline: true);
+    final code = await _ask('Assign QR / LPA code', r'LPA:1$... or QR value', multiline: true);
     if (code == null || code.isEmpty) return;
     await _run(() => _repository.assignQr(task.taskId, code: code), 'QR delivery completed.');
   }
