@@ -170,6 +170,14 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.insights_outlined, color: AppColors.primary),
+                title: const Text('Pricing & reports', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Live admin pricing inventory and business totals'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.adminCommercial),
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.support_agent_rounded, color: AppColors.primary),
                 title: const Text('Support & system health', style: TextStyle(fontWeight: FontWeight.w900)),
                 subtitle: const Text('Admin support queue and backend health'),
