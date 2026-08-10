@@ -169,7 +169,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
@@ -185,7 +185,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
@@ -201,7 +201,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(50),
+          minimumSize: const Size(0, 50),
           foregroundColor: primary,
           side: BorderSide(
             color: isDark ? const Color(0xFF4A4381) : AppColors.primarySoft,
