@@ -33,8 +33,12 @@ class _R2WBottomNavState extends State<R2WBottomNav> {
   Widget build(BuildContext context) {
     final items = _itemsFor(_role);
     final currentPath = GoRouterState.of(context).uri.path;
-    final selected = _indexForPath(currentPath, items) ??
-        widget.selectedIndex.clamp(0, items.length - 1);
+    final fallbackIndex = widget.selectedIndex < 0
+        ? 0
+        : widget.selectedIndex >= items.length
+            ? items.length - 1
+            : widget.selectedIndex;
+    final selected = _indexForPath(currentPath, items) ?? fallbackIndex;
 
     return NavigationBar(
       selectedIndex: selected,
