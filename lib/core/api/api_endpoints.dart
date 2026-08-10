@@ -39,6 +39,8 @@ class ApiEndpoints {
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileWorldmovePackages =
       '/api/v1/mobile/worldmove/packages/';
+  static const String mobileWorldmoveOrders =
+      '/api/v1/mobile/worldmove/orders/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
   static const String mobileOrders = '/api/v1/mobile/orders/';

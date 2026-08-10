@@ -7,11 +7,9 @@ import 'order_history.dart';
 import 'order_result.dart';
 
 class OrdersRepository {
-  OrdersRepository({
-    ApiClient? apiClient,
-    TokenStorage? tokenStorage,
-  })  : _apiClient = apiClient ?? ApiClient(),
-        _tokenStorage = tokenStorage ?? TokenStorage();
+  OrdersRepository({ApiClient? apiClient, TokenStorage? tokenStorage})
+    : _apiClient = apiClient ?? ApiClient(),
+      _tokenStorage = tokenStorage ?? TokenStorage();
 
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
@@ -39,15 +37,19 @@ class OrdersRepository {
 
     final normalizedStatus = status?.trim().toLowerCase() ?? '';
     final normalizedSearch = search?.trim().toLowerCase() ?? '';
-    final filtered = history.orders.where((order) {
-      final statusMatches = normalizedStatus.isEmpty ||
-          order.status.toLowerCase() == normalizedStatus;
-      final searchMatches = normalizedSearch.isEmpty ||
-          order.orderNumber.toLowerCase().contains(normalizedSearch) ||
-          order.packageName.toLowerCase().contains(normalizedSearch) ||
-          order.customerName.toLowerCase().contains(normalizedSearch);
-      return statusMatches && searchMatches;
-    }).toList(growable: false);
+    final filtered = history.orders
+        .where((order) {
+          final statusMatches =
+              normalizedStatus.isEmpty ||
+              order.status.toLowerCase() == normalizedStatus;
+          final searchMatches =
+              normalizedSearch.isEmpty ||
+              order.orderNumber.toLowerCase().contains(normalizedSearch) ||
+              order.packageName.toLowerCase().contains(normalizedSearch) ||
+              order.customerName.toLowerCase().contains(normalizedSearch);
+          return statusMatches && searchMatches;
+        })
+        .toList(growable: false);
 
     return OrderHistory(orders: filtered, count: filtered.length);
   }
@@ -58,18 +60,36 @@ class OrdersRepository {
     required String lastName,
     required String phone,
     String? imei,
+    String? simNumber,
   }) {
+    final isWorldmove = package.provider.toLowerCase() == 'worldmove';
     return _apiClient.post<MobileOrderResult>(
-      ApiEndpoints.mobileOrders,
+      isWorldmove
+          ? ApiEndpoints.mobileWorldmoveOrders
+          : ApiEndpoints.mobileOrders,
       data: {
         'package_id': package.id,
+        if (isWorldmove) 'wmproductId': package.id,
+        if (isWorldmove) 'qty': 1,
+        if (isWorldmove) 'qrcodeType': 2,
         if (package.provider.isNotEmpty) 'provider': package.provider,
         'customer_first_name': firstName.trim(),
         'customer_last_name': lastName.trim(),
         'customer_phone': phone.trim(),
         if (imei != null && imei.trim().isNotEmpty) 'imei': imei.trim(),
+        if (simNumber != null && simNumber.trim().isNotEmpty)
+          'simNum': simNumber.replaceAll(RegExp(r'\D'), ''),
       },
-      parser: MobileOrderResult.fromResponse,
+      parser: (response) {
+        if (!isWorldmove) return MobileOrderResult.fromResponse(response);
+        final enriched = Map<String, dynamic>.from(response as Map);
+        enriched.putIfAbsent('package_name', () => package.name);
+        enriched.putIfAbsent('price', () => package.price);
+        enriched.putIfAbsent('currency', () => package.currency);
+        enriched.putIfAbsent('customer_first_name', () => firstName.trim());
+        enriched.putIfAbsent('customer_last_name', () => lastName.trim());
+        return MobileOrderResult.fromResponse(enriched);
+      },
     );
   }
 }
