@@ -109,13 +109,14 @@ lib/features/
 
 ### Finance Ledger & Top-up
 
-- `/wallet` now opens a reseller-specific Finance Ledger workspace rather than the generic wallet screen.
-- Wallet balance stays sourced from `/api/v1/mobile/wallet/`; the full transaction ledger is enriched from `/api/v1/mobile/transactions/` when available.
+- `/wallet` routes by account role.
+- Reseller wallet balance stays sourced from `/api/v1/mobile/wallet/`; the full transaction ledger is enriched from `/api/v1/mobile/transactions/` when available.
 - Ledger enrichment is backward-compatible: if the transactions endpoint fails, the wallet still renders its server-provided recent transactions.
 - Transaction normalization supports credits, debits, refunds, failed states, references, providers and related order numbers without fabricating missing values.
 - Finance KPIs include total debits, credits, refunds, failed transaction count and net movement calculated only from returned ledger rows.
 - Search plus All / Credits / Debits / Refunds / Failed filters match the B2B web finance workflow.
-- Top-up requests use `/api/v1/mobile/wallet/requests/` with quick amount presets, custom amount, optional note, error handling and refresh after submission.
+- Reseller top-up requests use `/api/v1/mobile/wallet/requests/`.
+- Dealer balance requests use the dealer-specific `/api/v1/resellers/dealer-balance/request_balance/` contract with `requested_amount`, `currency` and `dealer_notes`; reseller top-up semantics are not reused for dealer funding.
 
 ### Dealer Network & Wallet
 
@@ -131,7 +132,9 @@ lib/features/
 
 - `/dealers/pricing` uses the real `/api/v1/pricing-rules/` contract for reseller-scoped dealer pricing rules.
 - Pricing rules support dealer, provider, optional package scope and markup percentage, with create, PATCH update and delete operations.
-- `ApiClient` now supports authenticated PATCH requests using the same token refresh/error handling path as the other HTTP verbs.
+- `/pricing/customer` uses the same pricing-rules contract for the authenticated dealer's customer-facing markup without reseller-side dealer selection.
+- `PricingRule` now retains `target_role` so reseller-scoped dealer rules and self-service dealer customer rules can be separated safely in the UI.
+- `ApiClient` supports authenticated PATCH requests using the same token refresh/error handling path as the other HTTP verbs.
 - `/catalog-controls` exposes the live mobile package catalog, provider filtering and server-backed featured state for reseller review.
 - Catalog visibility/recommended writes remain intentionally read-only because the web implementation falls back to localStorage when `resellers/catalog-controls/` is unavailable; mobile will not create device-only business rules that can diverge from the server.
 
@@ -144,9 +147,28 @@ lib/features/
 - Previous settings switches that only changed widget-local state were removed so the app does not imply server preferences were saved when they were not.
 - Theme selection remains device-side through `ThemeController`; reseller profile edit and password changes remain pending until the exact mobile-safe profile/password endpoint paths are validated.
 
+### Role-aware App Shell
+
+- Stored login role is normalized into an `AppRole` and drives dashboard selection and bottom navigation.
+- Reseller/Dealer primary navigation is Home / Catalog / Orders / Clients / More.
+- Client/Public navigation is Home / eSIMs / Orders / Reports / More.
+- Admin navigation foundation is Home / Orders / Ops / Reports / More.
+- Selected bottom-navigation state is derived from the active route rather than trusting legacy hard-coded tab indexes.
+- `/dashboard` resolves Dealer to `DealerDashboardScreen`, Client/Public to the existing customer dashboard foundation, and partner/admin fallback to the reseller workspace until their dedicated role dashboards are completed.
+
+### Dealer Role Foundation
+
+- Dealer Dashboard uses the same real tenant dashboard contract and period filters as the web dealer dashboard.
+- Dealer KPI values such as revenue, gross profit, margin, successful orders and customers render only when returned by the backend.
+- Dealer Action Center links Catalog, Customer Pricing, Clients, Orders, SIM/eSIM Inventory, SIM Converter, role-specific Finance Ledger/Balance Request and Reports.
+- Dealer Finance Ledger uses the mobile wallet/transactions read contract but sends funding requests through the dealer-specific balance-request endpoint.
+- Customer Pricing is self-service and scoped to the authenticated dealer; no arbitrary dealer selection is exposed.
+- SIM Converter mobile foundation uses only real conversion history and activation-code parsing endpoints.
+- Web-only simulation helpers and physical USB SIM programming operations are intentionally excluded from the mobile workspace.
+
 ## Dashboard migration rule
 
-The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
+The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The production dealer dashboard is `lib/features/dashboard/dealer_dashboard_screen.dart`. `/dashboard` resolves the stored account role before choosing the appropriate workspace.
 
 ## Mobile UX rules
 
