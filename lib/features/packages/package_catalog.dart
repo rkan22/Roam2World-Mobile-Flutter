@@ -139,7 +139,11 @@ class MobilePackage {
         ? Map<String, dynamic>.from(countries.first as Map)
         : const <String, dynamic>{};
     final identityText = [
+      json['id'],
       json['wmproductId'],
+      json['package_id'],
+      json['planCode'],
+      json['productCode'],
       json['name'],
       json['package_name'],
       json['productName'],

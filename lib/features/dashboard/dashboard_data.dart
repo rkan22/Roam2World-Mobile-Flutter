@@ -48,6 +48,23 @@ class DashboardData {
   final int expiredEsimCount;
   final List<DashboardOrderSummary> recentOrders;
 
+  DashboardData copyWith({
+    double? balance,
+    String? currency,
+    List<DashboardOrderSummary>? recentOrders,
+  }) {
+    return DashboardData(
+      role: role,
+      balance: balance ?? this.balance,
+      currency: currency ?? this.currency,
+      todaySales: todaySales,
+      monthlySales: monthlySales,
+      activeEsimCount: activeEsimCount,
+      expiredEsimCount: expiredEsimCount,
+      recentOrders: recentOrders ?? this.recentOrders,
+    );
+  }
+
   factory DashboardData.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
@@ -64,9 +81,10 @@ class DashboardData {
       expiredEsimCount: _toInt(data['expired_esim_count']),
       recentOrders: orders
           .whereType<Map>()
-          .map((item) => DashboardOrderSummary.fromJson(
-                Map<String, dynamic>.from(item),
-              ))
+          .map(
+            (item) =>
+                DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false),
     );
   }
@@ -74,8 +92,12 @@ class DashboardData {
   factory DashboardData.fromAdminResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
-    final metrics = Map<String, dynamic>.from(data['metrics'] as Map? ?? const {});
-    final revenue = Map<String, dynamic>.from(metrics['revenue'] as Map? ?? const {});
+    final metrics = Map<String, dynamic>.from(
+      data['metrics'] as Map? ?? const {},
+    );
+    final revenue = Map<String, dynamic>.from(
+      metrics['revenue'] as Map? ?? const {},
+    );
     final salesOverview = Map<String, dynamic>.from(
       data['sales_overview'] as Map? ?? const {},
     );
@@ -84,7 +106,8 @@ class DashboardData {
     return DashboardData(
       role: 'Admin',
       balance: 0,
-      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD').toString(),
+      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD')
+          .toString(),
       todaySales: _toDouble(salesOverview['today_sales']),
       monthlySales: _toDouble(
         salesOverview['total_sales'] ?? revenue['total_sales'],
@@ -93,9 +116,10 @@ class DashboardData {
       expiredEsimCount: _toInt(metrics['expired_esim_count']),
       recentOrders: orders
           .whereType<Map>()
-          .map((item) => DashboardOrderSummary.fromJson(
-                Map<String, dynamic>.from(item),
-              ))
+          .map(
+            (item) =>
+                DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false),
     );
   }
