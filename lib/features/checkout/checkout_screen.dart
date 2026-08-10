@@ -22,6 +22,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _imeiController = TextEditingController();
+  final _simNumberController = TextEditingController();
   final _repository = OrdersRepository();
 
   bool _accepted = false;
@@ -34,11 +35,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _lastNameController.dispose();
     _phoneController.dispose();
     _imeiController.dispose();
+    _simNumberController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (_submitting || !(_formKey.currentState?.validate() ?? false) || !_accepted) return;
+    if (_submitting ||
+        !(_formKey.currentState?.validate() ?? false) ||
+        !_accepted) {
+      return;
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -50,13 +56,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         lastName: _lastNameController.text,
         phone: _phoneController.text,
         imei: _imeiController.text,
+        simNumber: _simNumberController.text,
       );
       if (!mounted) return;
       context.go('/checkout/success', extra: result);
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'The order could not be completed. Please try again.');
+      if (mounted) {
+        setState(
+          () => _error = 'The order could not be completed. Please try again.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -65,10 +76,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final package = widget.package;
+    final requiresSimNumber =
+        package.provider.toLowerCase() == 'worldmove' &&
+        package.packageType.toLowerCase() == 'simcard';
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _submitting ? null : () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _submitting ? null : () => context.pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Checkout'),
       ),
       bottomNavigationBar: SafeArea(
@@ -76,7 +93,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: FilledButton(
           onPressed: _accepted && !_submitting ? _submit : null,
           child: _submitting
-              ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: Colors.white,
+                  ),
+                )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -94,7 +118,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             Text('Review and provision', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 5),
-            Text('Confirm the plan and assign it to your customer.', style: theme.textTheme.bodyMedium),
+            Text(
+              'Confirm the plan and assign it to your customer.',
+              style: theme.textTheme.bodyMedium,
+            ),
             const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(18),
@@ -109,23 +136,55 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     height: 56,
                     width: 56,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(18)),
-                    child: Text(_flagFor(package.countryCode), style: const TextStyle(fontSize: 28)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .14),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      _flagFor(package.countryCode),
+                      style: const TextStyle(fontSize: 28),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(package.destination, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17)),
+                        Text(
+                          package.destination,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 17,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text('${package.dataLabel} • ${package.validityLabel}', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                        Text(
+                          '${package.dataLabel} • ${package.validityLabel}',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 3),
-                        Text(package.displayProvider, style: TextStyle(color: Colors.white.withValues(alpha: .62), fontSize: 12.5)),
+                        Text(
+                          package.displayProvider,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: .62),
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Text(package.formattedPrice, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+                  Text(
+                    package.formattedPrice,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -137,9 +196,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: TextFormField(controller: _firstNameController, enabled: !_submitting, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'First name'), validator: _required)),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _firstNameController,
+                          enabled: !_submitting,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'First name',
+                          ),
+                          validator: _required,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: TextFormField(controller: _lastNameController, enabled: !_submitting, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Last name'), validator: _required)),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _lastNameController,
+                          enabled: !_submitting,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Last name',
+                          ),
+                          validator: _required,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -148,7 +227,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     enabled: !_submitting,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(labelText: 'Customer phone', prefixIcon: Icon(Icons.phone_outlined)),
+                    decoration: const InputDecoration(
+                      labelText: 'Customer phone',
+                      prefixIcon: Icon(Icons.phone_outlined),
+                    ),
                     validator: (value) {
                       final text = value?.trim() ?? '';
                       if (text.isEmpty) return 'Enter customer phone';
@@ -157,40 +239,86 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _imeiController,
-                    enabled: !_submitting,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: const InputDecoration(labelText: 'IMEI (when required)', prefixIcon: Icon(Icons.phone_iphone_outlined)),
-                  ),
+                  if (requiresSimNumber)
+                    TextFormField(
+                      controller: _simNumberController,
+                      enabled: !_submitting,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      maxLength: 20,
+                      onFieldSubmitted: (_) => _submit(),
+                      decoration: const InputDecoration(
+                        labelText: '20-digit SIM number',
+                        helperText:
+                            'Required for Worldmove physical SIM top-up.',
+                        prefixIcon: Icon(Icons.sim_card_outlined),
+                      ),
+                      validator: (value) {
+                        final normalized = (value ?? '').replaceAll(
+                          RegExp(r'\D'),
+                          '',
+                        );
+                        if (normalized.length != 20) {
+                          return 'Enter the 20-digit SIM number';
+                        }
+                        return null;
+                      },
+                    )
+                  else
+                    TextFormField(
+                      controller: _imeiController,
+                      enabled: !_submitting,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      decoration: const InputDecoration(
+                        labelText: 'IMEI (when required)',
+                        prefixIcon: Icon(Icons.phone_iphone_outlined),
+                      ),
+                    ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
             _SectionCard(
               title: 'Order summary',
-              subtitle: 'Wallet billing is applied when the order is confirmed.',
+              subtitle:
+                  'Wallet billing is applied when the order is confirmed.',
               child: Column(
                 children: [
                   _SummaryRow(label: 'Package', value: package.formattedPrice),
                   const _SummaryRow(label: 'Service fee', value: 'USD 0.00'),
                   const Divider(height: 28),
-                  _SummaryRow(label: 'Total', value: package.formattedPrice, emphasized: true),
+                  _SummaryRow(
+                    label: 'Total',
+                    value: package.formattedPrice,
+                    emphasized: true,
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(color: AppColors.accentSoft, borderRadius: BorderRadius.circular(B2BRadius.lg)),
+              decoration: BoxDecoration(
+                color: AppColors.accentSoft,
+                borderRadius: BorderRadius.circular(B2BRadius.lg),
+              ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.verified_user_outlined, color: AppColors.accent),
                   SizedBox(width: 10),
-                  Expanded(child: Text('The order will be provisioned through your Roam2World B2B account and will appear in Orders and eSIMs.', style: TextStyle(color: AppColors.textSecondary, height: 1.4, fontWeight: FontWeight.w600))),
+                  Expanded(
+                    child: Text(
+                      'The order will be provisioned through your Roam2World B2B account and will appear in Orders and eSIMs.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -198,18 +326,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: AppColors.dangerSoft, borderRadius: BorderRadius.circular(16)),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.error_outline_rounded, color: AppColors.danger), const SizedBox(width: 10), Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)))]),
+                decoration: BoxDecoration(
+                  color: AppColors.dangerSoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.danger,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 10),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: _accepted,
-              onChanged: _submitting ? null : (value) => setState(() => _accepted = value ?? false),
+              onChanged: _submitting
+                  ? null
+                  : (value) => setState(() => _accepted = value ?? false),
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('I confirm the customer and package information is correct.', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('Provisioning starts after the order is accepted.'),
+              title: const Text(
+                'I confirm the customer and package information is correct.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: const Text(
+                'Provisioning starts after the order is accepted.',
+              ),
             ),
           ],
         ),
@@ -217,11 +373,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  static String? _required(String? value) => (value?.trim().isEmpty ?? true) ? 'Required' : null;
+  static String? _required(String? value) =>
+      (value?.trim().isEmpty ?? true) ? 'Required' : null;
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.subtitle, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
   final String title;
   final String subtitle;
   final Widget child;
@@ -235,7 +396,9 @@ class _SectionCard extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
         border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,25 +415,46 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value, this.emphasized = false});
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
   final String label;
   final String value;
   final bool emphasized;
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          children: [
-            Text(label, style: TextStyle(color: emphasized ? AppColors.textPrimary : AppColors.textSecondary, fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600)),
-            const Spacer(),
-            Text(value, style: TextStyle(fontSize: emphasized ? 18 : 14, color: emphasized ? AppColors.primary : AppColors.textPrimary, fontWeight: FontWeight.w800)),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: emphasized ? AppColors.textPrimary : AppColors.textSecondary,
+            fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
+          ),
         ),
-      );
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: emphasized ? 18 : 14,
+            color: emphasized ? AppColors.primary : AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 String _flagFor(String code) {
   if (code.length != 2) return '🌐';
-  return code.toUpperCase().codeUnits.map((unit) => String.fromCharCode(unit + 127397)).join();
+  return code
+      .toUpperCase()
+      .codeUnits
+      .map((unit) => String.fromCharCode(unit + 127397))
+      .join();
 }
