@@ -19,6 +19,7 @@ import '../../features/orders/orders_screen.dart';
 import '../../features/packages/package_catalog.dart';
 import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
+import '../../features/partners/dealer_network_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/reports/reports_screen.dart';
@@ -36,6 +37,7 @@ abstract final class AppRoutes {
   static const checkoutSuccess = '/checkout/success';
   static const customers = '/customers';
   static const customerDetail = '/customers/detail';
+  static const dealers = '/dealers';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -78,6 +80,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         redirect: (context, state) => state.extra is CustomerDetailArgs ? null : AppRoutes.customers,
         builder: (context, state) => CustomerDetailScreen(customer: state.extra! as CustomerDetailArgs),
       ),
+      GoRoute(path: AppRoutes.dealers, builder: (context, state) => const DealerNetworkScreen()),
       GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
       GoRoute(
         path: AppRoutes.esimDetail,
