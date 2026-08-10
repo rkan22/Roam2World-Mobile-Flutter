@@ -171,7 +171,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 52),
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.navy,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -187,7 +187,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(0, 52),
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.navy,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
