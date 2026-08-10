@@ -15,6 +15,8 @@ class ApiEndpoints {
   static const String mobileAdminSupportTickets = '/api/v1/mobile/admin/support-tickets/';
   static const String mobileAdminProviderRetryQueue =
       '/api/v1/mobile/admin/provider-retry-queue/';
+  static const String mobileAdminProviderCallbackLogs =
+      '/api/v1/mobile/admin/provider-callback-logs/';
   static const String mobileAdminRoutingRules =
       '/api/v1/mobile/admin/routing-rules/';
   static const String mobileAdminRoutingOverride =
@@ -91,6 +93,9 @@ class ApiEndpoints {
 
   static String mobileAdminProviderRetryAction(Object itemId) =>
       '/api/v1/mobile/admin/provider-retry-queue/$itemId/action/';
+
+  static String mobileAdminProviderCallbackLogDetail(Object logId) =>
+      '/api/v1/mobile/admin/provider-callback-logs/$logId/';
 
   static String mobileAdminRoutingRuleDetail(Object ruleId) =>
       '/api/v1/mobile/admin/routing-rules/$ruleId/';
