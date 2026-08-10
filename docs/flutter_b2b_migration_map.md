@@ -107,6 +107,16 @@ lib/features/
 - Checkout keeps the existing mobile create-order contract but is presented as a B2B Package → Customer → Review flow.
 - Final submission is explicit as `Pay & create order`; provisioning remains server/provider driven and no QR is fabricated.
 
+### Finance Ledger & Top-up
+
+- `/wallet` now opens a reseller-specific Finance Ledger workspace rather than the generic wallet screen.
+- Wallet balance stays sourced from `/api/v1/mobile/wallet/`; the full transaction ledger is enriched from `/api/v1/mobile/transactions/` when available.
+- Ledger enrichment is backward-compatible: if the transactions endpoint fails, the wallet still renders its server-provided recent transactions.
+- Transaction normalization supports credits, debits, refunds, failed states, references, providers and related order numbers without fabricating missing values.
+- Finance KPIs include total debits, credits, refunds, failed transaction count and net movement calculated only from returned ledger rows.
+- Search plus All / Credits / Debits / Refunds / Failed filters match the B2B web finance workflow.
+- Top-up requests use `/api/v1/mobile/wallet/requests/` with quick amount presets, custom amount, optional note, error handling and refresh after submission.
+
 ## Dashboard migration rule
 
 The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
