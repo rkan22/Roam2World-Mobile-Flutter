@@ -18,6 +18,7 @@ class DealerSummary {
     required this.currentBalance,
     required this.totalAllocated,
     required this.totalSpent,
+    required this.totalSales,
     required this.totalClients,
     required this.totalOrders,
     required this.currency,
@@ -31,6 +32,7 @@ class DealerSummary {
   final double currentBalance;
   final double totalAllocated;
   final double totalSpent;
+  final double totalSales;
   final int totalClients;
   final int totalOrders;
   final String currency;
@@ -54,7 +56,7 @@ class DealerSummary {
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       name: fullName.isNotEmpty
           ? fullName
-          : (json['company_name'] ?? json['name'] ?? user['email'] ?? json['email'] ?? 'Dealer').toString(),
+          : (json['company_name'] ?? json['business_name'] ?? json['name'] ?? user['email'] ?? json['email'] ?? 'Dealer').toString(),
       email: (user['email'] ?? json['email'] ?? '').toString(),
       phone: '${user['country_code'] ?? json['country_code'] ?? ''}${user['phone_number'] ?? json['phone_number'] ?? ''}'.trim(),
       status: explicitStatus.isNotEmpty
@@ -63,8 +65,9 @@ class DealerSummary {
       currentBalance: money(json['current_balance'] ?? json['wallet_balance'] ?? json['available_balance']),
       totalAllocated: money(json['total_allocated']),
       totalSpent: money(json['total_spent']),
-      totalClients: count(json['total_clients'] ?? json['clients_count']),
-      totalOrders: count(json['total_orders'] ?? json['orders_count']),
+      totalSales: money(json['total_sales'] ?? json['revenue'] ?? json['total_revenue'] ?? json['sales']),
+      totalClients: count(json['total_clients'] ?? json['clients_count'] ?? json['client_count']),
+      totalOrders: count(json['total_orders'] ?? json['orders_count'] ?? json['order_count']),
       currency: (json['currency'] ?? 'USD').toString(),
     );
   }
