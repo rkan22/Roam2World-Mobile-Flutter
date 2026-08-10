@@ -10,15 +10,15 @@ class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF0B1020) : AppColors.background;
-    final surface = isDark ? const Color(0xFF151B2D) : AppColors.card;
-    final surfaceMuted = isDark ? const Color(0xFF1B2338) : AppColors.surfaceMuted;
+    final background = isDark ? const Color(0xFF090F20) : AppColors.background;
+    final surface = isDark ? const Color(0xFF020817) : AppColors.card;
+    final surfaceMuted = isDark ? const Color(0xFF1E293B) : AppColors.surfaceMuted;
     final textPrimary = isDark ? const Color(0xFFF8FAFC) : AppColors.textPrimary;
-    final textSecondary = isDark ? const Color(0xFFB8C0D0) : AppColors.textSecondary;
-    final textMuted = isDark ? const Color(0xFF7F8AA2) : AppColors.textMuted;
-    final border = isDark ? const Color(0xFF28324A) : AppColors.border;
-    final primary = isDark ? const Color(0xFF9B8CFF) : AppColors.primary;
-    final primarySoft = isDark ? const Color(0xFF2A2457) : AppColors.primaryLight;
+    final textSecondary = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
+    final textMuted = isDark ? const Color(0xFF64748B) : AppColors.textMuted;
+    final border = isDark ? const Color(0xFF1E293B) : AppColors.border;
+    final primary = isDark ? const Color(0xFF22D0F7) : AppColors.primary;
+    final primarySoft = isDark ? const Color(0xFF1C263F) : AppColors.primaryLight;
 
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
@@ -104,7 +104,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: isDark
             ? Colors.black.withValues(alpha: .28)
-            : const Color(0x0D101828),
+            : const Color(0x0D0F172A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(B2BRadius.xl),
           side: BorderSide(color: border),
@@ -171,7 +171,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 52),
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.navy,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -187,7 +187,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(0, 52),
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.navy,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
@@ -204,7 +204,7 @@ class AppTheme {
           minimumSize: const Size(0, 50),
           foregroundColor: primary,
           side: BorderSide(
-            color: isDark ? const Color(0xFF4A4381) : AppColors.primarySoft,
+            color: isDark ? const Color(0xFF334155) : AppColors.borderStrong,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(B2BRadius.md),
@@ -257,8 +257,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor:
-            isDark ? const Color(0xFF252E45) : AppColors.navy,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : AppColors.navy,
         contentTextStyle: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w600,

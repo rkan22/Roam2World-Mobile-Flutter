@@ -31,7 +31,7 @@ abstract final class B2BMotion {
 abstract final class B2BShadows {
   static const List<BoxShadow> card = [
     BoxShadow(
-      color: Color(0x0D101828),
+      color: Color(0x0D0F172A),
       blurRadius: 24,
       offset: Offset(0, 8),
     ),
@@ -39,7 +39,7 @@ abstract final class B2BShadows {
 
   static const List<BoxShadow> elevated = [
     BoxShadow(
-      color: Color(0x14101828),
+      color: Color(0x140F172A),
       blurRadius: 34,
       offset: Offset(0, 14),
     ),
@@ -47,7 +47,7 @@ abstract final class B2BShadows {
 
   static const List<BoxShadow> hero = [
     BoxShadow(
-      color: Color(0x265B4BDB),
+      color: Color(0x2607ACE9),
       blurRadius: 38,
       offset: Offset(0, 18),
     ),
@@ -68,6 +68,6 @@ abstract final class B2BGradients {
   static const LinearGradient soft = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFFFFFF), Color(0xFFF5F3FF)],
+    colors: [Color(0xFFF8FAFC), Color(0xFFF7F0FF)],
   );
 }
