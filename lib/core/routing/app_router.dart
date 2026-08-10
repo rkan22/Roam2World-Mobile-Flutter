@@ -5,6 +5,7 @@ import '../../features/admin/admin_governance_screen.dart';
 import '../../features/admin/admin_partners_screen.dart';
 import '../../features/admin/admin_routing_screen.dart';
 import '../../features/admin/manual_fulfillment_screen.dart';
+import '../../features/admin/provider_callback_logs_screen.dart';
 import '../../features/admin/provider_retry_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -53,6 +54,7 @@ abstract final class AppRoutes {
   static const adminDealers = '/admin/dealers';
   static const adminCommercial = '/admin/commercial';
   static const adminProviderRetry = '/admin/provider-retry';
+  static const adminProviderCallbacks = '/admin/provider-callbacks';
   static const adminRouting = '/admin/routing';
   static const adminManualFulfillment = '/admin/manual-fulfillment';
   static const adminGovernance = '/admin/governance';
@@ -111,6 +113,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       ),
       GoRoute(path: AppRoutes.adminCommercial, builder: (context, state) => const AdminCommercialScreen()),
       GoRoute(path: AppRoutes.adminProviderRetry, builder: (context, state) => const ProviderRetryScreen()),
+      GoRoute(path: AppRoutes.adminProviderCallbacks, builder: (context, state) => const ProviderCallbackLogsScreen()),
       GoRoute(path: AppRoutes.adminRouting, builder: (context, state) => const AdminRoutingScreen()),
       GoRoute(path: AppRoutes.adminManualFulfillment, builder: (context, state) => const ManualFulfillmentScreen()),
       GoRoute(path: AppRoutes.adminGovernance, builder: (context, state) => const AdminGovernanceScreen()),
