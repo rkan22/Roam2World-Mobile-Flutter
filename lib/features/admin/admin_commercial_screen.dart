@@ -162,9 +162,13 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             Expanded(child: B2BMetricCard(label: 'Rules', value: '${pricing.totalRules}', icon: Icons.price_change_outlined)),
             const SizedBox(width: B2BSpacing.sm),
             Expanded(child: B2BMetricCard(label: 'Active', value: '${pricing.activeRules}', icon: Icons.toggle_on_outlined)),
-            const SizedBox(width: B2BSpacing.sm),
-            Expanded(child: B2BMetricCard(label: 'Featured', value: '${pricing.featuredRules}', icon: Icons.star_outline_rounded)),
           ],
+        ),
+        const SizedBox(height: B2BSpacing.sm),
+        B2BMetricCard(
+          label: 'Featured',
+          value: '${pricing.featuredRules}',
+          icon: Icons.star_outline_rounded,
         ),
         const SizedBox(height: B2BSpacing.md),
         if (pricing.items.isEmpty)
