@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_metric_card.dart';
 import '../../design_system/components/b2b_surface.dart';
@@ -75,6 +76,17 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             const Text(
               'Live admin pricing-rule inventory and business totals from the mobile admin API.',
               style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: B2BSpacing.lg),
+            B2BSurface(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(Icons.replay_circle_filled_outlined, color: AppColors.primary),
+                title: const Text('Provider retry queue', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Review failed provider orders and run verified recovery actions'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.adminProviderRetry),
+              ),
             ),
             const SizedBox(height: B2BSpacing.lg),
             if (_loading && data == null)
