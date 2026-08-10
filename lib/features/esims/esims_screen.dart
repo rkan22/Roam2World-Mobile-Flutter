@@ -109,6 +109,12 @@ class _EsimsScreenState extends State<EsimsScreen> {
                     ),
                   ),
                   IconButton.filledTonal(
+                    tooltip: 'eSIM history',
+                    onPressed: () => context.push('/esims/history'),
+                    icon: const Icon(Icons.history_rounded),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton.filledTonal(
                     onPressed: () => context.push('/notifications'),
                     icon: const Icon(Icons.notifications_none_rounded),
                   ),
