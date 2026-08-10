@@ -70,7 +70,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: B2BShadows.card,
                     ),
-                    child: const Icon(Icons.public_rounded, color: Colors.white, size: 22),
+                    child: const Icon(
+                      Icons.public_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 11),
                   Text('Roam2World', style: theme.textTheme.titleLarge),
@@ -89,99 +93,136 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (value) => setState(() => page = value),
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          constraints: const BoxConstraints(maxWidth: 430),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(B2BRadius.xxl),
-                            border: Border.all(color: theme.colorScheme.outlineVariant),
-                            boxShadow: B2BShadows.elevated,
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compact = constraints.maxHeight < 520;
+                      final artworkHeight = compact
+                          ? (constraints.maxHeight * .48).clamp(170.0, 220.0)
+                          : (constraints.maxHeight * .58).clamp(240.0, 380.0);
+
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          compact ? 10 : 18,
+                          24,
+                          10,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight - 20,
                           ),
-                          child: AspectRatio(
-                            aspectRatio: 1.18,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    item.$4.withValues(alpha: .95),
-                                    AppColors.heroEnd,
-                                  ],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                constraints: const BoxConstraints(maxWidth: 430),
+                                height: artworkHeight,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius:
+                                      BorderRadius.circular(B2BRadius.xxl),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outlineVariant,
+                                  ),
+                                  boxShadow: B2BShadows.elevated,
                                 ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Positioned(
-                                    right: -34,
-                                    top: -28,
-                                    child: Container(
-                                      width: 160,
-                                      height: 160,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white.withValues(alpha: .10),
-                                      ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        item.$4.withValues(alpha: .95),
+                                        AppColors.heroEnd,
+                                      ],
                                     ),
                                   ),
-                                  Positioned(
-                                    left: -28,
-                                    bottom: -40,
-                                    child: Container(
-                                      width: 190,
-                                      height: 190,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white.withValues(alpha: .08),
-                                      ),
-                                    ),
-                                  ),
-                                  Center(
-                                    child: Container(
-                                      width: 112,
-                                      height: 112,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: .15),
-                                        borderRadius: BorderRadius.circular(34),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: .20),
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                        right: -34,
+                                        top: -28,
+                                        child: Container(
+                                          width: compact ? 120 : 160,
+                                          height: compact ? 120 : 160,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white.withValues(
+                                              alpha: .10,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      child: Icon(item.$1, size: 54, color: Colors.white),
-                                    ),
+                                      Positioned(
+                                        left: -28,
+                                        bottom: -40,
+                                        child: Container(
+                                          width: compact ? 140 : 190,
+                                          height: compact ? 140 : 190,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white.withValues(
+                                              alpha: .08,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Center(
+                                        child: Container(
+                                          width: compact ? 84 : 112,
+                                          height: compact ? 84 : 112,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: .15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              compact ? 26 : 34,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.white.withValues(
+                                                alpha: .20,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            item.$1,
+                                            size: compact ? 42 : 54,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
+                              SizedBox(height: compact ? 18 : 34),
+                              Text(
+                                item.$2,
+                                textAlign: TextAlign.center,
+                                style: compact
+                                    ? theme.textTheme.headlineMedium
+                                    : theme.textTheme.headlineLarge,
+                              ),
+                              SizedBox(height: compact ? 8 : 12),
+                              ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 420),
+                                child: Text(
+                                  item.$3,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 34),
-                        Text(
-                          item.$2,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineLarge,
-                        ),
-                        const SizedBox(height: 12),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: Text(
-                            item.$3,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -198,7 +239,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     height: 7,
                     width: page == index ? 28 : 7,
                     decoration: BoxDecoration(
-                      color: page == index ? AppColors.primary : AppColors.borderStrong,
+                      color: page == index
+                          ? AppColors.primary
+                          : AppColors.borderStrong,
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
@@ -206,7 +249,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 16),
               child: FilledButton.icon(
                 onPressed: () {
                   if (page == items.length - 1) {
@@ -218,8 +261,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     );
                   }
                 },
-                icon: Icon(page == items.length - 1 ? Icons.arrow_forward_rounded : Icons.chevron_right_rounded),
-                label: Text(page == items.length - 1 ? 'Get started' : 'Continue'),
+                icon: Icon(
+                  page == items.length - 1
+                      ? Icons.arrow_forward_rounded
+                      : Icons.chevron_right_rounded,
+                ),
+                label: Text(
+                  page == items.length - 1 ? 'Get started' : 'Continue',
+                ),
               ),
             ),
           ],
