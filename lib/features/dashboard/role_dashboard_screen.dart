@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/routing/app_role.dart';
 import '../auth/auth_repository.dart';
+import 'admin_dashboard_screen.dart';
 import 'dashboard_screen_reference.dart';
 import 'partner_dashboard_screen.dart';
 
@@ -48,7 +49,10 @@ class _RoleDashboardScreenState extends State<RoleDashboardScreen> {
       AppRole.client || AppRole.publicUser => const DashboardScreen(
           key: ValueKey<String>('customer-dashboard'),
         ),
-      AppRole.admin || AppRole.unknown => const DashboardScreen(
+      AppRole.admin => const AdminDashboardScreen(
+          key: ValueKey<String>('admin-dashboard'),
+        ),
+      AppRole.unknown => const DashboardScreen(
           key: ValueKey<String>('business-dashboard'),
         ),
     };
