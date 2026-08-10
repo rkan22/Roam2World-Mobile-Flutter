@@ -167,7 +167,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 const SizedBox(height: B2BSpacing.md),
               ],
               _CatalogHeader(
-                resultCount: _packages.length,
                 onNotificationsTap: () => context.push('/notifications'),
               ),
               const SizedBox(height: B2BSpacing.lg),
@@ -253,12 +252,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
 }
 
 class _CatalogHeader extends StatelessWidget {
-  const _CatalogHeader({
-    required this.resultCount,
-    required this.onNotificationsTap,
-  });
+  const _CatalogHeader({required this.onNotificationsTap});
 
-  final int resultCount;
   final VoidCallback onNotificationsTap;
 
   @override
@@ -360,11 +355,10 @@ class _DestinationStrip extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: B2BSpacing.sm),
         itemBuilder: (context, index) {
           final item = destinations[index];
-          final selected = selectedIndex == index;
           return ChoiceChip(
             avatar: Text(item.$1),
             label: Text(item.$2),
-            selected: selected,
+            selected: selectedIndex == index,
             onSelected: (_) => onSelected(index),
           );
         },
@@ -596,6 +590,7 @@ class _CatalogFilterSheet extends StatefulWidget {
 }
 
 class _CatalogFilterSheetState extends State<_CatalogFilterSheet> {
+  static const _all = '__all__';
   String? _provider;
   String? _productKind;
   int? _validityDays;
@@ -651,55 +646,63 @@ class _CatalogFilterSheetState extends State<_CatalogFilterSheet> {
                     ),
               ),
               const SizedBox(height: B2BSpacing.xl),
-              DropdownButtonFormField<String?>(
-                value: _provider,
+              DropdownButtonFormField<String>(
+                value: _provider ?? _all,
                 decoration: const InputDecoration(labelText: 'Operator'),
                 items: [
-                  const DropdownMenuItem<String?>(value: null, child: Text('All operators')),
+                  const DropdownMenuItem(value: _all, child: Text('All operators')),
                   for (final provider in widget.providers)
-                    DropdownMenuItem<String?>(value: provider, child: Text(provider)),
+                    DropdownMenuItem(value: provider, child: Text(provider)),
                 ],
-                onChanged: (value) => setState(() => _provider = value),
+                onChanged: (value) => setState(
+                  () => _provider = value == _all ? null : value,
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
-              DropdownButtonFormField<String?>(
-                value: _productKind,
+              DropdownButtonFormField<String>(
+                value: _productKind ?? _all,
                 decoration: const InputDecoration(labelText: 'Product type'),
                 items: const [
-                  DropdownMenuItem<String?>(value: null, child: Text('All types')),
-                  DropdownMenuItem<String?>(value: 'eSIM', child: Text('eSIM')),
-                  DropdownMenuItem<String?>(value: 'SIM Card', child: Text('SIM Card')),
+                  DropdownMenuItem(value: _all, child: Text('All types')),
+                  DropdownMenuItem(value: 'eSIM', child: Text('eSIM')),
+                  DropdownMenuItem(value: 'SIM Card', child: Text('SIM Card')),
                 ],
-                onChanged: (value) => setState(() => _productKind = value),
+                onChanged: (value) => setState(
+                  () => _productKind = value == _all ? null : value,
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
-              DropdownButtonFormField<int?>(
-                value: _validityDays,
+              DropdownButtonFormField<int>(
+                value: _validityDays ?? 0,
                 decoration: const InputDecoration(labelText: 'Validity'),
                 items: const [
-                  DropdownMenuItem<int?>(value: null, child: Text('Any validity')),
-                  DropdownMenuItem<int?>(value: 7, child: Text('7 days')),
-                  DropdownMenuItem<int?>(value: 15, child: Text('15 days')),
-                  DropdownMenuItem<int?>(value: 30, child: Text('30 days')),
-                  DropdownMenuItem<int?>(value: 60, child: Text('60 days')),
-                  DropdownMenuItem<int?>(value: 90, child: Text('90 days')),
+                  DropdownMenuItem(value: 0, child: Text('Any validity')),
+                  DropdownMenuItem(value: 7, child: Text('7 days')),
+                  DropdownMenuItem(value: 15, child: Text('15 days')),
+                  DropdownMenuItem(value: 30, child: Text('30 days')),
+                  DropdownMenuItem(value: 60, child: Text('60 days')),
+                  DropdownMenuItem(value: 90, child: Text('90 days')),
                 ],
-                onChanged: (value) => setState(() => _validityDays = value),
+                onChanged: (value) => setState(
+                  () => _validityDays = value == 0 ? null : value,
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
-              DropdownButtonFormField<double?>(
-                value: _dataGb,
+              DropdownButtonFormField<double>(
+                value: _dataGb ?? 0,
                 decoration: const InputDecoration(labelText: 'Data'),
                 items: const [
-                  DropdownMenuItem<double?>(value: null, child: Text('Any data')),
-                  DropdownMenuItem<double?>(value: 1, child: Text('1 GB')),
-                  DropdownMenuItem<double?>(value: 3, child: Text('3 GB')),
-                  DropdownMenuItem<double?>(value: 5, child: Text('5 GB')),
-                  DropdownMenuItem<double?>(value: 10, child: Text('10 GB')),
-                  DropdownMenuItem<double?>(value: 20, child: Text('20 GB')),
-                  DropdownMenuItem<double?>(value: 50, child: Text('50 GB')),
+                  DropdownMenuItem(value: 0, child: Text('Any data')),
+                  DropdownMenuItem(value: 1, child: Text('1 GB')),
+                  DropdownMenuItem(value: 3, child: Text('3 GB')),
+                  DropdownMenuItem(value: 5, child: Text('5 GB')),
+                  DropdownMenuItem(value: 10, child: Text('10 GB')),
+                  DropdownMenuItem(value: 20, child: Text('20 GB')),
+                  DropdownMenuItem(value: 50, child: Text('50 GB')),
                 ],
-                onChanged: (value) => setState(() => _dataGb = value),
+                onChanged: (value) => setState(
+                  () => _dataGb = value == 0 ? null : value,
+                ),
               ),
               const SizedBox(height: B2BSpacing.xl),
               Row(
