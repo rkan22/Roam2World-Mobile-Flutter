@@ -70,6 +70,35 @@ class DashboardData {
           .toList(growable: false),
     );
   }
+
+  factory DashboardData.fromAdminResponse(dynamic response) {
+    final root = Map<String, dynamic>.from(response as Map);
+    final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
+    final metrics = Map<String, dynamic>.from(data['metrics'] as Map? ?? const {});
+    final revenue = Map<String, dynamic>.from(metrics['revenue'] as Map? ?? const {});
+    final salesOverview = Map<String, dynamic>.from(
+      data['sales_overview'] as Map? ?? const {},
+    );
+    final orders = data['latest_orders'] as List? ?? const [];
+
+    return DashboardData(
+      role: 'Admin',
+      balance: 0,
+      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD').toString(),
+      todaySales: _toDouble(salesOverview['today_sales']),
+      monthlySales: _toDouble(
+        salesOverview['total_sales'] ?? revenue['total_sales'],
+      ),
+      activeEsimCount: _toInt(metrics['active_esim_count']),
+      expiredEsimCount: _toInt(metrics['expired_esim_count']),
+      recentOrders: orders
+          .whereType<Map>()
+          .map((item) => DashboardOrderSummary.fromJson(
+                Map<String, dynamic>.from(item),
+              ))
+          .toList(growable: false),
+    );
+  }
 }
 
 double _toDouble(dynamic value) =>

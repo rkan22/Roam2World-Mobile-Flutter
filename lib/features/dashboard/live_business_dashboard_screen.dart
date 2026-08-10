@@ -19,7 +19,7 @@ class LiveBusinessDashboardScreen extends StatelessWidget {
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 0),
       body: DashboardScreen(
         key: ValueKey<String>('approved-demo-dashboard-${role.name}'),
-        repository: DashboardRepository(),
+        repository: DashboardRepository(role: role),
         allowDemoFallback: false,
       ),
     );
