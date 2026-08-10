@@ -23,7 +23,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/support/support_screen.dart';
-import '../../features/wallet/wallet_screen.dart';
+import '../../features/wallet/reseller_finance_ledger_screen.dart';
 
 abstract final class AppRoutes {
   static const onboarding = '/onboarding';
@@ -91,7 +91,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => OrderDetailScreen(order: state.extra! as MobileOrderSummary),
       ),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
-      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
+      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const ResellerFinanceLedgerScreen()),
       GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
       GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
