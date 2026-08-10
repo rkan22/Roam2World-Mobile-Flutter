@@ -8,6 +8,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../orders/order_history.dart';
 import '../orders/orders_repository.dart';
+import 'customer_detail_screen.dart';
 import 'widgets/customers_adaptive_grid.dart';
 
 class CustomersScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
   bool _loading = true;
   String? _error;
   List<_CustomerSummary> _customers = const [];
+  String _statusFilter = 'all';
 
   @override
   void initState() {
@@ -59,10 +61,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   List<_CustomerSummary> get _visibleCustomers {
     final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return _customers;
-    return _customers
-        .where((customer) => customer.name.toLowerCase().contains(query))
-        .toList();
+    return _customers.where((customer) {
+      final matchesQuery = query.isEmpty || customer.name.toLowerCase().contains(query);
+      final matchesStatus = _statusFilter == 'all' || customer.status == _statusFilter;
+      return matchesQuery && matchesStatus;
+    }).toList();
   }
 
   @override
@@ -77,6 +80,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
       (sum, customer) => sum + customer.totalSpend,
     );
     final currency = visibleCustomers.isEmpty ? 'USD' : visibleCustomers.first.currency;
+    final activeCount = _customers.where((customer) => customer.status == 'active').length;
+    final pendingCount = _customers.where((customer) => customer.status == 'pending').length;
 
     return Scaffold(
       appBar: AppBar(
@@ -104,21 +109,65 @@ class _CustomersScreenState extends State<CustomersScreen> {
             B2BSpacing.xxl,
           ),
           children: [
-            Text(
-              'Your business network',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(
-              'Track customer activity generated from live order history.',
-              style: Theme.of(context).textTheme.bodyMedium,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Client Management', style: Theme.of(context).textTheme.headlineMedium),
+                      const SizedBox(height: B2BSpacing.xs),
+                      Text(
+                        'View customer order activity and create the next order from one mobile workspace.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: B2BSpacing.sm),
+                FilledButton.icon(
+                  onPressed: () => context.go('/packages'),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Order'),
+                ),
+              ],
             ),
             const SizedBox(height: B2BSpacing.lg),
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: 'Search company or customer',
+                hintText: 'Search customer name',
                 prefixIcon: Icon(Icons.search_rounded),
+              ),
+            ),
+            const SizedBox(height: B2BSpacing.sm),
+            SizedBox(
+              height: 42,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _StatusChip(
+                    label: 'All',
+                    count: _customers.length,
+                    selected: _statusFilter == 'all',
+                    onTap: () => setState(() => _statusFilter = 'all'),
+                  ),
+                  const SizedBox(width: B2BSpacing.xs),
+                  _StatusChip(
+                    label: 'Active',
+                    count: activeCount,
+                    selected: _statusFilter == 'active',
+                    onTap: () => setState(() => _statusFilter = 'active'),
+                  ),
+                  const SizedBox(width: B2BSpacing.xs),
+                  _StatusChip(
+                    label: 'Pending',
+                    count: pendingCount,
+                    selected: _statusFilter == 'pending',
+                    onTap: () => setState(() => _statusFilter = 'pending'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: B2BSpacing.md),
@@ -141,16 +190,19 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 title: _customers.isEmpty ? 'No customers yet' : 'No matching customers',
                 message: _customers.isEmpty
                     ? 'Customers will appear after their first order.'
-                    : 'Try another company or customer name.',
-                actionLabel: _customers.isEmpty ? 'Browse packages' : 'Clear search',
+                    : 'Try another name or status filter.',
+                actionLabel: _customers.isEmpty ? 'Browse packages' : 'Clear filters',
                 onAction: _customers.isEmpty
                     ? () => context.go('/packages')
-                    : _searchController.clear,
+                    : () {
+                        _searchController.clear();
+                        setState(() => _statusFilter = 'all');
+                      },
               )
             else ...[
               Row(
                 children: [
-                  Text('Companies', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Customers', style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
                   Text(
                     '${visibleCustomers.length} results',
@@ -165,13 +217,49 @@ class _CustomersScreenState extends State<CustomersScreen> {
               CustomersAdaptiveGrid(
                 children: [
                   for (final customer in visibleCustomers)
-                    _CustomerCard(customer: customer),
+                    _CustomerCard(
+                      customer: customer,
+                      onTap: () => context.push(
+                        '/customers/detail',
+                        extra: CustomerDetailArgs(
+                          name: customer.name,
+                          orders: customer.orders,
+                          totalSpend: customer.totalSpend,
+                          currency: customer.currency,
+                          lastOrderAt: customer.lastOrderAt,
+                          orderHistory: customer.orderHistory,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ],
           ],
         ),
       ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      selected: selected,
+      onSelected: (_) => onTap(),
+      label: Text('$label  $count'),
     );
   }
 }
@@ -246,35 +334,44 @@ class _OverviewValue extends StatelessWidget {
 }
 
 List<_CustomerSummary> _aggregateCustomers(List<MobileOrderSummary> orders) {
-  final grouped = <String, _CustomerSummary>{};
+  final groupedOrders = <String, List<MobileOrderSummary>>{};
   for (final order in orders) {
     final name = order.customerName.trim();
     if (name.isEmpty) continue;
-    final key = name.toLowerCase();
-    final existing = grouped[key];
-    grouped[key] = _CustomerSummary(
-      name: name,
-      orders: (existing?.orders ?? 0) + 1,
-      totalSpend: (existing?.totalSpend ?? 0) + order.amount,
-      currency: existing?.currency ?? order.currency,
-      lastOrderAt: _latest(existing?.lastOrderAt, order.createdAt),
-    );
+    groupedOrders.putIfAbsent(name.toLowerCase(), () => []).add(order);
   }
-  final customers = grouped.values.toList();
+
+  final customers = groupedOrders.values.map((customerOrders) {
+    customerOrders.sort((a, b) {
+      final left = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final right = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return right.compareTo(left);
+    });
+    final first = customerOrders.first;
+    final totalSpend = customerOrders.fold<double>(0, (sum, order) => sum + order.amount);
+    final hasPending = customerOrders.any((order) => _isPending(order.status));
+    final hasCompleted = customerOrders.any((order) => _isCompleted(order.status));
+    return _CustomerSummary(
+      name: first.customerName.trim(),
+      orders: customerOrders.length,
+      totalSpend: totalSpend,
+      currency: first.currency,
+      lastOrderAt: customerOrders.map((order) => order.createdAt).whereType<DateTime>().fold<DateTime?>(
+            null,
+            (latest, date) => latest == null || date.isAfter(latest) ? date : latest,
+          ),
+      status: hasPending && !hasCompleted ? 'pending' : 'active',
+      orderHistory: List.unmodifiable(customerOrders),
+    );
+  }).toList();
+
   customers.sort((a, b) {
-    final spendCompare = b.totalSpend.compareTo(a.totalSpend);
-    if (spendCompare != 0) return spendCompare;
     final left = a.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
     final right = b.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-    return right.compareTo(left);
+    final dateCompare = right.compareTo(left);
+    return dateCompare != 0 ? dateCompare : b.totalSpend.compareTo(a.totalSpend);
   });
   return customers;
-}
-
-DateTime? _latest(DateTime? first, DateTime? second) {
-  if (first == null) return second;
-  if (second == null) return first;
-  return first.isAfter(second) ? first : second;
 }
 
 class _CustomerSummary {
@@ -284,6 +381,8 @@ class _CustomerSummary {
     required this.totalSpend,
     required this.currency,
     required this.lastOrderAt,
+    required this.status,
+    required this.orderHistory,
   });
 
   final String name;
@@ -291,19 +390,24 @@ class _CustomerSummary {
   final double totalSpend;
   final String currency;
   final DateTime? lastOrderAt;
+  final String status;
+  final List<MobileOrderSummary> orderHistory;
 }
 
 class _CustomerCard extends StatelessWidget {
-  const _CustomerCard({required this.customer});
+  const _CustomerCard({required this.customer, required this.onTap});
 
   final _CustomerSummary customer;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final initials = _initials(customer.name);
     final scheme = Theme.of(context).colorScheme;
+    final pending = customer.status == 'pending';
     return B2BSurface(
       padding: const EdgeInsets.all(B2BSpacing.md),
+      onTap: onTap,
       child: Column(
         children: [
           Row(
@@ -344,15 +448,15 @@ class _CustomerCard extends StatelessWidget {
                         Container(
                           width: 7,
                           height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
+                          decoration: BoxDecoration(
+                            color: pending ? AppColors.warning : AppColors.success,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: B2BSpacing.xs),
                         Expanded(
                           child: Text(
-                            'Active · ${_formatDate(customer.lastOrderAt)}',
+                            '${pending ? 'Pending' : 'Active'} · ${_formatDate(customer.lastOrderAt)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -373,9 +477,7 @@ class _CustomerCard extends StatelessWidget {
           const SizedBox(height: B2BSpacing.md),
           Row(
             children: [
-              Expanded(
-                child: _CustomerMetric(label: 'Orders', value: '${customer.orders}'),
-              ),
+              Expanded(child: _CustomerMetric(label: 'Orders', value: '${customer.orders}')),
               Expanded(
                 child: _CustomerMetric(
                   label: 'Total spend',
@@ -427,11 +529,11 @@ class _CustomerMetric extends StatelessWidget {
   }
 }
 
+bool _isCompleted(String status) => RegExp(r'complete|success|deliver|active', caseSensitive: false).hasMatch(status);
+bool _isPending(String status) => RegExp(r'pending|process|provision|await', caseSensitive: false).hasMatch(status);
+
 String _initials(String name) {
-  final parts = name
-      .split(RegExp(r'\s+'))
-      .where((part) => part.isNotEmpty)
-      .toList();
+  final parts = name.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
   if (parts.isEmpty) return '?';
   return parts.take(2).map((part) => part[0].toUpperCase()).join();
 }
