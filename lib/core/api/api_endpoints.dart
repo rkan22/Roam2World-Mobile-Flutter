@@ -18,6 +18,37 @@ class ApiEndpoints {
       '/api/v1/mobile/notifications/';
   static const String mobileNotificationsReadAll =
       '/api/v1/mobile/notifications/read-all/';
+  static const String notificationRules = '/api/v1/notifications/rules/';
+
+  static const String dealerBalanceRequest =
+      '/api/v1/resellers/dealer-balance/request_balance/';
+  static const String dealerBalanceRequests =
+      '/api/v1/resellers/dealer-balance/balance_requests/';
+  static const String dealerProfile =
+      '/api/v1/resellers/dealers/my_profile/';
+  static const String dealerUpdateProfile =
+      '/api/v1/resellers/dealers/update_profile/';
+
+  static const String simConverterConversions =
+      '/api/v1/sim-converter/conversions/';
+  static const String simConverterStatistics =
+      '/api/v1/sim-converter/conversions/statistics/';
+  static const String simConverterParseActivationCode =
+      '/api/v1/sim-converter/conversions/parse_activation_code/';
+
+  static const String resellerDealers = '/api/v1/resellers/dealers/';
+  static const String resellerDealerWalletHistory =
+      '/api/v1/resellers/dealers/wallet-history/';
+  static const String resellerPendingDealerRequests =
+      '/api/v1/resellers/dealer-requests/pending/';
+
+  static const String failedOrders = '/api/v1/orders/failed/';
+  static const String providerOperationLogs =
+      '/api/v1/provider-operations/logs/';
+  static const String webhookLogs = '/api/v1/webhooks/logs/';
+  static const String auditLogs = '/api/v1/audit/logs/';
+  static const String resellerDealerRequests =
+      '/api/v1/resellers/dealer-requests/';
 
   static String mobileOrderDetail(Object orderId) =>
       '/api/v1/mobile/orders/$orderId/';
@@ -30,4 +61,13 @@ class ApiEndpoints {
 
   static String mobileNotificationUnread(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/unread/';
+
+  static String mobileDealerAllocateBalance(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
+
+  static String mobileDealerModifyBalance(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/modify-balance/';
+
+  static String mobileDealerWalletRequestApprove(Object requestId) =>
+      '/api/v1/mobile/dealer-wallet-requests/$requestId/approve/';
 }

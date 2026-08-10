@@ -167,6 +167,19 @@ class ApiClient {
     }
   }
 
+  Future<T> patch<T>(
+    String path, {
+    Object? data,
+    required T Function(dynamic data) parser,
+  }) async {
+    try {
+      final response = await _dio.patch<dynamic>(path, data: data);
+      return parser(response.data);
+    } on DioException catch (exception) {
+      throw ApiException.fromDio(exception);
+    }
+  }
+
   Future<void> delete(String path) async {
     try {
       await _dio.delete<dynamic>(path);
