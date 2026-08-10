@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import 'auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -65,92 +66,128 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 32),
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 30),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: B2BGradients.primary,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: B2BShadows.card,
+                        ),
+                        child: const Icon(Icons.public_rounded, color: Colors.white, size: 25),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Roam2World', style: theme.textTheme.titleLarge),
+                          Text('Partner workspace', style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
+                    decoration: BoxDecoration(
+                      gradient: B2BGradients.primary,
+                      borderRadius: BorderRadius.circular(B2BRadius.xxl),
+                      boxShadow: B2BShadows.hero,
+                    ),
+                    child: Stack(
                       children: [
-                        Container(
-                          height: 56,
-                          width: 56,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(
-                            Icons.public_rounded,
-                            color: Colors.white,
-                            size: 30,
+                        Positioned(
+                          right: -36,
+                          top: -42,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: .08),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Roam2World',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: .14),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Text(
+                                'BUSINESS CONNECTIVITY',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  letterSpacing: .7,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                            Text(
-                              'Business connectivity',
+                            const SizedBox(height: 18),
+                            const Text(
+                              'Welcome back',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: Colors.white,
+                                fontSize: 34,
+                                height: 1.05,
+                                letterSpacing: -.8,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Manage eSIM sales, orders and wallet operations from one secure workspace.',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: Colors.white.withValues(alpha: .78),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 38),
-                    const Text(
-                      'Welcome back',
-                      style: TextStyle(
-                        fontSize: 36,
-                        height: 1.05,
-                        fontWeight: FontWeight.w900,
-                      ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(B2BRadius.xl),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                      boxShadow: B2BShadows.card,
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Manage packages, orders, eSIMs and wallet operations securely.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: AppColors.border),
-                      ),
+                    child: Form(
+                      key: _formKey,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text('Sign in to your account', style: theme.textTheme.titleLarge),
+                          const SizedBox(height: 6),
+                          Text('Use your Roam2World partner credentials.', style: theme.textTheme.bodyMedium),
+                          const SizedBox(height: 20),
                           TextFormField(
                             controller: _emailController,
                             enabled: !_isLoading,
@@ -164,9 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             validator: (value) {
                               final text = value?.trim() ?? '';
                               if (text.isEmpty) return 'Enter your email address';
-                              if (!text.contains('@')) {
-                                return 'Enter a valid email address';
-                              }
+                              if (!text.contains('@')) return 'Enter a valid email address';
                               return null;
                             },
                           ),
@@ -180,14 +215,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             onFieldSubmitted: (_) => _submit(),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline_rounded),
+                              prefixIcon: const Icon(Icons.lock_outline_rounded),
                               suffixIcon: IconButton(
                                 onPressed: _isLoading
                                     ? null
-                                    : () => setState(
-                                          () => _hidePassword = !_hidePassword,
-                                        ),
+                                    : () => setState(() => _hidePassword = !_hidePassword),
                                 icon: Icon(
                                   _hidePassword
                                       ? Icons.visibility_outlined
@@ -196,47 +228,41 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             validator: (value) {
-                              if ((value ?? '').isEmpty) {
-                                return 'Enter your password';
-                              }
+                              if ((value ?? '').isEmpty) return 'Enter your password';
                               if ((value ?? '').length < 6) {
                                 return 'Password must be at least 6 characters';
                               }
                               return null;
                             },
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               Checkbox(
                                 value: _rememberMe,
                                 onChanged: _isLoading
                                     ? null
-                                    : (value) => setState(
-                                          () => _rememberMe = value ?? true,
-                                        ),
+                                    : (value) => setState(() => _rememberMe = value ?? true),
                               ),
-                              const Text('Remember me'),
+                              Text('Remember me', style: theme.textTheme.bodyMedium),
                               const Spacer(),
                               TextButton(
                                 onPressed: _isLoading
                                     ? null
-                                    : () => context.push(
-                                          AppRoutes.forgotPassword,
-                                        ),
+                                    : () => context.push(AppRoutes.forgotPassword),
                                 child: const Text('Forgot password?'),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          ElevatedButton(
+                          FilledButton(
                             onPressed: _isLoading ? null : _submit,
                             child: _isLoading
                                 ? const SizedBox(
                                     height: 22,
                                     width: 22,
                                     child: CircularProgressIndicator(
-                                      strokeWidth: 2.4,
+                                      strokeWidth: 2.3,
                                       color: Colors.white,
                                     ),
                                   )
@@ -245,27 +271,33 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shield_outlined,
-                          size: 18,
-                          color: AppColors.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Secure reseller access',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
+                  ),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: AppColors.successSoft,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified_user_outlined, size: 17, color: AppColors.success),
+                          SizedBox(width: 7),
+                          Text(
+                            'Secure partner access',
+                            style: TextStyle(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

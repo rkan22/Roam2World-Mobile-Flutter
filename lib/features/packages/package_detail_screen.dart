@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import 'package_catalog.dart';
 
 class PackageDetailScreen extends StatelessWidget {
@@ -11,12 +12,20 @@ class PackageDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        child: ElevatedButton(
+        child: FilledButton(
           onPressed: () => context.push('/checkout', extra: package),
-          child: Text('Buy Now  •  ${package.formattedPrice}'),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.shopping_bag_outlined, size: 19),
+              const SizedBox(width: 8),
+              Text('Continue to checkout  •  ${package.formattedPrice}'),
+            ],
+          ),
         ),
       ),
       body: SafeArea(
@@ -26,50 +35,118 @@ class PackageDetailScreen extends StatelessWidget {
             Row(
               children: [
                 IconButton.filledTonal(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
-                const Expanded(child: Text('Package Detail', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900))),
+                Expanded(child: Text('Plan details', textAlign: TextAlign.center, style: theme.textTheme.titleLarge)),
                 const SizedBox(width: 48),
               ],
             ),
             const SizedBox(height: 18),
             Container(
-              height: 220,
+              height: 228,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.navy, AppColors.primary], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(28),
+                gradient: B2BGradients.primary,
+                borderRadius: BorderRadius.circular(B2BRadius.xxl),
+                boxShadow: B2BShadows.hero,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  Row(children: [Text(_flagFor(package.countryCode), style: const TextStyle(fontSize: 34)), const Spacer(), const _FeaturePill(icon: Icons.network_cell_rounded, label: '4G / 5G')]),
-                  const Spacer(),
-                  Text(package.displayProvider, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(package.destination, style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900)),
+                  Positioned(
+                    right: -28,
+                    top: -32,
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: .08)),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(18)),
+                            child: Text(_flagFor(package.countryCode), style: const TextStyle(fontSize: 31)),
+                          ),
+                          const Spacer(),
+                          const _FeaturePill(icon: Icons.network_cell_rounded, label: '4G / 5G'),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(package.displayProvider, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 5),
+                      Text(package.destination, style: const TextStyle(color: Colors.white, fontSize: 30, letterSpacing: -0.5, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
+                      Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: .78), fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border)),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(B2BRadius.xl),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+                boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+              ),
+              child: Row(
+                children: [
+                  Expanded(child: _PlanMetric(label: 'Data', value: package.dataLabel, icon: Icons.data_usage_rounded)),
+                  _Divider(),
+                  Expanded(child: _PlanMetric(label: 'Validity', value: package.validityLabel, icon: Icons.schedule_rounded)),
+                  _Divider(),
+                  Expanded(child: _PlanMetric(label: 'Price', value: package.formattedPrice, icon: Icons.payments_outlined)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Plan information', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(B2BRadius.xl),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+                boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+              ),
               child: Column(
                 children: [
-                  Row(children: [
-                    Expanded(child: _PlanMetric(label: 'Data', value: package.dataLabel)),
-                    Expanded(child: _PlanMetric(label: 'Validity', value: package.validityLabel)),
-                    Expanded(child: _PlanMetric(label: 'Price', value: package.formattedPrice)),
-                  ]),
-                  const SizedBox(height: 20),
-                  const Divider(height: 1),
-                  const SizedBox(height: 20),
-                  _InfoRow(icon: Icons.inventory_2_outlined, title: package.name, body: 'Package ID: ${package.id}'),
-                  const SizedBox(height: 18),
+                  _InfoRow(icon: Icons.inventory_2_outlined, title: 'Package', body: package.name, trailing: '#${package.id}'),
+                  const Divider(height: 28),
                   _InfoRow(icon: Icons.public_rounded, title: 'Coverage', body: package.destination),
-                  const SizedBox(height: 18),
-                  const _InfoRow(icon: Icons.bolt_rounded, title: 'Activation', body: 'Installation details become available after the order is provisioned.'),
-                  const SizedBox(height: 18),
-                  const _InfoRow(icon: Icons.phone_iphone_rounded, title: 'Compatibility', body: 'Requires an unlocked eSIM-compatible device.'),
+                  const Divider(height: 28),
+                  const _InfoRow(icon: Icons.bolt_rounded, title: 'Activation', body: 'QR and activation details appear after provisioning.'),
+                  const Divider(height: 28),
+                  const _InfoRow(icon: Icons.phone_iphone_rounded, title: 'Compatibility', body: 'Unlocked eSIM-compatible devices are required.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.accentSoft, borderRadius: BorderRadius.circular(B2BRadius.lg)),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.business_center_outlined, color: AppColors.accent),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('B2B fulfilment', style: TextStyle(fontWeight: FontWeight.w800)),
+                        SizedBox(height: 4),
+                        Text('Complete checkout to provision this package to your customer and manage it from the eSIM workspace.', style: TextStyle(color: AppColors.textSecondary, height: 1.4)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -80,10 +157,16 @@ class PackageDetailScreen extends StatelessWidget {
   }
 }
 
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(width: 1, height: 48, color: Theme.of(context).colorScheme.outlineVariant);
+}
+
 class _FeaturePill extends StatelessWidget {
   const _FeaturePill({required this.icon, required this.label});
   final IconData icon;
   final String label;
+
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -93,24 +176,58 @@ class _FeaturePill extends StatelessWidget {
 }
 
 class _PlanMetric extends StatelessWidget {
-  const _PlanMetric({required this.label, required this.value});
+  const _PlanMetric({required this.label, required this.value, required this.icon});
   final String label;
   final String value;
+  final IconData icon;
+
   @override
-  Widget build(BuildContext context) => Column(children: [Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)), const SizedBox(height: 5), Text(value, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))]);
+  Widget build(BuildContext context) => Column(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(height: 7),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 4),
+          Text(value, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium),
+        ],
+      );
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.title, required this.body});
+  const _InfoRow({required this.icon, required this.title, required this.body, this.trailing});
   final IconData icon;
   final String title;
   final String body;
+  final String? trailing;
+
   @override
-  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(height: 42, width: 42, decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: AppColors.primary)),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.w900)), const SizedBox(height: 4), Text(body, style: const TextStyle(color: AppColors.textSecondary, height: 1.45))])),
-      ]);
+  Widget build(BuildContext context) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 42,
+            width: 42,
+            decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: AppColors.primary, size: 21),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+                    if (trailing != null) Text(trailing!, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(body, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      );
 }
 
 String _flagFor(String code) {

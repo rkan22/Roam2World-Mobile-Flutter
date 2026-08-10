@@ -24,35 +24,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.md,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Row(
-              children: [
-                IconButton.filledTonal(
-                  onPressed: context.pop,
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Account preferences',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        'Settings',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+            _Header(onBack: context.pop),
+            const SizedBox(height: B2BSpacing.lg),
+            const _SettingsHero(),
+            const SizedBox(height: B2BSpacing.xl),
             const _SectionTitle('Workspace'),
-            const SizedBox(height: 12),
+            const SizedBox(height: B2BSpacing.sm),
             B2BSurface(
               padding: EdgeInsets.zero,
               child: Column(
@@ -60,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.language_rounded,
                     title: 'App language',
-                    subtitle: 'Language used in the mobile workspace',
+                    subtitle: 'Language used across your B2B workspace',
                     trailing: language,
                     onTap: _selectLanguage,
                   ),
@@ -70,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     builder: (context, mode, child) => _SettingsTile(
                       icon: Icons.palette_outlined,
                       title: 'Appearance',
-                      subtitle: 'Choose light, dark, or follow the device',
+                      subtitle: 'Light, dark, or follow this device',
                       trailing: ThemeController.label(mode),
                       onTap: _selectTheme,
                     ),
@@ -78,9 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const _SectionTitle('Notifications'),
-            const SizedBox(height: 12),
+            const SizedBox(height: B2BSpacing.xl),
+            const _SectionTitle('Business notifications'),
+            const SizedBox(height: B2BSpacing.sm),
             B2BSurface(
               padding: EdgeInsets.zero,
               child: Column(
@@ -88,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _PreferenceSwitch(
                     icon: Icons.receipt_long_outlined,
                     title: 'Order updates',
-                    subtitle: 'Status and delivery events',
+                    subtitle: 'Purchases, provisioning and delivery status',
                     value: orderNotifications,
                     onChanged: (value) =>
                         setState(() => orderNotifications = value),
@@ -97,7 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _PreferenceSwitch(
                     icon: Icons.account_balance_wallet_outlined,
                     title: 'Wallet updates',
-                    subtitle: 'Top-up and balance activity',
+                    subtitle: 'Top-up requests and balance activity',
                     value: walletNotifications,
                     onChanged: (value) =>
                         setState(() => walletNotifications = value),
@@ -106,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _PreferenceSwitch(
                     icon: Icons.campaign_outlined,
                     title: 'Product announcements',
-                    subtitle: 'New packages and platform news',
+                    subtitle: 'New destinations, packages and platform news',
                     value: productNotifications,
                     onChanged: (value) =>
                         setState(() => productNotifications = value),
@@ -114,9 +98,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const _SectionTitle('Security'),
-            const SizedBox(height: 12),
+            const SizedBox(height: B2BSpacing.xl),
+            const _SectionTitle('Security & platform'),
+            const SizedBox(height: B2BSpacing.sm),
             const B2BSurface(
               padding: EdgeInsets.zero,
               child: Column(
@@ -124,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.lock_outline_rounded,
                     title: 'Secure token storage',
-                    subtitle: 'Session credentials are stored securely',
+                    subtitle: 'Session credentials stay protected on device',
                     trailing: 'Active',
                     statusColor: AppColors.success,
                   ),
@@ -132,9 +116,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.https_outlined,
                     title: 'Production API security',
-                    subtitle: 'HTTPS endpoint validation is enabled',
+                    subtitle: 'Encrypted HTTPS API communication',
                     trailing: 'Protected',
                     statusColor: AppColors.success,
+                  ),
+                  Divider(height: 1),
+                  _SettingsTile(
+                    icon: Icons.verified_user_outlined,
+                    title: 'B2B role access',
+                    subtitle: 'Workspace permissions follow your server role',
+                    trailing: 'Server managed',
+                    statusColor: AppColors.primary,
                   ),
                 ],
               ),
@@ -161,11 +153,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final item in const ['English', 'Türkçe', 'Deutsch'])
-                RadioListTile<String>(
-                  value: item,
-                  title: Text(item),
-                ),
-              const SizedBox(height: 12),
+                RadioListTile<String>(value: item, title: Text(item)),
+              const SizedBox(height: B2BSpacing.sm),
             ],
           ),
         ),
@@ -200,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : 'Always use ${ThemeController.label(mode).toLowerCase()} mode',
                     ),
                   ),
-                const SizedBox(height: 12),
+                const SizedBox(height: B2BSpacing.sm),
               ],
             ),
           ),
@@ -210,8 +199,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        const SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Settings', style: Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height: B2BSpacing.xxs),
+              Text(
+                'Control your Roam2World business workspace.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsHero extends StatelessWidget {
+  const _SettingsHero();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        boxShadow: B2BShadows.hero,
+      ),
+      child: const Row(
+        children: [
+          _HeroIcon(),
+          SizedBox(width: B2BSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Workspace preferences',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: B2BSpacing.xs),
+                Text(
+                  'Keep notifications, appearance and business security aligned with your workflow.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroIcon extends StatelessWidget {
+  const _HeroIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+      ),
+      child: const Icon(Icons.tune_rounded, color: Colors.white, size: 27),
+    );
+  }
+}
+
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
+
   final String text;
 
   @override
@@ -241,7 +326,10 @@ class _SettingsTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: B2BSpacing.md,
+        vertical: B2BSpacing.xs,
+      ),
       leading: Container(
         width: 42,
         height: 42,
@@ -257,11 +345,16 @@ class _SettingsTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailing != null)
-            Text(
-              trailing!,
-              style: TextStyle(
-                color: statusColor ?? scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
+              child: Text(
+                trailing!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: statusColor ?? scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           if (onTap != null) const Icon(Icons.chevron_right_rounded),
@@ -292,7 +385,10 @@ class _PreferenceSwitch extends StatelessWidget {
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: B2BSpacing.md,
+        vertical: B2BSpacing.xs,
+      ),
       secondary: Container(
         width: 42,
         height: 42,

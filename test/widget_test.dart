@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const Roam2WorldApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Global eSIM catalogue'), findsOneWidget);
+    expect(find.text('Sell connectivity anywhere'), findsOneWidget);
     expect(find.text('Skip'), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
   });
@@ -18,7 +18,9 @@ void main() {
       const MaterialApp(home: LoginScreen()),
     );
 
-    await tester.tap(find.text('Sign in'));
+    final signIn = find.text('Sign in');
+    await tester.ensureVisible(signIn);
+    await tester.tap(signIn);
     await tester.pump();
 
     expect(find.text('Enter your email address'), findsOneWidget);

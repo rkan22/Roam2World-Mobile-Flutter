@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 
 class ContentLoadingState extends StatefulWidget {
   final String label;
@@ -19,8 +20,8 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -33,6 +34,7 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: AnimatedBuilder(
@@ -40,30 +42,30 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
         builder: (context, child) {
           final shimmer = Color.lerp(
             scheme.surfaceContainerHighest,
-            scheme.primaryContainer,
-            (_controller.value - .5).abs() * 2,
+            scheme.primaryContainer.withValues(alpha: .45),
+            _controller.value,
           )!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SkeletonBlock(height: 28, widthFactor: .48, color: shimmer),
+              _SkeletonBlock(height: 28, widthFactor: .46, color: shimmer),
               const SizedBox(height: 10),
-              _SkeletonBlock(height: 14, widthFactor: .72, color: shimmer),
+              _SkeletonBlock(height: 14, widthFactor: .68, color: shimmer),
               const SizedBox(height: 22),
-              _SkeletonBlock(height: 150, color: shimmer, radius: 24),
+              _SkeletonBlock(height: 156, color: shimmer, radius: B2BRadius.xl),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _SkeletonBlock(height: 104, color: shimmer)),
+                  Expanded(child: _SkeletonBlock(height: 108, color: shimmer)),
                   const SizedBox(width: 12),
-                  Expanded(child: _SkeletonBlock(height: 104, color: shimmer)),
+                  Expanded(child: _SkeletonBlock(height: 108, color: shimmer)),
                 ],
               ),
               const SizedBox(height: 16),
-              _SkeletonBlock(height: 84, color: shimmer),
+              _SkeletonBlock(height: 86, color: shimmer),
               const SizedBox(height: 12),
-              _SkeletonBlock(height: 84, color: shimmer),
-              const SizedBox(height: 16),
+              _SkeletonBlock(height: 86, color: shimmer),
+              const SizedBox(height: 18),
               Center(
                 child: Text(
                   widget.label,
@@ -86,7 +88,7 @@ class _SkeletonBlock extends StatelessWidget {
     required this.height,
     required this.color,
     this.widthFactor = 1,
-    this.radius = 18,
+    this.radius = B2BRadius.md,
   });
 
   final double height;
@@ -99,7 +101,7 @@ class _SkeletonBlock extends StatelessWidget {
     return FractionallySizedBox(
       widthFactor: widthFactor,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: B2BMotion.fast,
         height: height,
         decoration: BoxDecoration(
           color: color,
@@ -182,49 +184,41 @@ class _StateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+
     return Center(
       child: Container(
         margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(28),
-        constraints: const BoxConstraints(maxWidth: 420),
+        padding: const EdgeInsets.all(26),
+        constraints: const BoxConstraints(maxWidth: 430),
         decoration: BoxDecoration(
           color: scheme.surface,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(B2BRadius.xl),
           border: Border.all(color: scheme.outlineVariant),
+          boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              height: 64,
-              width: 64,
+              height: 66,
+              width: 66,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: .12),
-                borderRadius: BorderRadius.circular(20),
+                color: iconColor.withValues(alpha: .11),
+                borderRadius: BorderRadius.circular(22),
               ),
-              child: Icon(icon, size: 32, color: iconColor),
+              child: Icon(icon, size: 31, color: iconColor),
             ),
             const SizedBox(height: 18),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            Text(title, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.45,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),

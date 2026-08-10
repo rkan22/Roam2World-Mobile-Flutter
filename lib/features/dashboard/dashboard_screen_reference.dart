@@ -1,16 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, this.repository});
-
   final DashboardRepository? repository;
 
   @override
@@ -18,12 +20,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _primary = Color(0xFF0868F7);
-  static const _background = Color(0xFFF7F9FC);
-  static const _text = Color(0xFF0C1733);
-  static const _muted = Color(0xFF758097);
   static const _channel = MethodChannel('com.roam2world.mobile/lpa');
-
   late final DashboardRepository _repository;
   DashboardData? _data;
   Object? _error;
@@ -45,7 +42,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _error = null;
       });
     }
-
     try {
       final result = await _repository.fetchDashboard(forceRefresh: forceRefresh);
       if (!mounted) return;
@@ -55,52 +51,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() => _error = error);
+      if (kDebugMode) {
+        setState(() {
+          _data = _demoData;
+          _error = null;
+          _showingStaleData = true;
+        });
+      } else {
+        setState(() => _error = error);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  DashboardData get _demoData => DashboardData(
+        role: 'Reseller',
+        balance: 12540,
+        currency: 'USD',
+        todaySales: 8760.50,
+        monthlySales: 98760.50,
+        activeEsimCount: 1248,
+        expiredEsimCount: 42,
+        recentOrders: [
+          DashboardOrderSummary(id: 1, orderNumber: 'R2W-1042', productName: 'United States • 10 GB • 30 Days', status: 'completed', totalAmount: 23.09, createdAt: DateTime.now().subtract(const Duration(minutes: 18))),
+          DashboardOrderSummary(id: 2, orderNumber: 'R2W-1041', productName: 'Türkiye • 20 GB • 30 Days', status: 'completed', totalAmount: 25.08, createdAt: DateTime.now().subtract(const Duration(hours: 2))),
+          DashboardOrderSummary(id: 3, orderNumber: 'R2W-1040', productName: 'Japan • 5 GB • 15 Days', status: 'completed', totalAmount: 12.50, createdAt: DateTime.now().subtract(const Duration(hours: 5))),
+        ],
+      );
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _background,
-      body: SafeArea(child: _buildBody()),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(child: _buildBody()),
+      );
 
   Widget _buildBody() {
     if (_loading && _data == null) {
-      return const ContentLoadingState(label: 'Loading your workspace...');
+      return const ContentLoadingState(label: 'Loading your dashboard...');
     }
     if (_error != null && _data == null) {
       return ContentErrorState(
-        message: _error is ApiException
-            ? (_error! as ApiException).message
-            : 'Dashboard could not be loaded.',
+        message: _error is ApiException ? (_error! as ApiException).message : 'Dashboard could not be loaded.',
         onRetry: () => _load(forceRefresh: true),
       );
     }
-
     final data = _data!;
     return RefreshIndicator(
       onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+        padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
         children: [
-          if (_showingStaleData) ...[
-            _staleBanner(),
-            const SizedBox(height: 12),
-          ],
+          if (_showingStaleData) ...[_staleBanner(), const SizedBox(height: 12)],
           _header(data),
-          const SizedBox(height: 22),
-          _walletCard(data),
           const SizedBox(height: 18),
-          _metricsGrid(data),
-          const SizedBox(height: 20),
-          _recentPurchases(data),
-          const SizedBox(height: 18),
+          _walletHero(data),
+          const SizedBox(height: 14),
+          _metricStrip(data),
+          const SizedBox(height: 14),
+          _recentOrders(data),
+          const SizedBox(height: 14),
           _quickActions(),
         ],
       ),
@@ -108,294 +119,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _header(DashboardData data) {
-    final role = data.role.trim().isEmpty ? 'Partner' : data.role.trim();
+    final role = _friendlyRole(data.role);
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        _SquareIconButton(icon: Icons.menu_rounded, onTap: () => context.push('/profile')),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Welcome Admin 👋',
-                style: TextStyle(
-                  color: _text,
-                  fontSize: 29,
-                  height: 1.1,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.7,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                role,
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text('Good morning, $role', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.35)),
+              const SizedBox(height: 3),
+              Text('Here’s what’s happening with your business today.', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              onPressed: () => context.push('/notifications'),
-              icon: const Icon(Icons.notifications_none_rounded, size: 30),
-              color: _text,
-            ),
-            Positioned(
-              right: 9,
-              top: 8,
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: const BoxDecoration(
-                  color: _primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 6),
-        InkWell(
+        const SizedBox(width: 10),
+        _SquareIconButton(icon: Icons.notifications_none_rounded, badge: true, onTap: () => context.push('/notifications')),
+        const SizedBox(width: 8),
+        GestureDetector(
           onTap: () => context.push('/profile'),
-          borderRadius: BorderRadius.circular(99),
-          child: const CircleAvatar(
-            radius: 25,
-            backgroundColor: _primary,
-            child: Text(
-              'A',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          child: Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(14)),
+            child: Text(role.characters.first.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
           ),
         ),
-        const SizedBox(width: 4),
-        const Icon(Icons.keyboard_arrow_down_rounded, color: _text),
       ],
     );
   }
 
-  Widget _walletCard(DashboardData data) {
-    final amount = '${data.currency} ${data.balance.toStringAsFixed(2)}';
-    return _surface(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _iconBox(
-                icon: Icons.account_balance_wallet_rounded,
-                foreground: _primary,
-                background: const Color(0xFFEAF2FF),
-                size: 58,
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Wallet Balance',
-                      style: TextStyle(
-                        color: _muted,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _balanceVisible ? amount : '••••••••',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _primary,
-                        fontSize: 36,
-                        height: 1.08,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton.filled(
-                onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
-                style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFFF0F5FF),
-                  foregroundColor: _primary,
-                  minimumSize: const Size(52, 52),
-                ),
-                icon: Icon(
-                  _balanceVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFFE8EDF5)),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () => context.push('/wallet'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.account_balance_wallet_outlined, size: 19),
-              label: const Text(
-                'Add Money',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ],
+  Widget _walletHero(DashboardData data) {
+    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
+    final balance = _balanceVisible ? _money(data.balance, currency) : '••••••••';
+    return Container(
+      height: 190,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppColors.heroStart, AppColors.heroMiddle, AppColors.heroEnd]),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: B2BShadows.hero,
       ),
-    );
-  }
-
-  Widget _metricsGrid(DashboardData data) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const gap = 12.0;
-        final width = (constraints.maxWidth - gap) / 2;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.trending_up_rounded,
-                iconColor: _primary,
-                iconBackground: const Color(0xFFEDF4FF),
-                label: 'Today Sales',
-                value: '${data.currency} ${_compactMoney(data.todaySales)}',
-                badge: 'Live',
-                badgeColor: _primary,
-                badgeBackground: const Color(0xFFF4F8FF),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.calendar_month_rounded,
-                iconColor: _primary,
-                iconBackground: const Color(0xFFEDF4FF),
-                label: 'Monthly Sales',
-                value: '${data.currency} ${_compactMoney(data.monthlySales)}',
-                badge: 'This month',
-                badgeColor: _primary,
-                badgeBackground: const Color(0xFFF4F8FF),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.sim_card_outlined,
-                iconColor: const Color(0xFF0BB77A),
-                iconBackground: const Color(0xFFECFBF5),
-                label: 'Active eSIMs',
-                value: '${data.activeEsimCount}',
-                badge: 'Active',
-                badgeColor: const Color(0xFF0AAE73),
-                badgeBackground: const Color(0xFFECFBF5),
-                onTap: () => context.go('/esims'),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _metricCard(
-                icon: Icons.schedule_rounded,
-                iconColor: const Color(0xFFFF7A00),
-                iconBackground: const Color(0xFFFFF4E8),
-                label: 'Expired eSIMs',
-                value: '${data.expiredEsimCount}',
-                badge: 'Needs attention',
-                badgeColor: const Color(0xFFF27900),
-                badgeBackground: const Color(0xFFFFF5E9),
-                onTap: () => context.go('/esims'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _metricCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBackground,
-    required String label,
-    required String value,
-    required String badge,
-    required Color badgeColor,
-    required Color badgeBackground,
-    VoidCallback? onTap,
-  }) {
-    return _surface(
-      onTap: onTap,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          _iconCircle(icon, iconColor, iconBackground),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Positioned(right: -54, top: -54, child: Container(width: 190, height: 190, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: .07)))),
+          Positioned(right: 6, bottom: 8, child: Icon(Icons.account_balance_wallet_outlined, size: 105, color: Colors.white.withValues(alpha: .08))),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
               children: [
-                Text(
-                  label,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Wallet Balance', style: TextStyle(color: Colors.white70, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 8),
+                      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                        Flexible(child: Text(balance, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 27, height: 1, letterSpacing: -0.8, fontWeight: FontWeight.w800))),
+                        const SizedBox(width: 7),
+                        Padding(padding: const EdgeInsets.only(bottom: 2), child: Text(currency, style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700))),
+                      ]),
+                      const SizedBox(height: 12),
+                      const Text('Available Balance', style: TextStyle(color: Colors.white60, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
+                      Text(balance, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                      const Spacer(),
+                      SizedBox(
+                        height: 38,
+                        child: FilledButton.icon(
+                          onPressed: () => context.push('/wallet'),
+                          style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(horizontal: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          icon: const Icon(Icons.add_rounded, size: 17),
+                          label: const Text('Add Funds'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: badgeColor.withValues(alpha: .14)),
-                  ),
-                  child: Text(
-                    badge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: badgeColor,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 4,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      height: 102,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(color: const Color(0xFF181A24), borderRadius: BorderRadius.circular(18), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 18, offset: Offset(0, 8))]),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Row(children: [
+                          const Icon(Icons.public_rounded, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
+                          const Expanded(child: Text('Roam2World', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
+                          IconButton(visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 28, minHeight: 28), onPressed: () => setState(() => _balanceVisible = !_balanceVisible), icon: Icon(_balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 15, color: Colors.white70)),
+                        ]),
+                        const Spacer(),
+                        const Text('B2B WALLET', style: TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: .9, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
+                        const Text('Secure partner balance', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                      ]),
                     ),
                   ),
                 ),
@@ -407,351 +230,210 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _recentPurchases(DashboardData data) {
-    return _surface(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Recent Purchases',
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/orders'),
-                child: const Text('View All'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (data.recentOrders.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              child: Row(
-                children: [
-                  _iconCircle(
-                    Icons.receipt_long_outlined,
-                    _primary,
-                    const Color(0xFFEDF4FF),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text(
-                      'Your latest eSIM purchases will appear here.',
-                      style: TextStyle(color: _muted, fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            for (final order in data.recentOrders.take(2)) ...[
-              _purchaseRow(order, data.currency),
-              if (order != data.recentOrders.take(2).last)
-                const Divider(height: 1, color: Color(0xFFE8EDF5)),
-            ],
-        ],
+  Widget _metricStrip(DashboardData data) {
+    final metrics = [
+      _MetricData(label: 'Total Sales', value: _money(data.monthlySales, data.currency), icon: Icons.account_balance_wallet_outlined, color: AppColors.primary, soft: AppColors.primaryLight),
+      _MetricData(label: 'Today Sales', value: _money(data.todaySales, data.currency), icon: Icons.shopping_bag_outlined, color: AppColors.sky, soft: const Color(0xFFEAF7FE)),
+      _MetricData(label: 'Active eSIMs', value: '${data.activeEsimCount}', icon: Icons.groups_2_outlined, color: AppColors.success, soft: AppColors.successSoft),
+      _MetricData(label: 'Expired', value: '${data.expiredEsimCount}', icon: Icons.pie_chart_outline_rounded, color: AppColors.warning, soft: AppColors.warningSoft),
+    ];
+    return SizedBox(
+      height: 126,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: metrics.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 9),
+        itemBuilder: (context, index) => SizedBox(width: 112, child: _metricCard(metrics[index])),
       ),
     );
   }
 
-  Widget _purchaseRow(DashboardOrderSummary order, String currency) {
-    final date = order.createdAt == null
-        ? ''
-        : DateFormat('MMM d, yyyy • h:mm a').format(order.createdAt!.toLocal());
-    final completed = order.status.toLowerCase() == 'completed' ||
-        order.status.toLowerCase() == 'success';
-    final statusColor = completed ? const Color(0xFF0AAE73) : const Color(0xFFF27900);
-    final statusBg = completed ? const Color(0xFFECFBF5) : const Color(0xFFFFF5E9);
+  Widget _metricCard(_MetricData metric) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(17), border: Border.all(color: theme.colorScheme.outlineVariant), boxShadow: B2BShadows.card),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 30, height: 30, decoration: BoxDecoration(color: metric.soft, borderRadius: BorderRadius.circular(10)), child: Icon(metric.icon, size: 16, color: metric.color)),
+        const Spacer(),
+        Text(metric.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5)),
+        const SizedBox(height: 3),
+        Text(metric.value, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 3),
+        Text(_metricCaption(metric.label), style: theme.textTheme.bodySmall?.copyWith(fontSize: 9.5, color: AppColors.success, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
 
-    return InkWell(
-      onTap: () => context.go('/orders'),
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            _iconCircle(
-              Icons.business_rounded,
-              const Color(0xFF7EA9EF),
-              const Color(0xFFF0F5FF),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    order.productName.isEmpty ? 'eSIM purchase' : order.productName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    order.orderNumber.isEmpty ? 'Roam2World order' : order.orderNumber,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _muted, fontSize: 12.5),
-                  ),
-                  if (date.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(date, style: const TextStyle(color: _muted, fontSize: 11.5)),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '$currency ${order.totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    order.status.isEmpty ? 'Pending' : _titleCase(order.status),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+  String _metricCaption(String label) {
+    if (label == 'Expired') return 'Live status';
+    if (label == 'Active eSIMs') return 'In service';
+    return 'Updated now';
+  }
+
+  Widget _recentOrders(DashboardData data) {
+    final theme = Theme.of(context);
+    final orders = data.recentOrders.take(4).toList(growable: false);
+    return Container(
+      decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: theme.colorScheme.outlineVariant), boxShadow: B2BShadows.card),
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 13, 8, 6),
+          child: Row(children: [
+            Expanded(child: Text('Recent Orders', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+            TextButton(onPressed: () => context.go('/orders'), child: const Text('View all')),
+          ]),
         ),
-      ),
+        if (orders.isEmpty)
+          Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 18), child: Text('Your latest eSIM orders will appear here.', style: theme.textTheme.bodyMedium))
+        else
+          for (var i = 0; i < orders.length; i++) ...[
+            _orderRow(orders[i], data.currency),
+            if (i != orders.length - 1) const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Divider(height: 1)),
+          ],
+        const SizedBox(height: 6),
+      ]),
+    );
+  }
+
+  Widget _orderRow(DashboardOrderSummary order, String currency) {
+    final theme = Theme.of(context);
+    final completed = order.status.toLowerCase().contains('complete') || order.status.toLowerCase().contains('success');
+    final date = order.createdAt == null ? order.orderNumber : DateFormat('MMM d, HH:mm').format(order.createdAt!.toLocal());
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Row(children: [
+        Container(width: 28, height: 28, decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.public_rounded, size: 15, color: AppColors.primary)),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(order.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(date, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+        ])),
+        const SizedBox(width: 8),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(_money(order.totalAmount, currency), style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 3),
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: completed ? AppColors.success : AppColors.warning)),
+            const SizedBox(width: 4),
+            Text(completed ? 'Completed' : order.status, style: theme.textTheme.bodySmall?.copyWith(fontSize: 9.5, color: completed ? AppColors.success : AppColors.warning, fontWeight: FontWeight.w700)),
+          ]),
+        ]),
+      ]),
     );
   }
 
   Widget _quickActions() {
-    final actions = <({IconData icon, String label, VoidCallback onTap})>[
-      (
-        icon: Icons.shopping_cart_rounded,
-        label: 'Buy eSIM',
-        onTap: () => context.go('/packages'),
-      ),
-      (
-        icon: Icons.qr_code_2_rounded,
-        label: 'NekoKopla',
-        onTap: _openNekoko,
-      ),
-      (
-        icon: Icons.history_rounded,
-        label: 'eSIM History',
-        onTap: () => context.go('/esims'),
-      ),
-      (
-        icon: Icons.account_balance_wallet_rounded,
-        label: 'Wallet Request',
-        onTap: () => context.go('/wallet'),
-      ),
-      (
-        icon: Icons.sim_card_rounded,
-        label: 'TGT SIM Recharge',
-        onTap: () => _showMessage('TGT SIM Recharge is not configured yet.'),
-      ),
+    final actions = <_ActionData>[
+      _ActionData(label: 'Buy eSIM', icon: Icons.shopping_bag_outlined, color: AppColors.primary, onTap: () => context.go('/packages')),
+      _ActionData(label: 'My eSIMs', icon: Icons.sim_card_outlined, color: AppColors.sky, onTap: () => context.go('/esims')),
+      _ActionData(label: 'Add Funds', icon: Icons.account_balance_wallet_outlined, color: AppColors.success, onTap: () => context.push('/wallet')),
+      _ActionData(label: 'Orders', icon: Icons.swap_horiz_rounded, color: AppColors.orange, onTap: () => context.go('/orders')),
+      _ActionData(label: 'NekoKopla', icon: Icons.qr_code_2_rounded, color: AppColors.navy, onTap: _openNekoKopla),
     ];
-
-    return _surface(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              color: _text,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const gap = 8.0;
-              final tileWidth = (constraints.maxWidth - (gap * 4)) / 5;
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = 0; i < actions.length; i++) ...[
-                    SizedBox(
-                      width: tileWidth,
-                      child: _quickActionTile(actions[i]),
-                    ),
-                    if (i != actions.length - 1) const SizedBox(width: gap),
-                  ],
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickActionTile(({IconData icon, String label, VoidCallback onTap}) action) {
-    return InkWell(
-      onTap: action.onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 106),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE4EAF3)),
-        ),
-        child: Column(
-          children: [
-            Icon(action.icon, color: _primary, size: 29),
-            const SizedBox(height: 10),
-            Text(
-              action.label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: _text,
-                fontSize: 10.5,
-                height: 1.15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border), boxShadow: B2BShadows.card),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        Row(children: [
+          for (var i = 0; i < actions.length; i++) ...[
+            Expanded(child: _actionItem(actions[i])),
+            if (i != actions.length - 1) const SizedBox(width: 8),
           ],
-        ),
-      ),
+        ]),
+      ]),
     );
   }
 
-  Future<void> _openNekoko() async {
+  Widget _actionItem(_ActionData action) => InkWell(
+        onTap: action.onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Column(children: [
+          Container(height: 48, decoration: BoxDecoration(color: action.color.withValues(alpha: .08), borderRadius: BorderRadius.circular(14), border: Border.all(color: action.color.withValues(alpha: .10))), child: Center(child: Icon(action.icon, color: action.color, size: 21))),
+          const SizedBox(height: 7),
+          Text(action.label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textPrimary, fontSize: 9.5, fontWeight: FontWeight.w700)),
+        ]),
+      );
+
+  Future<void> _openNekoKopla() async {
     try {
       await _channel.invokeMethod<void>('openNekoko');
     } on PlatformException catch (error) {
+      if (!mounted) return;
       _showMessage(error.message ?? 'NekoKopla could not be opened.');
     } on MissingPluginException {
-      _showMessage('NekoKopla launcher is available on Android.');
+      if (!mounted) return;
+      _showMessage('NekoKopla is available on supported Android devices.');
     }
   }
 
+  Widget _staleBanner() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(color: AppColors.warningSoft, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.warning.withValues(alpha: .25))),
+        child: Row(children: [
+          const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 17),
+          const SizedBox(width: 8),
+          Expanded(child: Text(kDebugMode ? 'Preview data is shown while dashboard API access is unavailable.' : 'Showing the last available dashboard data.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700))),
+        ]),
+      );
+
   void _showMessage(String message) {
-    if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Widget _staleBanner() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF5E9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.info_outline_rounded, color: Color(0xFFF27900), size: 18),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Showing the latest saved dashboard data.',
-              style: TextStyle(color: Color(0xFF9A5B00), fontSize: 12.5),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _friendlyRole(String role) {
+    final value = role.trim();
+    if (value.isEmpty) return 'Partner';
+    final lower = value.toLowerCase();
+    if (lower.contains('admin')) return 'Admin';
+    if (lower.contains('dealer')) return 'Dealer';
+    if (lower.contains('reseller')) return 'Reseller';
+    if (lower.contains('client')) return 'Client';
+    return value;
   }
 
-  Widget _surface({
-    required Widget child,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
-    VoidCallback? onTap,
-  }) {
-    final content = Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE3E8F1)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0B1F3A),
-            blurRadius: 16,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: child,
-    );
-    if (onTap == null) return content;
-    return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: content);
+  String _money(double value, String currency) {
+    final normalized = currency.trim().toUpperCase();
+    final symbol = switch (normalized) {'USD' => r'$', 'EUR' => '€', 'GBP' => '£', 'TRY' => '₺', _ => '$normalized '};
+    return '$symbol${NumberFormat('#,##0.00', 'en_US').format(value)}';
   }
+}
 
-  Widget _iconBox({
-    required IconData icon,
-    required Color foreground,
-    required Color background,
-    double size = 54,
-  }) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Icon(icon, color: foreground, size: 29),
-    );
-  }
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({required this.icon, required this.onTap, this.badge = false});
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool badge;
 
-  Widget _iconCircle(IconData icon, Color foreground, Color background) {
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-      child: Icon(icon, color: foreground, size: 27),
-    );
-  }
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: Stack(clipBehavior: Clip.none, children: [
+          Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: AppColors.border)), child: Icon(icon, size: 20, color: AppColors.textPrimary)),
+          if (badge) const Positioned(right: 4, top: 4, child: DecoratedBox(decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle), child: SizedBox(width: 7, height: 7))),
+        ]),
+      );
+}
 
-  String _compactMoney(double value) {
-    if (value.abs() >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value.abs() >= 1000) return NumberFormat('#,##0').format(value);
-    return value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2);
-  }
+class _MetricData {
+  const _MetricData({required this.label, required this.value, required this.icon, required this.color, required this.soft});
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final Color soft;
+}
 
-  String _titleCase(String value) {
-    final clean = value.replaceAll('_', ' ').trim();
-    if (clean.isEmpty) return clean;
-    return clean
-        .split(RegExp(r'\s+'))
-        .map((part) => part.isEmpty
-            ? part
-            : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
-        .join(' ');
-  }
+class _ActionData {
+  const _ActionData({required this.label, required this.icon, required this.color, required this.onTap});
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
 }

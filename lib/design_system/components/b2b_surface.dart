@@ -10,7 +10,7 @@ class B2BSurface extends StatelessWidget {
     this.onTap,
     this.backgroundColor,
     this.borderColor,
-    this.radius = B2BRadius.lg,
+    this.radius = B2BRadius.xl,
     this.showShadow = true,
   });
 
@@ -30,31 +30,34 @@ class B2BSurface extends StatelessWidget {
     final resolvedBackground = backgroundColor ?? scheme.surface;
     final resolvedBorder = borderColor ?? scheme.outlineVariant;
 
-    final content = AnimatedContainer(
+    final decorated = AnimatedContainer(
       duration: B2BMotion.fast,
-      padding: padding,
       decoration: BoxDecoration(
         color: resolvedBackground,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: resolvedBorder),
+        border: Border.all(color: resolvedBorder.withValues(alpha: isDark ? .9 : .78)),
         boxShadow: showShadow && !isDark ? B2BShadows.card : null,
       ),
-      child: Material(
-        color: Colors.transparent,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        clipBehavior: Clip.antiAlias,
-        child: child,
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: padding,
+            child: child,
+          ),
+        ),
       ),
     );
 
-    if (onTap == null) return content;
+    if (onTap == null) return decorated;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(radius),
-        child: content,
+        child: decorated,
       ),
     );
   }
