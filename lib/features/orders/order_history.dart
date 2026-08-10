@@ -9,17 +9,20 @@ class OrderHistory {
     final data = root['data'] is Map
         ? Map<String, dynamic>.from(root['data'] as Map)
         : root;
-    final rawOrders = data['orders'] ?? data['results'] ?? const [];
+    final rawOrders =
+        data['orders'] ?? data['results'] ?? data['items'] ?? const [];
+    final orders = rawOrders is List
+        ? rawOrders
+            .whereType<Map>()
+            .map((item) => MobileOrderSummary.fromJson(
+                  Map<String, dynamic>.from(item),
+                ))
+            .toList()
+        : const <MobileOrderSummary>[];
     return OrderHistory(
-      orders: rawOrders is List
-          ? rawOrders
-              .whereType<Map>()
-              .map((item) => MobileOrderSummary.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ))
-              .toList()
-          : const [],
-      count: int.tryParse((data['count'] ?? 0).toString()) ?? 0,
+      orders: orders,
+      count: int.tryParse((data['count'] ?? data['total'] ?? orders.length).toString()) ??
+          orders.length,
     );
   }
 }
