@@ -18,6 +18,7 @@ class ApiEndpoints {
       '/api/v1/mobile/notifications/';
   static const String mobileNotificationsReadAll =
       '/api/v1/mobile/notifications/read-all/';
+  static const String notificationRules = '/api/v1/notifications/rules/';
 
   // Reseller -> dealer network endpoints used by the web B2B panel.
   static const String resellerDealers = '/api/v1/resellers/dealers/';
@@ -26,7 +27,8 @@ class ApiEndpoints {
   static const String resellerPendingDealerRequests =
       '/api/v1/resellers/dealer-requests/pending/';
 
-  // Reseller operations endpoints mirrored from the web B2B workspace.
+  // Reseller operations endpoints. All are treated as optional/read-only sources
+  // until the backend exposes explicit write/retry contracts for mobile.
   static const String failedOrders = '/api/v1/orders/failed/';
   static const String providerOperationLogs =
       '/api/v1/provider-operations/logs/';
