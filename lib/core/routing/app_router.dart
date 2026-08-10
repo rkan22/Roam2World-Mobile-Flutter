@@ -5,7 +5,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
 import '../../features/customers/customers_screen.dart';
-import '../../features/dashboard/dashboard_screen_reference.dart';
+import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
