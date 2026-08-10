@@ -13,6 +13,8 @@ class ApiEndpoints {
   static const String mobileAdminSystemHealth = '/api/v1/mobile/admin/system-health/';
   static const String mobileAdminActivityLogs = '/api/v1/mobile/admin/activity-logs/';
   static const String mobileAdminSupportTickets = '/api/v1/mobile/admin/support-tickets/';
+  static const String mobileAdminProviderRetryQueue =
+      '/api/v1/mobile/admin/provider-retry-queue/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
@@ -70,6 +72,12 @@ class ApiEndpoints {
 
   static String mobileNotificationUnread(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/unread/';
+
+  static String mobileAdminProviderRetryDetail(Object itemId) =>
+      '/api/v1/mobile/admin/provider-retry-queue/$itemId/';
+
+  static String mobileAdminProviderRetryAction(Object itemId) =>
+      '/api/v1/mobile/admin/provider-retry-queue/$itemId/action/';
 
   static String mobileDealerAllocateBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
