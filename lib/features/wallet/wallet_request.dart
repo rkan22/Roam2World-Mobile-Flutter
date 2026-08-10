@@ -16,13 +16,21 @@ class WalletRequest {
   final DateTime? createdAt;
 
   factory WalletRequest.fromResponse(dynamic response) {
-    final data = Map<String, dynamic>.from(response as Map);
+    final root = Map<String, dynamic>.from(response as Map);
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
     return WalletRequest(
       id: int.tryParse((data['id'] ?? 0).toString()) ?? 0,
-      amount: double.tryParse(data['requested_amount']?.toString() ?? data['amount']?.toString() ?? '') ?? 0,
+      amount: double.tryParse(
+            data['requested_amount']?.toString() ??
+                data['amount']?.toString() ??
+                '',
+          ) ??
+          0,
       currency: data['currency']?.toString() ?? 'USD',
       status: data['status']?.toString() ?? 'pending',
-      note: data['note']?.toString() ?? '',
+      note: (data['dealer_notes'] ?? data['note'] ?? '').toString(),
       createdAt: DateTime.tryParse(data['created_at']?.toString() ?? ''),
     );
   }
