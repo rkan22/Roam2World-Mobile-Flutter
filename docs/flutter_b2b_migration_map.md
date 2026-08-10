@@ -98,6 +98,15 @@ lib/features/
 - Detail screen is capability-aware: physical SIMs do not show QR/LPA controls; eSIMs can show QR, SM-DP+, Matching ID and direct install actions.
 - Existing mobile eSIM endpoint remains the source of truth; no usage, QR or expiry values are fabricated.
 
+### Orders & New Order
+
+- Order parsing now supports R2W references, customer/email, ICCID, product type and provider-issued activation data when returned by the mobile API.
+- The previous hard-coded demo Order Detail screen was removed; order details now render only the selected real `MobileOrderSummary`.
+- Order Detail shows customer assignment, ICCID, type, created time, amount and status, with QR/activation controls only when the backend returns installation data.
+- `/orders/detail` requires a real order object and safely redirects to the order list when opened without one.
+- Checkout keeps the existing mobile create-order contract but is presented as a B2B Package → Customer → Review flow.
+- Final submission is explicit as `Pay & create order`; provisioning remains server/provider driven and no QR is fabricated.
+
 ## Dashboard migration rule
 
 The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
