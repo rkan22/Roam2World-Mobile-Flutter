@@ -15,6 +15,10 @@ class ApiEndpoints {
   static const String mobileAdminSupportTickets = '/api/v1/mobile/admin/support-tickets/';
   static const String mobileAdminProviderRetryQueue =
       '/api/v1/mobile/admin/provider-retry-queue/';
+  static const String mobileAdminRoutingRules =
+      '/api/v1/mobile/admin/routing-rules/';
+  static const String mobileAdminRoutingOverride =
+      '/api/v1/mobile/admin/routing-rules/override/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
@@ -78,6 +82,9 @@ class ApiEndpoints {
 
   static String mobileAdminProviderRetryAction(Object itemId) =>
       '/api/v1/mobile/admin/provider-retry-queue/$itemId/action/';
+
+  static String mobileAdminRoutingRuleDetail(Object ruleId) =>
+      '/api/v1/mobile/admin/routing-rules/$ruleId/';
 
   static String mobileDealerAllocateBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
