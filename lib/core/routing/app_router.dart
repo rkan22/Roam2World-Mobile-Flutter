@@ -4,7 +4,7 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
-import '../../features/customers/clientS_home_screen.dart';
+import '../../features/customers/clients_home_screen.dart';
 import '../../features/customers/customer_detail_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/dashboard/role_dashboard_screen.dart';
