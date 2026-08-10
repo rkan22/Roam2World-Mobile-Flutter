@@ -91,6 +91,14 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
                   ),
                   const Divider(height: 1),
                   ListTile(
+                    leading: const Icon(Icons.webhook_outlined, color: AppColors.primary),
+                    title: const Text('Provider callback logs', style: TextStyle(fontWeight: FontWeight.w900)),
+                    subtitle: const Text('Inspect live provider callbacks, signatures and processing state'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.adminProviderCallbacks),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
                     leading: const Icon(Icons.route_outlined, color: AppColors.primary),
                     title: const Text('Provider routing', style: TextStyle(fontWeight: FontWeight.w900)),
                     subtitle: const Text('Manage live B2B provider priority, primary route and availability'),
