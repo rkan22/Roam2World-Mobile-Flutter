@@ -171,7 +171,7 @@ List<_ClientRow> _aggregate(List<MobileOrderSummary> orders) {
       name: first.customerName.trim().isEmpty ? first.customerEmail : first.customerName,
       email: first.customerEmail,
       orders: List.unmodifiable(items),
-      totalSpend: items.fold(0, (sum, item) => sum + item.amount),
+      totalSpend: items.fold<double>(0, (sum, item) => sum + item.amount),
       currency: first.currency,
       lastOrderAt: first.createdAt,
     );
