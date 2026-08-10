@@ -128,7 +128,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
                     minLines: 2,
                     maxLines: 4,
                     decoration: InputDecoration(
-                      hintText: 'LPA:1$... or provider activation code',
+                      hintText: 'LPA:1\$... or provider activation code',
                       suffixIcon: IconButton(
                         onPressed: _paste,
                         tooltip: 'Paste',
@@ -238,7 +238,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
               ],
             const SizedBox(height: B2BSpacing.lg),
             const B2BSurface(
-              backgroundColor: AppColors.surfaceSoft,
+              backgroundColor: AppColors.surfaceMuted,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
