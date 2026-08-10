@@ -63,11 +63,20 @@ lib/features/
 4. Advanced B2B: Coverage, Provider Operations, Failed Orders, Profitability, API Logs, Audit, Notifications, Reports.
 5. Role completion: Admin, Dealer, Client and Public User variants.
 
-## Dashboard migration rule
+## Dashboard implementation
 
-The maintained Flutter dashboard is `lib/features/dashboard/dashboard_screen.dart`. The legacy `dashboard_screen_reference.dart` is not the production target.
+- `/dashboard` now targets a role-specific reseller dashboard foundation.
+- Dashboard periods map to API query values: `today`, `7d`, `30d`, `month`, `all`.
+- The parser accepts both the current flat mobile response and richer nested B2B `wallet`, `sales`, `customers`, `esims`, and `orders` payloads.
+- Revenue, profit, margin, successful orders, and customer count are shown only when returned by the server.
 
-The first dashboard iteration uses the existing mobile endpoint (`/api/v1/mobile/dashboard/`) and exposes only values backed by that response. Web-only metrics such as gross profit, margin, provider health, expiring inventory and customer counts should be connected when equivalent mobile API fields/endpoints are available.
+## Unified catalog implementation
+
+- Search and destination remain primary, one-tap controls.
+- Operator, product type, validity, and data filters are exposed through a native bottom sheet instead of desktop selects.
+- Catalog cards show provider/operator, SIM/eSIM type, data, validity, destination/coverage, featured state, and B2B price.
+- `MobilePackage` now preserves product kind, normalized data GB, validity days, and coverage count where the server provides them.
+- Advanced filters are forwarded to `/api/v1/mobile/packages/`; the UI does not fake filtering when the backend does not support a field.
 
 ## Mobile UX rules
 
