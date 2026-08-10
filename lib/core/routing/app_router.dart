@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_commercial_screen.dart';
+import '../../features/admin/admin_governance_screen.dart';
 import '../../features/admin/admin_partners_screen.dart';
 import '../../features/admin/admin_routing_screen.dart';
 import '../../features/admin/manual_fulfillment_screen.dart';
@@ -54,6 +55,7 @@ abstract final class AppRoutes {
   static const adminProviderRetry = '/admin/provider-retry';
   static const adminRouting = '/admin/routing';
   static const adminManualFulfillment = '/admin/manual-fulfillment';
+  static const adminGovernance = '/admin/governance';
   static const customerPricing = '/pricing/customer';
   static const dealerPricing = '/dealers/pricing';
   static const finance = '/finance';
@@ -111,6 +113,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.adminProviderRetry, builder: (context, state) => const ProviderRetryScreen()),
       GoRoute(path: AppRoutes.adminRouting, builder: (context, state) => const AdminRoutingScreen()),
       GoRoute(path: AppRoutes.adminManualFulfillment, builder: (context, state) => const ManualFulfillmentScreen()),
+      GoRoute(path: AppRoutes.adminGovernance, builder: (context, state) => const AdminGovernanceScreen()),
       GoRoute(path: AppRoutes.customerPricing, builder: (context, state) => const CustomerPricingScreen()),
       GoRoute(path: AppRoutes.dealerPricing, builder: (context, state) => const DealerPricingScreen()),
       GoRoute(path: AppRoutes.finance, builder: (context, state) => const RoleFinanceLedgerScreen()),
