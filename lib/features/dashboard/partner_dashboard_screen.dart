@@ -279,12 +279,16 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
             _WorkspaceAction('Dealer Pricing', Icons.percent_rounded, '/dealers/pricing'),
             _WorkspaceAction('Finance Ledger', Icons.receipt_long_outlined, '/finance'),
             _WorkspaceAction('Operations', Icons.monitor_heart_outlined, '/operations'),
+            _WorkspaceAction('Notification Rules', Icons.notifications_active_outlined, '/notifications/rules'),
+            _WorkspaceAction('SIM Converter', Icons.sim_card_download_outlined, '/sim-converter'),
             _WorkspaceAction('Clients', Icons.groups_outlined, '/clients'),
             _WorkspaceAction('Reports', Icons.analytics_outlined, '/reports'),
           ]
         : const [
             _WorkspaceAction('Customer Pricing', Icons.percent_rounded, '/pricing/customer'),
             _WorkspaceAction('Finance Ledger', Icons.receipt_long_outlined, '/finance'),
+            _WorkspaceAction('Notification Rules', Icons.notifications_active_outlined, '/notifications/rules'),
+            _WorkspaceAction('SIM Converter', Icons.sim_card_download_outlined, '/sim-converter'),
             _WorkspaceAction('Clients', Icons.groups_outlined, '/clients'),
             _WorkspaceAction('Orders', Icons.shopping_bag_outlined, '/orders'),
             _WorkspaceAction('eSIMs', Icons.sim_card_outlined, '/esims'),
