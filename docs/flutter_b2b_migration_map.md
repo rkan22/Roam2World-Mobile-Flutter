@@ -89,6 +89,15 @@ lib/features/
 - New Order actions route back into the Unified Catalog.
 - Email, phone and eSIM statistics are intentionally not fabricated when the mobile API does not provide them.
 
+### SIM & eSIM Inventory
+
+- One inventory surface supports both physical SIMs and eSIMs, matching the web B2B inventory model.
+- Search plus Active / Pending / Expired / Installed status tabs.
+- Mobile filter bottom sheet for provider and line type.
+- Inventory cards surface ICCID, provider, package, customer, data/validity, expiry and usage only when supplied by the API.
+- Detail screen is capability-aware: physical SIMs do not show QR/LPA controls; eSIMs can show QR, SM-DP+, Matching ID and direct install actions.
+- Existing mobile eSIM endpoint remains the source of truth; no usage, QR or expiry values are fabricated.
+
 ## Dashboard migration rule
 
 The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
