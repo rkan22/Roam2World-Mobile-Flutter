@@ -10,6 +10,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'wallet_data.dart';
 import 'wallet_repository.dart';
+import 'wallet_request.dart';
 import 'widgets/wallet_adaptive_sections.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _WalletScreenState extends State<WalletScreen> {
   bool _showingStaleData = false;
   String? _error;
   WalletData? _wallet;
+  List<WalletRequest> _requests = const [];
+  final Set<int> _processingRequests = <int>{};
   int _selectedFilter = 0;
 
   @override
@@ -40,9 +43,11 @@ class _WalletScreenState extends State<WalletScreen> {
     });
     try {
       final wallet = await _repository.fetchWallet(forceRefresh: forceRefresh);
+      final requests = await _loadRequests(wallet.role);
       if (!mounted) return;
       setState(() {
         _wallet = wallet;
+        _requests = requests;
         _showingStaleData = _repository.lastFetchUsedStale;
       });
     } on ApiException catch (error) {
@@ -56,8 +61,254 @@ class _WalletScreenState extends State<WalletScreen> {
     }
   }
 
+  Future<List<WalletRequest>> _loadRequests(String role) async {
+    try {
+      if (role.toLowerCase() == 'admin') {
+        return _repository.fetchReviewRequests(
+          reviewerRole: role,
+          status: 'all',
+        );
+      }
+      if (role.toLowerCase() == 'reseller') {
+        final groups = await Future.wait([
+          _repository.fetchTopUpRequests(),
+          _repository.fetchReviewRequests(reviewerRole: role),
+        ]);
+        return [...groups[0], ...groups[1]];
+      }
+      return _repository.fetchTopUpRequests();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> _reviewRequest(
+    WalletRequest request, {
+    required bool approve,
+    String? note,
+  }) async {
+    if (_processingRequests.contains(request.id)) return;
+    setState(() => _processingRequests.add(request.id));
+    try {
+      final updated = await _repository.reviewRequest(
+        request: request,
+        approve: approve,
+        note: note,
+      );
+      if (!mounted) return;
+      setState(() {
+        _requests = _requests
+            .map(
+              (item) =>
+                  item.id == updated.id &&
+                      item.requestType == updated.requestType
+                  ? updated
+                  : item,
+            )
+            .toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            approve ? 'Wallet request approved.' : 'Wallet request rejected.',
+          ),
+        ),
+      );
+      await _load(forceRefresh: true);
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _processingRequests.remove(request.id));
+    }
+  }
+
+  Future<void> _confirmReview(
+    WalletRequest request, {
+    required bool approve,
+  }) async {
+    final noteController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          approve ? 'Approve wallet request?' : 'Reject wallet request?',
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${request.currency} ${request.amount.toStringAsFixed(2)} will be ${approve ? 'approved' : 'rejected'}.',
+            ),
+            const SizedBox(height: B2BSpacing.md),
+            TextField(
+              controller: noteController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: approve
+                    ? 'Review note (optional)'
+                    : 'Reason (optional)',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(approve ? 'Approve' : 'Reject'),
+          ),
+        ],
+      ),
+    );
+    final note = noteController.text;
+    noteController.dispose();
+    if (confirmed == true && mounted) {
+      await _reviewRequest(request, approve: approve, note: note);
+    }
+  }
+
+  Future<void> _showAdminWalletAction(
+    WalletRequest request, {
+    required bool refund,
+  }) async {
+    final amountController = TextEditingController();
+    final reasonController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var submitting = false;
+    String? submitError;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(refund ? 'Refund wallet funds' : 'Adjust wallet balance'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: amountController,
+                  enabled: !submitting,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: refund ? 'Refund amount' : 'Adjustment amount',
+                    prefixText: '${request.currency} ',
+                    helperText: refund
+                        ? 'A positive amount will be reversed.'
+                        : 'Use a negative amount to reduce the balance.',
+                  ),
+                  validator: (value) {
+                    final amount = double.tryParse(value?.trim() ?? '');
+                    if (amount == null ||
+                        amount == 0 ||
+                        (refund && amount < 0)) {
+                      return refund
+                          ? 'Enter an amount greater than zero.'
+                          : 'Enter a non-zero amount.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: B2BSpacing.md),
+                TextFormField(
+                  controller: reasonController,
+                  enabled: !submitting,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Reason'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter a reason for the ledger.'
+                      : null,
+                ),
+                if (submitError != null) ...[
+                  const SizedBox(height: B2BSpacing.sm),
+                  Text(
+                    submitError!,
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: submitting
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      if (!(formKey.currentState?.validate() ?? false)) return;
+                      setDialogState(() {
+                        submitting = true;
+                        submitError = null;
+                      });
+                      try {
+                        final amount = double.parse(
+                          amountController.text.trim(),
+                        );
+                        if (refund) {
+                          await _repository.refundTopUpRequest(
+                            requestId: request.id,
+                            amount: amount,
+                            reason: reasonController.text,
+                          );
+                        } else {
+                          await _repository.adjustTopUpRequest(
+                            requestId: request.id,
+                            amount: amount,
+                            reason: reasonController.text,
+                          );
+                        }
+                        if (!mounted || !dialogContext.mounted) return;
+                        Navigator.of(dialogContext).pop();
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              refund
+                                  ? 'Wallet refund completed.'
+                                  : 'Wallet adjustment completed.',
+                            ),
+                          ),
+                        );
+                        await _load(forceRefresh: true);
+                      } on ApiException catch (error) {
+                        setDialogState(() => submitError = error.message);
+                      } finally {
+                        if (dialogContext.mounted) {
+                          setDialogState(() => submitting = false);
+                        }
+                      }
+                    },
+              child: Text(submitting ? 'Processing...' : 'Confirm'),
+            ),
+          ],
+        ),
+      ),
+    );
+    amountController.dispose();
+    reasonController.dispose();
+  }
+
   String _money(double value, String currency) {
-    return NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
+    return NumberFormat.currency(
+      name: currency,
+      symbol: '$currency ',
+    ).format(value);
   }
 
   List<WalletTransaction> _visibleTransactions(WalletData wallet) {
@@ -82,7 +333,9 @@ class _WalletScreenState extends State<WalletScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false) || submitting) return;
+            if (!(formKey.currentState?.validate() ?? false) || submitting) {
+              return;
+            }
             setSheetState(() {
               submitting = true;
               submitError = null;
@@ -106,7 +359,9 @@ class _WalletScreenState extends State<WalletScreen> {
             } on ApiException catch (error) {
               setSheetState(() => submitError = error.message);
             } catch (_) {
-              setSheetState(() => submitError = 'Top-up request could not be created.');
+              setSheetState(
+                () => submitError = 'Top-up request could not be created.',
+              );
             } finally {
               if (sheetContext.mounted) setSheetState(() => submitting = false);
             }
@@ -132,7 +387,10 @@ class _WalletScreenState extends State<WalletScreen> {
                       color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(B2BRadius.md),
                     ),
-                    child: const Icon(Icons.add_card_rounded, color: AppColors.primary),
+                    child: const Icon(
+                      Icons.add_card_rounded,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   Text(
@@ -142,13 +400,18 @@ class _WalletScreenState extends State<WalletScreen> {
                   const SizedBox(height: B2BSpacing.xs),
                   const Text(
                     'Create a funding request for your business wallet. Your available funds update after approval.',
-                    style: TextStyle(color: AppColors.textSecondary, height: 1.45),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      height: 1.45,
+                    ),
                   ),
                   const SizedBox(height: B2BSpacing.lg),
                   TextFormField(
                     controller: amountController,
                     enabled: !submitting,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Top-up amount',
                       prefixText: '${wallet.currency} ',
@@ -191,7 +454,9 @@ class _WalletScreenState extends State<WalletScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.arrow_upward_rounded),
-                    label: Text(submitting ? 'Sending request...' : 'Send top-up request'),
+                    label: Text(
+                      submitting ? 'Sending request...' : 'Send top-up request',
+                    ),
                   ),
                 ],
               ),
@@ -260,8 +525,14 @@ class _WalletScreenState extends State<WalletScreen> {
             children: [
               Expanded(
                 child: B2BMetricCard(
-                  label: wallet.isDealer ? 'Current balance' : 'Current credit',
-                  value: _money(wallet.currentAmount, wallet.currency),
+                  label: wallet.isAdmin
+                      ? 'Ledger entries'
+                      : wallet.isDealer
+                      ? 'Current balance'
+                      : 'Current credit',
+                  value: wallet.isAdmin
+                      ? wallet.transactions.length.toString()
+                      : _money(wallet.currentAmount, wallet.currency),
                   icon: Icons.account_balance_wallet_outlined,
                 ),
               ),
@@ -269,7 +540,9 @@ class _WalletScreenState extends State<WalletScreen> {
               Expanded(
                 child: B2BMetricCard(
                   label: wallet.secondaryLabel,
-                  value: _money(wallet.secondaryAmount, wallet.currency),
+                  value: wallet.isAdmin
+                      ? wallet.secondaryAmount.toInt().toString()
+                      : _money(wallet.secondaryAmount, wallet.currency),
                   icon: wallet.isDealer
                       ? Icons.trending_down_rounded
                       : Icons.credit_score_rounded,
@@ -304,6 +577,148 @@ class _WalletScreenState extends State<WalletScreen> {
               if (index != transactions.length - 1)
                 const SizedBox(height: B2BSpacing.sm),
             ],
+          if (_requests.isNotEmpty) ...[
+            const SizedBox(height: B2BSpacing.xl),
+            const _SectionHeader(
+              title: 'Wallet requests',
+              subtitle: 'Funding requests and their current status',
+            ),
+            const SizedBox(height: B2BSpacing.md),
+            for (var index = 0; index < _requests.length; index++) ...[
+              _WalletRequestTile(
+                request: _requests[index],
+                processing: _processingRequests.contains(_requests[index].id),
+                onApprove:
+                    _requests[index].requestType.isNotEmpty &&
+                        _requests[index].isPending
+                    ? () => _confirmReview(_requests[index], approve: true)
+                    : null,
+                onReject:
+                    _requests[index].requestType.isNotEmpty &&
+                        _requests[index].isPending
+                    ? () => _confirmReview(_requests[index], approve: false)
+                    : null,
+                onAdjust:
+                    _requests[index].requestType == 'reseller_topup_request'
+                    ? () => _showAdminWalletAction(
+                        _requests[index],
+                        refund: false,
+                      )
+                    : null,
+                onRefund:
+                    _requests[index].requestType == 'reseller_topup_request' &&
+                        !_requests[index].isPending
+                    ? () =>
+                          _showAdminWalletAction(_requests[index], refund: true)
+                    : null,
+              ),
+              if (index != _requests.length - 1)
+                const SizedBox(height: B2BSpacing.sm),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletRequestTile extends StatelessWidget {
+  const _WalletRequestTile({
+    required this.request,
+    required this.processing,
+    this.onApprove,
+    this.onReject,
+    this.onAdjust,
+    this.onRefund,
+  });
+
+  final WalletRequest request;
+  final bool processing;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+  final VoidCallback? onAdjust;
+  final VoidCallback? onRefund;
+
+  @override
+  Widget build(BuildContext context) {
+    final requester = request.requesterName.isNotEmpty
+        ? request.requesterName
+        : request.requesterEmail;
+    return B2BSurface(
+      showShadow: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  requester.isEmpty ? 'Funding request' : requester,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              Text(
+                '${request.currency} ${request.amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.xs),
+          Text(
+            request.status.toUpperCase(),
+            style: TextStyle(
+              color: request.isPending
+                  ? AppColors.warning
+                  : AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (request.note.isNotEmpty) ...[
+            const SizedBox(height: B2BSpacing.xs),
+            Text(request.note),
+          ],
+          if (onApprove != null && onReject != null) ...[
+            const SizedBox(height: B2BSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: processing ? null : onReject,
+                    child: const Text('Reject'),
+                  ),
+                ),
+                const SizedBox(width: B2BSpacing.sm),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: processing ? null : onApprove,
+                    child: Text(processing ? 'Processing...' : 'Approve'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (onAdjust != null || onRefund != null) ...[
+            const SizedBox(height: B2BSpacing.sm),
+            Wrap(
+              spacing: B2BSpacing.sm,
+              runSpacing: B2BSpacing.xs,
+              children: [
+                if (onAdjust != null)
+                  OutlinedButton.icon(
+                    onPressed: processing ? null : onAdjust,
+                    icon: const Icon(Icons.tune_rounded),
+                    label: const Text('Adjust'),
+                  ),
+                if (onRefund != null)
+                  OutlinedButton.icon(
+                    onPressed: processing ? null : onRefund,
+                    icon: const Icon(Icons.undo_rounded),
+                    label: const Text('Refund'),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -433,13 +848,20 @@ class _BalanceHero extends StatelessWidget {
                           color: Colors.white.withValues(alpha: .12),
                           borderRadius: BorderRadius.circular(B2BRadius.md),
                         ),
-                        child: const Icon(Icons.shield_outlined, color: Colors.white),
+                        child: const Icon(
+                          Icons.shield_outlined,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: B2BSpacing.xl),
                   Text(
-                    wallet.isDealer ? 'Available balance' : 'Available credit',
+                    wallet.isAdmin
+                        ? 'Wallet operations'
+                        : wallet.isDealer
+                        ? 'Available balance'
+                        : 'Available credit',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.w700,
@@ -447,7 +869,9 @@ class _BalanceHero extends StatelessWidget {
                   ),
                   const SizedBox(height: B2BSpacing.xs),
                   Text(
-                    amount,
+                    wallet.isAdmin
+                        ? '${wallet.transactions.length} recent entries'
+                        : amount,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -459,7 +883,9 @@ class _BalanceHero extends StatelessWidget {
                   ),
                   const SizedBox(height: B2BSpacing.xs),
                   Text(
-                    wallet.isDealer
+                    wallet.isAdmin
+                        ? 'Review live reseller, dealer and payment activity'
+                        : wallet.isDealer
                         ? 'Available for new orders and settlements'
                         : 'Available credit for new eSIM orders',
                     style: const TextStyle(color: Colors.white70),
@@ -467,15 +893,16 @@ class _BalanceHero extends StatelessWidget {
                   const SizedBox(height: B2BSpacing.xl),
                   Row(
                     children: [
-                      FilledButton.icon(
-                        onPressed: onTopUp,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
+                      if (wallet.canRequestTopUp)
+                        FilledButton.icon(
+                          onPressed: onTopUp,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primary,
+                          ),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('Add funds'),
                         ),
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add funds'),
-                      ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -559,22 +986,22 @@ class _StaleDataBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        showShadow: false,
-        backgroundColor: AppColors.warning.withValues(alpha: .1),
-        borderColor: AppColors.warning.withValues(alpha: .35),
-        child: const Row(
-          children: [
-            Icon(Icons.cloud_off_rounded, color: AppColors.warning),
-            SizedBox(width: B2BSpacing.sm),
-            Expanded(
-              child: Text(
-                'Could not refresh. Showing the last available wallet data.',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
+    showShadow: false,
+    backgroundColor: AppColors.warning.withValues(alpha: .1),
+    borderColor: AppColors.warning.withValues(alpha: .35),
+    child: const Row(
+      children: [
+        Icon(Icons.cloud_off_rounded, color: AppColors.warning),
+        SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Text(
+            'Could not refresh. Showing the last available wallet data.',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _TransactionTile extends StatelessWidget {
@@ -589,7 +1016,9 @@ class _TransactionTile extends StatelessWidget {
     final sign = positive ? '+' : '-';
     final date = transaction.createdAt == null
         ? transaction.status
-        : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal());
+        : DateFormat(
+            'dd MMM yyyy, HH:mm',
+          ).format(transaction.createdAt!.toLocal());
     final title = transaction.description.isEmpty
         ? _titleCase(transaction.type)
         : transaction.description;
@@ -636,13 +1065,16 @@ class _TransactionTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '$sign${transaction.currency} ${transaction.amount.toStringAsFixed(2)}',
+                '$sign${transaction.currency} ${transaction.displayAmount.toStringAsFixed(2)}',
                 style: TextStyle(color: color, fontWeight: FontWeight.w900),
               ),
               if (transaction.status.isNotEmpty) ...[
                 const SizedBox(height: B2BSpacing.xxs),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(B2BRadius.pill),
@@ -671,6 +1103,8 @@ String _titleCase(String value) {
   return normalized
       .split(' ')
       .where((part) => part.isNotEmpty)
-      .map((part) => '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+      .map(
+        (part) => '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+      )
       .join(' ');
 }

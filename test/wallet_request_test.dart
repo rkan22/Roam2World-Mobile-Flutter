@@ -18,4 +18,39 @@ void main() {
     expect(request.status, 'pending');
     expect(request.note, 'Need balance for sales');
   });
+
+  test('parses wallet request history response', () {
+    final requests = WalletRequest.listFromResponse([
+      {
+        'id': 18,
+        'amount': '75.00',
+        'currency': 'USD',
+        'status': 'approved',
+        'note': 'Approved funding',
+      },
+    ]);
+
+    expect(requests, hasLength(1));
+    expect(requests.single.status, 'approved');
+    expect(requests.single.amount, 75);
+  });
+
+  test('parses admin review request and nested requester', () {
+    final request = WalletRequest.fromResponse({
+      'success': true,
+      'data': {
+        'id': 21,
+        'request_type': 'reseller_topup_request',
+        'amount': '500.00',
+        'currency': 'USD',
+        'status': 'pending',
+        'reseller': {'name': 'Demo Reseller', 'email': 'reseller@example.com'},
+      },
+    });
+
+    expect(request.requestType, 'reseller_topup_request');
+    expect(request.requesterName, 'Demo Reseller');
+    expect(request.requesterEmail, 'reseller@example.com');
+    expect(request.isPending, isTrue);
+  });
 }
