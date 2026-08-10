@@ -26,6 +26,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/reports/reports_screen.dart';
 import '../../features/support/support_screen.dart';
+import '../../features/wallet/role_finance_ledger_screen.dart';
 import '../../features/wallet/wallet_screen.dart';
 
 abstract final class AppRoutes {
@@ -42,6 +43,7 @@ abstract final class AppRoutes {
   static const dealerNetwork = '/dealers';
   static const customerPricing = '/pricing/customer';
   static const dealerPricing = '/dealers/pricing';
+  static const finance = '/finance';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -119,6 +121,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(
         path: AppRoutes.dealerPricing,
         builder: (context, state) => const DealerPricingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.finance,
+        builder: (context, state) => const RoleFinanceLedgerScreen(),
       ),
       GoRoute(
         path: AppRoutes.esims,
