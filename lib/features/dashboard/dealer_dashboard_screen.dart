@@ -172,9 +172,11 @@ class _DealerDashboardScreenState extends State<DealerDashboardScreen> {
             childAspectRatio: 1.55,
             children: [
               _Action(title: 'Buy package', subtitle: 'Operator catalog', icon: Icons.public_rounded, onTap: () => context.go('/packages')),
+              _Action(title: 'Customer pricing', subtitle: 'Retail markup', icon: Icons.percent_rounded, onTap: () => context.push('/pricing/customer')),
               _Action(title: 'Clients', subtitle: 'Customer base', icon: Icons.groups_outlined, onTap: () => context.go('/clients')),
               _Action(title: 'Orders', subtitle: 'Provisioning', icon: Icons.receipt_long_outlined, onTap: () => context.go('/orders')),
               _Action(title: 'My eSIMs', subtitle: 'Inventory & usage', icon: Icons.sim_card_outlined, onTap: () => context.push('/esims')),
+              _Action(title: 'SIM Converter', subtitle: 'Parse & history', icon: Icons.sim_card_download_outlined, onTap: () => context.push('/sim-converter')),
               _Action(title: 'Request balance', subtitle: 'Wallet & ledger', icon: Icons.add_card_rounded, onTap: () => context.push('/wallet')),
               _Action(title: 'Reports', subtitle: 'Sales intelligence', icon: Icons.analytics_outlined, onTap: () => context.push('/reports')),
             ],
