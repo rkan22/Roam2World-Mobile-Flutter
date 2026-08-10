@@ -12,6 +12,7 @@ import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/operations/operations_center_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/order_history.dart';
 import '../../features/orders/order_result.dart';
@@ -48,6 +49,7 @@ abstract final class AppRoutes {
   static const dealerPricing = '/dealers/pricing';
   static const dealerPerformance = '/reports/dealers';
   static const profitability = '/reports/profitability';
+  static const operations = '/operations';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -96,6 +98,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.dealerPricing, builder: (context, state) => const DealerPricingScreen()),
       GoRoute(path: AppRoutes.dealerPerformance, builder: (context, state) => const DealerPerformanceScreen()),
       GoRoute(path: AppRoutes.profitability, builder: (context, state) => const ProfitabilityScreen()),
+      GoRoute(path: AppRoutes.operations, builder: (context, state) => const OperationsCenterScreen()),
       GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
       GoRoute(
         path: AppRoutes.esimDetail,
