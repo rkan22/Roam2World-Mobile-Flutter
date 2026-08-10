@@ -19,6 +19,13 @@ class ApiEndpoints {
   static const String mobileNotificationsReadAll =
       '/api/v1/mobile/notifications/read-all/';
 
+  // Reseller -> dealer network endpoints used by the web B2B panel.
+  static const String resellerDealers = '/api/v1/resellers/dealers/';
+  static const String resellerDealerWalletHistory =
+      '/api/v1/resellers/dealers/wallet-history/';
+  static const String resellerPendingDealerRequests =
+      '/api/v1/resellers/dealer-requests/pending/';
+
   static String mobileOrderDetail(Object orderId) =>
       '/api/v1/mobile/orders/$orderId/';
 
@@ -30,4 +37,13 @@ class ApiEndpoints {
 
   static String mobileNotificationUnread(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/unread/';
+
+  static String mobileDealerAllocateBalance(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
+
+  static String mobileDealerModifyBalance(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/modify-balance/';
+
+  static String mobileDealerWalletRequestApprove(Object requestId) =>
+      '/api/v1/mobile/dealer-wallet-requests/$requestId/approve/';
 }
