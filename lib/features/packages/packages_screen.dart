@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_surface.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'package_catalog.dart';
@@ -20,7 +22,6 @@ class PackagesScreen extends StatefulWidget {
 class _PackagesScreenState extends State<PackagesScreen> {
   final _repository = PackagesRepository();
   final _searchController = TextEditingController();
-  final _filters = const ['All', 'Data', 'Voice', 'Data + Voice'];
   final _destinations = const [
     ('🌐', 'All', ''),
     ('🇹🇷', 'Turkey', 'turkey'),
@@ -30,8 +31,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
 
   Timer? _searchTimer;
   List<MobilePackage> _packages = const [];
-  int _selectedFilter = 0;
   int _selectedDestination = 0;
+  String? _provider;
+  String? _productKind;
+  int? _validityDays;
+  double? _dataGb;
   bool _loading = true;
   bool _showingStaleData = false;
   String? _error;
@@ -49,6 +53,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
     super.dispose();
   }
 
+  int get _activeFilterCount => [
+        _provider,
+        _productKind,
+        _validityDays,
+        _dataGb,
+      ].where((value) => value != null).length;
+
   Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
       _loading = _packages.isEmpty;
@@ -58,7 +69,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
       final catalog = await _repository.fetchPackages(
         search: _searchController.text,
         destination: _destinations[_selectedDestination].$3,
-        packageType: _packageType,
+        provider: _provider,
+        productKind: _productKind,
+        validityDays: _validityDays,
+        dataGb: _dataGb,
         forceRefresh: forceRefresh,
       );
       if (!mounted) return;
@@ -71,22 +85,65 @@ class _PackagesScreenState extends State<PackagesScreen> {
       setState(() => _error = error.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Packages could not be loaded.');
+      setState(() => _error = 'Catalog could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  String? get _packageType => switch (_selectedFilter) {
-        1 => 'DATA-ONLY',
-        2 => 'VOICE',
-        3 => 'DATA-VOICE',
-        _ => null,
-      };
-
   void _onSearchChanged(String _) {
     _searchTimer?.cancel();
-    _searchTimer = Timer(const Duration(milliseconds: 450), _load);
+    _searchTimer = Timer(const Duration(milliseconds: 420), _load);
+  }
+
+  Future<void> _openFilters() async {
+    final result = await showModalBottomSheet<_CatalogFilters>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CatalogFilterSheet(
+        current: _CatalogFilters(
+          provider: _provider,
+          productKind: _productKind,
+          validityDays: _validityDays,
+          dataGb: _dataGb,
+        ),
+        providers: _providerOptions,
+      ),
+    );
+    if (result == null) return;
+    setState(() {
+      _provider = result.provider;
+      _productKind = result.productKind;
+      _validityDays = result.validityDays;
+      _dataGb = result.dataGb;
+    });
+    await _load();
+  }
+
+  List<String> get _providerOptions {
+    final seen = <String>{};
+    final values = <String>[];
+    for (final package in _packages) {
+      final value = package.displayProvider.trim();
+      if (value.isEmpty || !seen.add(value.toLowerCase())) continue;
+      values.add(value);
+    }
+    values.sort();
+    return values;
+  }
+
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedDestination = 0;
+      _provider = null;
+      _productKind = null;
+      _validityDays = null;
+      _dataGb = null;
+    });
+    _load();
   }
 
   @override
@@ -98,100 +155,585 @@ class _PackagesScreenState extends State<PackagesScreen> {
           onRefresh: () => _load(forceRefresh: true),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            padding: const EdgeInsets.fromLTRB(
+              B2BSpacing.lg,
+              B2BSpacing.md,
+              B2BSpacing.lg,
+              B2BSpacing.xxl,
+            ),
             children: [
               if (_showingStaleData) ...[
                 const _StaleDataBanner(),
-                const SizedBox(height: 14),
+                const SizedBox(height: B2BSpacing.md),
               ],
+              _CatalogHeader(
+                resultCount: _packages.length,
+                onNotificationsTap: () => context.push('/notifications'),
+              ),
+              const SizedBox(height: B2BSpacing.lg),
+              _SearchBar(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                filterCount: _activeFilterCount,
+                onFilterTap: _openFilters,
+              ),
+              const SizedBox(height: B2BSpacing.lg),
+              _DestinationStrip(
+                destinations: _destinations,
+                selectedIndex: _selectedDestination,
+                onSelected: (index) {
+                  setState(() => _selectedDestination = index);
+                  _load();
+                },
+              ),
+              if (_activeFilterCount > 0) ...[
+                const SizedBox(height: B2BSpacing.md),
+                _ActiveFilters(
+                  provider: _provider,
+                  productKind: _productKind,
+                  validityDays: _validityDays,
+                  dataGb: _dataGb,
+                  onClear: _clearFilters,
+                ),
+              ],
+              const SizedBox(height: B2BSpacing.xl),
               Row(
                 children: [
-                  const Expanded(
-                    child: Text('Packages', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900)),
+                  Expanded(
+                    child: Text(
+                      'Unified catalog',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
                   ),
-                  IconButton.filledTonal(
-                    onPressed: () => context.push('/notifications'),
-                    icon: const Icon(Icons.notifications_none_rounded),
+                  Text(
+                    '${_packages.length} plans',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: const InputDecoration(
-                  hintText: 'Search countries or packages',
-                  prefixIcon: Icon(Icons.search_rounded),
-                ),
-              ),
-              const SizedBox(height: 22),
-              const Text('Destinations', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 78,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _destinations.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    final item = _destinations[index];
-                    return _Country(
-                      flag: item.$1,
-                      name: item.$2,
-                      selected: _selectedDestination == index,
-                      onTap: () {
-                        setState(() => _selectedDestination = index);
-                        _load();
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) => ChoiceChip(
-                    label: Text(_filters[index]),
-                    selected: _selectedFilter == index,
-                    onSelected: (_) {
-                      setState(() => _selectedFilter = index);
-                      _load();
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: B2BSpacing.md),
               if (_loading)
-                const ContentLoadingState(label: 'Loading packages...')
+                const ContentLoadingState(label: 'Loading unified catalog...')
               else if (_error != null && _packages.isEmpty)
-                ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
+                ContentErrorState(
+                  message: _error!,
+                  onRetry: () => _load(forceRefresh: true),
+                )
               else if (_packages.isEmpty)
                 ContentEmptyState(
                   icon: Icons.inventory_2_outlined,
-                  title: 'No packages found',
-                  message: 'Try another search or destination.',
+                  title: 'No plans found',
+                  message: 'Try another destination or remove some filters.',
                   actionLabel: 'Clear filters',
-                  onAction: () {
-                    _searchController.clear();
-                    setState(() {
-                      _selectedFilter = 0;
-                      _selectedDestination = 0;
-                    });
-                    _load();
-                  },
+                  onAction: _clearFilters,
                 )
               else
                 for (var index = 0; index < _packages.length; index++) ...[
-                  _PackageTile(
+                  _PackageCard(
                     package: _packages[index],
-                    onTap: () => context.push('/packages/detail', extra: _packages[index]),
+                    onTap: () => context.push(
+                      '/packages/detail',
+                      extra: _packages[index],
+                    ),
                   ),
-                  if (index != _packages.length - 1) const SizedBox(height: 12),
+                  if (index != _packages.length - 1)
+                    const SizedBox(height: B2BSpacing.md),
                 ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CatalogHeader extends StatelessWidget {
+  const _CatalogHeader({
+    required this.resultCount,
+    required this.onNotificationsTap,
+  });
+
+  final int resultCount;
+  final VoidCallback onNotificationsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Catalog',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: B2BSpacing.xs),
+              Text(
+                'Compare SIM & eSIM inventory across providers.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: onNotificationsTap,
+          tooltip: 'Notifications',
+          icon: const Icon(Icons.notifications_none_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar({
+    required this.controller,
+    required this.onChanged,
+    required this.filterCount,
+    required this.onFilterTap,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final int filterCount;
+  final VoidCallback onFilterTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onChanged: onChanged,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Search plans, countries, providers',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+          ),
+        ),
+        const SizedBox(width: B2BSpacing.sm),
+        Badge(
+          isLabelVisible: filterCount > 0,
+          label: Text('$filterCount'),
+          child: IconButton.filledTonal(
+            onPressed: onFilterTap,
+            tooltip: 'Catalog filters',
+            icon: const Icon(Icons.tune_rounded),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DestinationStrip extends StatelessWidget {
+  const _DestinationStrip({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<(String, String, String)> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: destinations.length,
+        separatorBuilder: (_, _) => const SizedBox(width: B2BSpacing.sm),
+        itemBuilder: (context, index) {
+          final item = destinations[index];
+          final selected = selectedIndex == index;
+          return ChoiceChip(
+            avatar: Text(item.$1),
+            label: Text(item.$2),
+            selected: selected,
+            onSelected: (_) => onSelected(index),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ActiveFilters extends StatelessWidget {
+  const _ActiveFilters({
+    this.provider,
+    this.productKind,
+    this.validityDays,
+    this.dataGb,
+    required this.onClear,
+  });
+
+  final String? provider;
+  final String? productKind;
+  final int? validityDays;
+  final double? dataGb;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = <String>[
+      if (provider != null) provider!,
+      if (productKind != null) productKind!,
+      if (validityDays != null) '$validityDays days',
+      if (dataGb != null) '${dataGb!.toStringAsFixed(dataGb! % 1 == 0 ? 0 : 1)} GB',
+    ];
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final label in labels) ...[
+                  Chip(label: Text(label)),
+                  const SizedBox(width: B2BSpacing.xs),
+                ],
+              ],
+            ),
+          ),
+        ),
+        TextButton(onPressed: onClear, child: const Text('Clear')),
+      ],
+    );
+  }
+}
+
+class _PackageCard extends StatelessWidget {
+  const _PackageCard({required this.package, required this.onTap});
+
+  final MobilePackage package;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return B2BSurface(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(B2BRadius.md),
+                ),
+                child: Text(
+                  _flagFor(package.countryCode),
+                  style: const TextStyle(fontSize: 26),
+                ),
+              ),
+              const SizedBox(width: B2BSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            package.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                        ),
+                        if (package.isFeatured)
+                          const Padding(
+                            padding: EdgeInsets.only(left: B2BSpacing.xs),
+                            child: Icon(Icons.star_rounded, color: AppColors.warning, size: 20),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: B2BSpacing.xs),
+                    Text(
+                      '${package.displayProvider} · ${package.productKind}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.md),
+          Wrap(
+            spacing: B2BSpacing.xs,
+            runSpacing: B2BSpacing.xs,
+            children: [
+              _SpecChip(icon: Icons.data_usage_rounded, label: package.dataLabel),
+              _SpecChip(icon: Icons.schedule_rounded, label: package.validityLabel),
+              _SpecChip(icon: Icons.public_rounded, label: package.destination),
+              if (package.coverageCount > 1)
+                _SpecChip(
+                  icon: Icons.language_rounded,
+                  label: '${package.coverageCount} countries',
+                ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'B2B price',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      package.formattedPrice,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: onTap,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                label: const Text('View plan'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpecChip extends StatelessWidget {
+  const _SpecChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(B2BRadius.pill),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: B2BSpacing.sm,
+          vertical: B2BSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: AppColors.textSecondary),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CatalogFilters {
+  const _CatalogFilters({
+    this.provider,
+    this.productKind,
+    this.validityDays,
+    this.dataGb,
+  });
+
+  final String? provider;
+  final String? productKind;
+  final int? validityDays;
+  final double? dataGb;
+}
+
+class _CatalogFilterSheet extends StatefulWidget {
+  const _CatalogFilterSheet({required this.current, required this.providers});
+
+  final _CatalogFilters current;
+  final List<String> providers;
+
+  @override
+  State<_CatalogFilterSheet> createState() => _CatalogFilterSheetState();
+}
+
+class _CatalogFilterSheetState extends State<_CatalogFilterSheet> {
+  String? _provider;
+  String? _productKind;
+  int? _validityDays;
+  double? _dataGb;
+
+  @override
+  void initState() {
+    super.initState();
+    _provider = widget.current.provider;
+    _productKind = widget.current.productKind;
+    _validityDays = widget.current.validityDays;
+    _dataGb = widget.current.dataGb;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(B2BRadius.xl)),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          B2BSpacing.lg,
+          B2BSpacing.lg,
+          B2BSpacing.lg,
+          MediaQuery.viewInsetsOf(context).bottom + B2BSpacing.lg,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Catalog filters',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: B2BSpacing.xs),
+              Text(
+                'Filter by operator, product type, validity and data.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+              const SizedBox(height: B2BSpacing.xl),
+              DropdownButtonFormField<String?>(
+                value: _provider,
+                decoration: const InputDecoration(labelText: 'Operator'),
+                items: [
+                  const DropdownMenuItem<String?>(value: null, child: Text('All operators')),
+                  for (final provider in widget.providers)
+                    DropdownMenuItem<String?>(value: provider, child: Text(provider)),
+                ],
+                onChanged: (value) => setState(() => _provider = value),
+              ),
+              const SizedBox(height: B2BSpacing.md),
+              DropdownButtonFormField<String?>(
+                value: _productKind,
+                decoration: const InputDecoration(labelText: 'Product type'),
+                items: const [
+                  DropdownMenuItem<String?>(value: null, child: Text('All types')),
+                  DropdownMenuItem<String?>(value: 'eSIM', child: Text('eSIM')),
+                  DropdownMenuItem<String?>(value: 'SIM Card', child: Text('SIM Card')),
+                ],
+                onChanged: (value) => setState(() => _productKind = value),
+              ),
+              const SizedBox(height: B2BSpacing.md),
+              DropdownButtonFormField<int?>(
+                value: _validityDays,
+                decoration: const InputDecoration(labelText: 'Validity'),
+                items: const [
+                  DropdownMenuItem<int?>(value: null, child: Text('Any validity')),
+                  DropdownMenuItem<int?>(value: 7, child: Text('7 days')),
+                  DropdownMenuItem<int?>(value: 15, child: Text('15 days')),
+                  DropdownMenuItem<int?>(value: 30, child: Text('30 days')),
+                  DropdownMenuItem<int?>(value: 60, child: Text('60 days')),
+                  DropdownMenuItem<int?>(value: 90, child: Text('90 days')),
+                ],
+                onChanged: (value) => setState(() => _validityDays = value),
+              ),
+              const SizedBox(height: B2BSpacing.md),
+              DropdownButtonFormField<double?>(
+                value: _dataGb,
+                decoration: const InputDecoration(labelText: 'Data'),
+                items: const [
+                  DropdownMenuItem<double?>(value: null, child: Text('Any data')),
+                  DropdownMenuItem<double?>(value: 1, child: Text('1 GB')),
+                  DropdownMenuItem<double?>(value: 3, child: Text('3 GB')),
+                  DropdownMenuItem<double?>(value: 5, child: Text('5 GB')),
+                  DropdownMenuItem<double?>(value: 10, child: Text('10 GB')),
+                  DropdownMenuItem<double?>(value: 20, child: Text('20 GB')),
+                  DropdownMenuItem<double?>(value: 50, child: Text('50 GB')),
+                ],
+                onChanged: (value) => setState(() => _dataGb = value),
+              ),
+              const SizedBox(height: B2BSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _provider = null;
+                          _productKind = null;
+                          _validityDays = null;
+                          _dataGb = null;
+                        });
+                      },
+                      child: const Text('Reset'),
+                    ),
+                  ),
+                  const SizedBox(width: B2BSpacing.sm),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(
+                        context,
+                        _CatalogFilters(
+                          provider: _provider,
+                          productKind: _productKind,
+                          validityDays: _validityDays,
+                          dataGb: _dataGb,
+                        ),
+                      ),
+                      child: const Text('Apply filters'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -205,121 +747,35 @@ class _StaleDataBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: B2BSpacing.md,
+          vertical: B2BSpacing.md,
+        ),
         decoration: BoxDecoration(
           color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(B2BRadius.md),
           border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
         ),
         child: const Row(
           children: [
             Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(child: Text('Could not refresh. Showing the last available packages.', style: TextStyle(fontWeight: FontWeight.w700))),
-          ],
-        ),
-      );
-}
-
-class _Country extends StatelessWidget {
-  const _Country({required this.flag, required this.name, required this.selected, required this.onTap});
-  final String flag;
-  final String name;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              height: 48,
-              width: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primaryLight : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+            SizedBox(width: B2BSpacing.sm),
+            Expanded(
+              child: Text(
+                'Could not refresh. Showing the last available catalog.',
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              child: Text(flag, style: const TextStyle(fontSize: 24)),
             ),
-            const SizedBox(height: 6),
-            Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? AppColors.primary : null)),
           ],
-        ),
-      );
-}
-
-class _PackageTile extends StatelessWidget {
-  const _PackageTile({required this.package, required this.onTap});
-  final MobilePackage package;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: AppColors.border)),
-            child: Row(
-              children: [
-                Container(
-                  height: 52,
-                  width: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(17)),
-                  child: Text(_flagFor(package.countryCode), style: const TextStyle(fontSize: 27)),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(package.destination, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                      const SizedBox(height: 3),
-                      Text(package.displayProvider, style: const TextStyle(color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.data_usage_rounded, size: 15, color: AppColors.textSecondary),
-                          const SizedBox(width: 4),
-                          Flexible(child: Text(package.dataLabel, style: const TextStyle(fontWeight: FontWeight.w800))),
-                          const SizedBox(width: 12),
-                          const Icon(Icons.schedule_rounded, size: 15, color: AppColors.textSecondary),
-                          const SizedBox(width: 4),
-                          Flexible(child: Text(package.validityLabel, style: const TextStyle(fontWeight: FontWeight.w800))),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(package.formattedPrice, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                    const SizedBox(height: 10),
-                    FilledButton(
-                      onPressed: onTap,
-                      style: FilledButton.styleFrom(minimumSize: const Size(72, 38), padding: const EdgeInsets.symmetric(horizontal: 14)),
-                      child: const Text('Buy'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       );
 }
 
 String _flagFor(String code) {
   if (code.length != 2) return '🌐';
-  return code.toUpperCase().codeUnits.map((unit) => String.fromCharCode(unit + 127397)).join();
+  return code
+      .toUpperCase()
+      .codeUnits
+      .map((unit) => String.fromCharCode(unit + 127397))
+      .join();
 }
