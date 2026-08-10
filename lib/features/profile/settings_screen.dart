@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../design_system/components/b2b_surface.dart';
@@ -15,9 +16,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String language = 'English';
-  bool orderNotifications = true;
-  bool walletNotifications = true;
-  bool productNotifications = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Account preferences',
+                        'Business workspace',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       Text(
@@ -60,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.language_rounded,
                     title: 'App language',
-                    subtitle: 'Language used in the mobile workspace',
+                    subtitle: 'Interface language on this device',
                     trailing: language,
                     onTap: _selectLanguage,
                   ),
@@ -79,37 +77,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const _SectionTitle('Notifications'),
+            const _SectionTitle('Operations'),
             const SizedBox(height: 12),
             B2BSurface(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  _PreferenceSwitch(
-                    icon: Icons.receipt_long_outlined,
-                    title: 'Order updates',
-                    subtitle: 'Status and delivery events',
-                    value: orderNotifications,
-                    onChanged: (value) =>
-                        setState(() => orderNotifications = value),
+                  _SettingsTile(
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Notification rules',
+                    subtitle: 'Server-backed thresholds, channels and alert policy',
+                    onTap: () => context.push(AppRoutes.notificationRules),
                   ),
                   const Divider(height: 1),
-                  _PreferenceSwitch(
-                    icon: Icons.account_balance_wallet_outlined,
-                    title: 'Wallet updates',
-                    subtitle: 'Top-up and balance activity',
-                    value: walletNotifications,
-                    onChanged: (value) =>
-                        setState(() => walletNotifications = value),
+                  _SettingsTile(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'Notification inbox',
+                    subtitle: 'Review operational and account updates',
+                    onTap: () => context.push(AppRoutes.notifications),
                   ),
                   const Divider(height: 1),
-                  _PreferenceSwitch(
-                    icon: Icons.campaign_outlined,
-                    title: 'Product announcements',
-                    subtitle: 'New packages and platform news',
-                    value: productNotifications,
-                    onChanged: (value) =>
-                        setState(() => productNotifications = value),
+                  _SettingsTile(
+                    icon: Icons.monitor_heart_outlined,
+                    title: 'Operations center',
+                    subtitle: 'Failed orders, logs and audit activity',
+                    onTap: () => context.push(AppRoutes.operations),
                   ),
                 ],
               ),
@@ -124,15 +116,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingsTile(
                     icon: Icons.lock_outline_rounded,
                     title: 'Secure token storage',
-                    subtitle: 'Session credentials are stored securely',
+                    subtitle: 'Session credentials are stored securely on device',
                     trailing: 'Active',
                     statusColor: AppColors.success,
                   ),
                   Divider(height: 1),
                   _SettingsTile(
                     icon: Icons.https_outlined,
-                    title: 'Production API security',
-                    subtitle: 'HTTPS endpoint validation is enabled',
+                    title: 'API transport',
+                    subtitle: 'Authenticated HTTPS requests and token refresh',
                     trailing: 'Protected',
                     statusColor: AppColors.success,
                   ),
@@ -161,10 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final item in const ['English', 'Türkçe', 'Deutsch'])
-                RadioListTile<String>(
-                  value: item,
-                  title: Text(item),
-                ),
+                RadioListTile<String>(value: item, title: Text(item)),
               const SizedBox(height: 12),
             ],
           ),
@@ -267,43 +256,6 @@ class _SettingsTile extends StatelessWidget {
           if (onTap != null) const Icon(Icons.chevron_right_rounded),
         ],
       ),
-    );
-  }
-}
-
-class _PreferenceSwitch extends StatelessWidget {
-  const _PreferenceSwitch({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SwitchListTile(
-      value: value,
-      onChanged: onChanged,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      secondary: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: scheme.primaryContainer,
-          borderRadius: BorderRadius.circular(B2BRadius.sm),
-        ),
-        child: Icon(icon, size: 21, color: scheme.primary),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-      subtitle: Text(subtitle),
     );
   }
 }
