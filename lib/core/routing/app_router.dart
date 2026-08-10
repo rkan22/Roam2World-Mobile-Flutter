@@ -5,7 +5,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
 import '../../features/customers/customers_screen.dart';
-import '../../features/dashboard/dashboard_screen_reference.dart';
+import '../../features/dashboard/role_dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
@@ -50,45 +50,97 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
   return GoRouter(
     initialLocation: initialLocation,
     routes: [
-      GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
-      GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
-      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
-      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const DashboardScreen()),
-      GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dashboard,
+        builder: (context, state) => const RoleDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.packages,
+        builder: (context, state) => const PackagesScreen(),
+      ),
       GoRoute(
         path: AppRoutes.packageDetail,
-        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
-        builder: (context, state) => PackageDetailScreen(package: state.extra! as MobilePackage),
+        redirect: (context, state) =>
+            state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) =>
+            PackageDetailScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkout,
-        redirect: (context, state) => state.extra is MobilePackage ? null : AppRoutes.packages,
-        builder: (context, state) => CheckoutScreen(package: state.extra! as MobilePackage),
+        redirect: (context, state) =>
+            state.extra is MobilePackage ? null : AppRoutes.packages,
+        builder: (context, state) =>
+            CheckoutScreen(package: state.extra! as MobilePackage),
       ),
       GoRoute(
         path: AppRoutes.checkoutSuccess,
-        redirect: (context, state) => state.extra is MobileOrderResult ? null : AppRoutes.orders,
-        builder: (context, state) => OrderSuccessScreen(result: state.extra! as MobileOrderResult),
+        redirect: (context, state) =>
+            state.extra is MobileOrderResult ? null : AppRoutes.orders,
+        builder: (context, state) =>
+            OrderSuccessScreen(result: state.extra! as MobileOrderResult),
       ),
-      GoRoute(path: AppRoutes.customers, builder: (context, state) => const CustomersScreen()),
-      GoRoute(path: AppRoutes.esims, builder: (context, state) => const EsimsScreen()),
+      GoRoute(
+        path: AppRoutes.customers,
+        builder: (context, state) => const CustomersScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.esims,
+        builder: (context, state) => const EsimsScreen(),
+      ),
       GoRoute(
         path: AppRoutes.esimDetail,
-        redirect: (context, state) => state.extra is MobileEsim ? null : AppRoutes.esims,
-        builder: (context, state) => EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
+        redirect: (context, state) =>
+            state.extra is MobileEsim ? null : AppRoutes.esims,
+        builder: (context, state) =>
+            EsimDetailScreen(initialEsim: state.extra! as MobileEsim),
       ),
-      GoRoute(path: AppRoutes.orders, builder: (context, state) => const OrdersScreen()),
+      GoRoute(
+        path: AppRoutes.orders,
+        builder: (context, state) => const OrdersScreen(),
+      ),
       GoRoute(
         path: AppRoutes.orderDetail,
-        redirect: (context, state) => state.extra is MobileOrderSummary ? null : AppRoutes.orders,
-        builder: (context, state) => OrderDetailScreen(order: state.extra! as MobileOrderSummary),
+        redirect: (context, state) =>
+            state.extra is MobileOrderSummary ? null : AppRoutes.orders,
+        builder: (context, state) =>
+            OrderDetailScreen(order: state.extra! as MobileOrderSummary),
       ),
-      GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
-      GoRoute(path: AppRoutes.wallet, builder: (context, state) => const WalletScreen()),
-      GoRoute(path: AppRoutes.reports, builder: (context, state) => const ReportsScreen()),
-      GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
-      GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: AppRoutes.support, builder: (context, state) => const SupportScreen()),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.wallet,
+        builder: (context, state) => const WalletScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reports,
+        builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.support,
+        builder: (context, state) => const SupportScreen(),
+      ),
     ],
   );
 }
