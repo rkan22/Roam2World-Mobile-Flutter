@@ -14,6 +14,10 @@ class PackagesRepository {
     String? search,
     String? destination,
     String? packageType,
+    String? provider,
+    String? productKind,
+    int? validityDays,
+    double? dataGb,
     int limit = 100,
     bool forceRefresh = false,
   }) async {
@@ -21,10 +25,16 @@ class PackagesRepository {
     final normalizedSearch = search?.trim() ?? '';
     final normalizedDestination = destination?.trim() ?? '';
     final normalizedType = packageType?.trim() ?? '';
+    final normalizedProvider = provider?.trim() ?? '';
+    final normalizedProductKind = productKind?.trim() ?? '';
     final cacheKey = [
       normalizedSearch.toLowerCase(),
       normalizedDestination.toLowerCase(),
       normalizedType.toLowerCase(),
+      normalizedProvider.toLowerCase(),
+      normalizedProductKind.toLowerCase(),
+      validityDays?.toString() ?? '',
+      dataGb?.toString() ?? '',
       limit.toString(),
     ].join('|');
 
@@ -45,6 +55,13 @@ class PackagesRepository {
           if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
           if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
           if (normalizedType.isNotEmpty) 'package_type': normalizedType,
+          if (normalizedProvider.isNotEmpty) 'provider': normalizedProvider,
+          if (normalizedProductKind.isNotEmpty)
+            'product_type': normalizedProductKind.toLowerCase() == 'sim card'
+                ? 'simcard'
+                : 'esim',
+          if (validityDays != null) 'validity': validityDays,
+          if (dataGb != null) 'data_gb': dataGb,
         },
         parser: PackageCatalog.fromResponse,
       );
