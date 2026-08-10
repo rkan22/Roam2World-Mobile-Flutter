@@ -52,8 +52,10 @@ class OperationsRepository {
         : await _composeAuditFallback();
 
     final logs = [...providerLogs, ...webhookLogs]
-      ..sort((a, b) => (b.createdAt ?? DateTime(1970)).compareTo(a.createdAt ?? DateTime(1970)));
-    auditEvents.sort((a, b) => (b.createdAt ?? DateTime(1970)).compareTo(a.createdAt ?? DateTime(1970)));
+      ..sort((a, b) => (b.createdAt ?? DateTime(1970))
+          .compareTo(a.createdAt ?? DateTime(1970)));
+    auditEvents.sort((a, b) => (b.createdAt ?? DateTime(1970))
+        .compareTo(a.createdAt ?? DateTime(1970)));
 
     return OperationsData(
       failedOrders: failed,
@@ -63,8 +65,13 @@ class OperationsRepository {
   }
 
   Future<List<AuditEventItem>> _composeAuditFallback() async {
-    final orders = await _safe<OrderHistory>(() => OrdersRepository(apiClient: _apiClient).fetchOrders());
-    final wallet = await _safe<WalletData>(() => WalletRepository(apiClient: _apiClient).fetchWallet(forceRefresh: true));
+    final orders = await _safe<OrderHistory>(
+      () => OrdersRepository(apiClient: _apiClient).fetchOrders(),
+    );
+    final wallet = await _safe<WalletData>(
+      () => WalletRepository(apiClient: _apiClient)
+          .fetchWallet(forceRefresh: true),
+    );
     final dealerRows = await _safeList<Map<String, dynamic>>(
       () => _apiClient.get<List<Map<String, dynamic>>>(
         ApiEndpoints.resellerDealerRequests,
@@ -74,35 +81,53 @@ class OperationsRepository {
 
     final events = <AuditEventItem>[];
     if (orders != null) {
-      events.addAll(orders.orders.take(80).map((order) => AuditEventItem(
-            id: 'order-${order.id}',
-            actor: order.customerName.isEmpty ? 'System' : order.customerName,
-            action: 'order_${order.status.toLowerCase()}',
-            target: order.orderNumber.isEmpty ? order.packageName : order.orderNumber,
-            source: 'orders',
-            description: order.packageName,
-            createdAt: order.createdAt,
-          )));
+      events.addAll(
+        orders.orders.take(80).map(
+              (order) => AuditEventItem(
+                id: 'order-${order.id}',
+                actor: order.customerName.isEmpty
+                    ? 'System'
+                    : order.customerName,
+                action: 'order_${order.status.toLowerCase()}',
+                target: order.orderNumber.isEmpty
+                    ? order.packageName
+                    : order.orderNumber,
+                source: 'orders',
+                description: order.packageName,
+                createdAt: order.createdAt,
+              ),
+            ),
+      );
     }
     if (wallet != null) {
-      events.addAll(wallet.transactions.take(80).map((txn) => AuditEventItem(
-            id: 'wallet-${txn.id}',
-            actor: 'System',
-            action: txn.normalizedType.isEmpty ? 'wallet' : txn.normalizedType,
-            target: txn.reference.isEmpty ? 'Wallet' : txn.reference,
-            source: 'finance',
-            description: txn.description,
-            createdAt: txn.createdAt,
-          )));
+      events.addAll(
+        wallet.transactions.take(80).map(
+              (txn) => AuditEventItem(
+                id: 'wallet-${txn.id}',
+                actor: 'System',
+                action: txn.type.trim().isEmpty ? 'wallet' : txn.type,
+                target: txn.id == 0 ? 'Wallet' : 'Wallet #${txn.id}',
+                source: 'finance',
+                description: txn.description,
+                createdAt: txn.createdAt,
+              ),
+            ),
+      );
     }
-    events.addAll(dealerRows.take(80).map((row) => AuditEventItem.fromJson(
-          {
-            ...row,
-            'action': row['action'] ?? 'dealer_${row['status'] ?? 'request'}',
-            'target': row['dealer_name'] ?? row['dealer_email'] ?? row['id'],
-          },
-          source: 'dealers',
-        )));
+    events.addAll(
+      dealerRows.take(80).map(
+            (row) => AuditEventItem.fromJson(
+              {
+                ...row,
+                'action':
+                    row['action'] ?? 'dealer_${row['status'] ?? 'request'}',
+                'target':
+                    row['dealer_name'] ?? row['dealer_email'] ?? row['id'],
+              },
+              source: 'dealers',
+            ),
+          ),
+    );
     return events;
   }
 
@@ -125,16 +150,28 @@ class OperationsRepository {
 
 List<Map<String, dynamic>> _rows(dynamic response) {
   if (response is List) {
-    return response.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+    return response
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
   if (response is! Map) return const [];
   final root = Map<String, dynamic>.from(response);
   dynamic data = root['data'] ?? root;
   if (data is Map) {
-    data = data['results'] ?? data['items'] ?? data['logs'] ?? data['events'] ?? data['orders'] ?? data['transactions'] ?? data;
+    data = data['results'] ??
+        data['items'] ??
+        data['logs'] ??
+        data['events'] ??
+        data['orders'] ??
+        data['transactions'] ??
+        data;
   }
   if (data is List) {
-    return data.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+    return data
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
   return const [];
 }
