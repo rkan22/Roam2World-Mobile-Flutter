@@ -35,6 +35,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     ('T.T Turkey', 'turkey'),
     ('Orange Big Data', 'flexnet'),
     ('Orange Balkans', 'orange-balkans'),
+    ('Manual Fulfillment', 'manual'),
   ];
   final _destinations = const [
     ('🌐', 'All', ''),
