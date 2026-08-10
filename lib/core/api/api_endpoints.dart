@@ -37,6 +37,8 @@ class ApiEndpoints {
       '/api/v1/mobile/packages/featured/';
   static const String mobileOrders = '/api/v1/mobile/orders/';
   static const String mobileEsims = '/api/v1/mobile/esims/';
+  static const String mobileEsimHistory = '/api/v1/mobile/esim-history/';
+  static const String mobileTgtCheckGb = '/api/v1/mobile/tgt/check-gb/';
   static const String mobileWallet = '/api/v1/mobile/wallet/';
   static const String mobileWalletRequests =
       '/api/v1/mobile/wallet/requests/';
@@ -83,6 +85,9 @@ class ApiEndpoints {
 
   static String mobileEsimDetail(Object esimId) =>
       '/api/v1/mobile/esims/$esimId/';
+
+  static String mobileEsimHistoryDetail(Object esimId) =>
+      '/api/v1/mobile/esim-history/$esimId/';
 
   static String mobileNotificationRead(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/read/';
