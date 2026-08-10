@@ -12,8 +12,14 @@ import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key, this.repository});
+  const DashboardScreen({
+    super.key,
+    this.repository,
+    this.allowDemoFallback = true,
+  });
+
   final DashboardRepository? repository;
+  final bool allowDemoFallback;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -51,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      if (kDebugMode) {
+      if (kDebugMode && widget.allowDemoFallback) {
         setState(() {
           _data = _demoData;
           _error = null;
@@ -376,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Row(children: [
           const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 17),
           const SizedBox(width: 8),
-          Expanded(child: Text(kDebugMode ? 'Preview data is shown while dashboard API access is unavailable.' : 'Showing the last available dashboard data.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700))),
+          Expanded(child: Text(kDebugMode && widget.allowDemoFallback ? 'Preview data is shown while dashboard API access is unavailable.' : 'Showing the last available dashboard data.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700))),
         ]),
       );
 
