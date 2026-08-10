@@ -4,6 +4,7 @@ class PricingRule {
     required this.provider,
     required this.packageId,
     required this.dealerId,
+    required this.targetRole,
     required this.markupPercentage,
     required this.minMarkupPercentage,
     required this.maxMarkupPercentage,
@@ -15,6 +16,7 @@ class PricingRule {
   final String provider;
   final String packageId;
   final int? dealerId;
+  final String targetRole;
   final double markupPercentage;
   final double? minMarkupPercentage;
   final double? maxMarkupPercentage;
@@ -26,6 +28,7 @@ class PricingRule {
         provider: json['provider']?.toString() ?? '',
         packageId: json['package_id']?.toString() ?? '',
         dealerId: int.tryParse((json['dealer'] ?? '').toString()),
+        targetRole: (json['target_role'] ?? '').toString(),
         markupPercentage: double.tryParse((json['markup_percentage'] ?? 0).toString()) ?? 0,
         minMarkupPercentage: double.tryParse((json['min_markup_percentage'] ?? '').toString()),
         maxMarkupPercentage: double.tryParse((json['max_markup_percentage'] ?? '').toString()),
