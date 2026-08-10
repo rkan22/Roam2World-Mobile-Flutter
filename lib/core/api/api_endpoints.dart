@@ -16,6 +16,7 @@ class ApiEndpoints {
       '/api/v1/mobile/admin/activity-logs/';
   static const String mobileAdminSupportTickets =
       '/api/v1/mobile/admin/support-tickets/';
+  static const String mobileAdminWhatsApp = '/api/v1/mobile/admin/whatsapp/';
   static const String mobileAdminProviderRetryQueue =
       '/api/v1/mobile/admin/provider-retry-queue/';
   static const String mobileAdminProviderCallbackLogs =

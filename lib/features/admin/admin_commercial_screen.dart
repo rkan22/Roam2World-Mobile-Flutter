@@ -37,7 +37,8 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
       final data = await _repository.fetch();
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Admin commercial data could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Admin commercial data could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -56,9 +57,14 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
     final data = _data;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Admin Commercial'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -71,7 +77,10 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             B2BSpacing.xxl,
           ),
           children: [
-            Text('Pricing & reports', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Pricing & reports',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Live admin pricing-rule inventory and business totals from the mobile admin API.',
@@ -83,49 +92,113 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.monitor_heart_outlined, color: AppColors.primary),
-                    title: const Text('Provider health', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Review route availability and run verified live provider checks'),
+                    leading: const Icon(
+                      Icons.chat_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'WhatsApp workspace',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Connection, templates, customer catalog and manual approvals',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.adminWhatsApp),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.monitor_heart_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Provider health',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Review route availability and run verified live provider checks',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminProviderHealth),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.replay_circle_filled_outlined, color: AppColors.primary),
-                    title: const Text('Provider retry queue', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Review failed provider orders and run verified recovery actions'),
+                    leading: const Icon(
+                      Icons.replay_circle_filled_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Provider retry queue',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Review failed provider orders and run verified recovery actions',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminProviderRetry),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.webhook_outlined, color: AppColors.primary),
-                    title: const Text('Provider callback logs', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Inspect live provider callbacks, signatures and processing state'),
+                    leading: const Icon(
+                      Icons.webhook_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Provider callback logs',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Inspect live provider callbacks, signatures and processing state',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminProviderCallbacks),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.route_outlined, color: AppColors.primary),
-                    title: const Text('Provider routing', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Manage live B2B provider priority, primary route and availability'),
+                    leading: const Icon(
+                      Icons.route_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Provider routing',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Manage live B2B provider priority, primary route and availability',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminRouting),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.assignment_turned_in_outlined, color: AppColors.primary),
-                    title: const Text('Manual fulfillment', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Operate manual eSIM/SIM tasks, blank stock and supplier delivery'),
+                    leading: const Icon(
+                      Icons.assignment_turned_in_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Manual fulfillment',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Operate manual eSIM/SIM tasks, blank stock and supplier delivery',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminManualFulfillment),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.policy_outlined, color: AppColors.primary),
-                    title: const Text('Platform governance', style: TextStyle(fontWeight: FontWeight.w900)),
-                    subtitle: const Text('Manage role permissions, account policies and catalog governance'),
+                    leading: const Icon(
+                      Icons.policy_outlined,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Platform governance',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: const Text(
+                      'Manage role permissions, account policies and catalog governance',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(AppRoutes.adminGovernance),
                   ),
@@ -134,7 +207,9 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             ),
             const SizedBox(height: B2BSpacing.lg),
             if (_loading && data == null)
-              const ContentLoadingState(label: 'Loading admin commercial data...')
+              const ContentLoadingState(
+                label: 'Loading admin commercial data...',
+              )
             else if (_error != null && data == null)
               ContentErrorState(message: _error!, onRetry: _load)
             else if (data != null) ...[
@@ -159,7 +234,8 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             Expanded(
               child: B2BMetricCard(
                 label: 'Total sales',
-                value: '${report.currency} ${report.totalSales.toStringAsFixed(2)}',
+                value:
+                    '${report.currency} ${report.totalSales.toStringAsFixed(2)}',
                 icon: Icons.payments_outlined,
               ),
             ),
@@ -211,13 +287,28 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Mobile pricing rules', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Mobile pricing rules',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: B2BSpacing.sm),
         Row(
           children: [
-            Expanded(child: B2BMetricCard(label: 'Rules', value: '${pricing.totalRules}', icon: Icons.price_change_outlined)),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Rules',
+                value: '${pricing.totalRules}',
+                icon: Icons.price_change_outlined,
+              ),
+            ),
             const SizedBox(width: B2BSpacing.sm),
-            Expanded(child: B2BMetricCard(label: 'Active', value: '${pricing.activeRules}', icon: Icons.toggle_on_outlined)),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Active',
+                value: '${pricing.activeRules}',
+                icon: Icons.toggle_on_outlined,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: B2BSpacing.sm),
@@ -231,7 +322,8 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
           const ContentEmptyState(
             icon: Icons.sell_outlined,
             title: 'No pricing rules',
-            message: 'The admin pricing endpoint returned no mobile package rules.',
+            message:
+                'The admin pricing endpoint returned no mobile package rules.',
           )
         else
           B2BSurface(
@@ -240,7 +332,8 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
               children: [
                 for (var index = 0; index < pricing.items.length; index++) ...[
                   _pricingTile(pricing.items[index]),
-                  if (index != pricing.items.length - 1) const Divider(height: 1),
+                  if (index != pricing.items.length - 1)
+                    const Divider(height: 1),
                 ],
               ],
             ),
@@ -256,10 +349,15 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
     ].join(' · ');
     return ListTile(
       leading: Icon(
-        item.isActive ? Icons.check_circle_rounded : Icons.pause_circle_outline_rounded,
+        item.isActive
+            ? Icons.check_circle_rounded
+            : Icons.pause_circle_outline_rounded,
         color: item.isActive ? AppColors.success : AppColors.textMuted,
       ),
-      title: Text(item.packageName, style: const TextStyle(fontWeight: FontWeight.w800)),
+      title: Text(
+        item.packageName,
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
       subtitle: subtitle.isEmpty ? null : Text(subtitle),
       trailing: item.isFeatured
           ? const Icon(Icons.star_rounded, color: AppColors.warning)
@@ -268,9 +366,14 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
   }
 
   Widget _row(String label, int total, int active) => Row(
-        children: [
-          Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800))),
-          Text('$active active / $total total', style: const TextStyle(color: AppColors.textSecondary)),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      Text(
+        '$active active / $total total',
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+    ],
+  );
 }
