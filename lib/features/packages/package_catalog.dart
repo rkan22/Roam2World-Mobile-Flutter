@@ -71,6 +71,34 @@ class PackageCatalog {
       hasMore: false,
     );
   }
+
+  factory PackageCatalog.fromProviderResponse(
+    dynamic response, {
+    required String provider,
+    required String displayProvider,
+  }) {
+    dynamic value = response;
+    for (var depth = 0; depth < 2 && value is Map; depth++) {
+      value =
+          value['data'] ??
+          value['results'] ??
+          value['packages'] ??
+          value['list'] ??
+          const [];
+    }
+    return PackageCatalog(
+      packages: value is List
+          ? value.whereType<Map>().map((raw) {
+              return MobilePackage.fromJson({
+                ...Map<String, dynamic>.from(raw),
+                'provider': provider,
+                'display_provider': displayProvider,
+              });
+            }).toList()
+          : const [],
+      hasMore: false,
+    );
+  }
 }
 
 class MobilePackage {
@@ -114,16 +142,27 @@ class MobilePackage {
       json['wmproductId'],
       json['name'],
       json['package_name'],
+      json['productName'],
+      json['planName'],
       json['productRegion'],
     ].where((value) => value != null).join(' ');
     final parsedData = _dataFromText(identityText);
     final parsedValidity = _validityFromText(identityText);
     final dataQuantity =
-        json['data_quantity'] ?? json['data_gb'] ?? json['data'] ?? parsedData;
+        json['data_quantity'] ??
+        json['data_gb'] ??
+        json['data'] ??
+        json['dataAmount'] ??
+        json['dataAllowance'] ??
+        json['capacity'] ??
+        parsedData;
     final dataUnit = json['data_unit']?.toString() ?? 'GB';
     final validity =
         json['package_validity'] ??
         json['validity_days'] ??
+        json['validityDays'] ??
+        json['days'] ??
+        json['durationDays'] ??
         json['validity'] ??
         parsedValidity;
     final validityUnit = json['package_validity_unit']?.toString() ?? 'Days';
@@ -135,11 +174,15 @@ class MobilePackage {
           json['id']?.toString() ??
           json['wmproductId']?.toString() ??
           json['package_id']?.toString() ??
+          json['planCode']?.toString() ??
+          json['productCode']?.toString() ??
+          json['code']?.toString() ??
           '',
       name:
           json['name']?.toString() ??
           json['package_name']?.toString() ??
           json['productName']?.toString() ??
+          json['planName']?.toString() ??
           json['title']?.toString() ??
           'eSIM package',
       provider: json['provider']?.toString() ?? '',
