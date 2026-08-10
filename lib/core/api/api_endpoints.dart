@@ -19,6 +19,15 @@ class ApiEndpoints {
       '/api/v1/mobile/admin/routing-rules/';
   static const String mobileAdminRoutingOverride =
       '/api/v1/mobile/admin/routing-rules/override/';
+  static const String manualAdminProducts =
+      '/api/v1/admin/manual-fulfillment/products/';
+  static const String manualAdminSimInventory =
+      '/api/v1/admin/manual-fulfillment/sim-inventory/';
+  static const String manualAdminTasks =
+      '/api/v1/admin/manual-fulfillment/tasks/';
+  static const String manualCatalogProducts =
+      '/api/v1/mobile/b2b/manual/products/';
+  static const String manualRequest = '/api/v1/mobile/b2b/manual/request/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
@@ -85,6 +94,21 @@ class ApiEndpoints {
 
   static String mobileAdminRoutingRuleDetail(Object ruleId) =>
       '/api/v1/mobile/admin/routing-rules/$ruleId/';
+
+  static String manualAdminProductDetail(Object packageId) =>
+      '/api/v1/admin/manual-fulfillment/products/$packageId/';
+
+  static String manualAdminAssignQr(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/assign-qr/';
+
+  static String manualAdminActivateSim(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/activate-sim/';
+
+  static String manualAdminCancelTask(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/cancel/';
+
+  static String manualAdminSendToFlexnet(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/send-to-flexnet/';
 
   static String mobileDealerAllocateBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
