@@ -20,6 +20,16 @@ class ApiEndpoints {
       '/api/v1/mobile/notifications/read-all/';
   static const String notificationRules = '/api/v1/notifications/rules/';
 
+  // Dealer self-service endpoints used by the B2B web panel.
+  static const String dealerBalanceRequest =
+      '/api/v1/resellers/dealer-balance/request_balance/';
+  static const String dealerBalanceRequests =
+      '/api/v1/resellers/dealer-balance/balance_requests/';
+  static const String dealerProfile =
+      '/api/v1/resellers/dealers/my_profile/';
+  static const String dealerUpdateProfile =
+      '/api/v1/resellers/dealers/update_profile/';
+
   // Reseller -> dealer network endpoints used by the web B2B panel.
   static const String resellerDealers = '/api/v1/resellers/dealers/';
   static const String resellerDealerWalletHistory =
