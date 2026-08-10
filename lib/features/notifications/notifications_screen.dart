@@ -76,9 +76,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _items = next;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notification status could not be updated.'),
-        ),
+        const SnackBar(content: Text('Notification status could not be updated.')),
       );
     }
   }
@@ -98,9 +96,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _items = previous);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notifications could not be marked as read.'),
-        ),
+        const SnackBar(content: Text('Notifications could not be marked as read.')),
       );
     } finally {
       if (mounted) setState(() => _markingAll = false);
@@ -115,21 +111,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final unreadCount = _items.where((item) => !item.isRead).length;
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        title: const Text('Notifications'),
-        actions: [
-          IconButton(
-            onPressed: _loading ? null : _load,
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
+      body: SafeArea(
+        child: _buildBody(unreadCount),
       ),
-      body: _buildBody(unreadCount),
     );
   }
 
@@ -148,12 +132,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(
           B2BSpacing.lg,
-          B2BSpacing.xs,
+          B2BSpacing.md,
           B2BSpacing.lg,
           B2BSpacing.xxl,
         ),
         children: [
-          _InboxSummary(
+          _PageHeader(onBack: context.pop, onRefresh: _load),
+          const SizedBox(height: B2BSpacing.lg),
+          _InboxHero(
             totalCount: _items.length,
             unreadCount: unreadCount,
             unreadOnly: _unreadOnly,
@@ -212,7 +198,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final widgets = <Widget>[];
     void addSection(String title, List<MobileNotificationItem> sectionItems) {
       if (sectionItems.isEmpty) return;
-      if (widgets.isNotEmpty) widgets.add(const SizedBox(height: B2BSpacing.xl));
+      if (widgets.isNotEmpty) {
+        widgets.add(const SizedBox(height: B2BSpacing.xl));
+      }
       widgets
         ..add(_SectionLabel(title: title, count: sectionItems.length))
         ..add(const SizedBox(height: B2BSpacing.sm));
@@ -236,8 +224,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-class _InboxSummary extends StatelessWidget {
-  const _InboxSummary({
+class _PageHeader extends StatelessWidget {
+  const _PageHeader({required this.onBack, required this.onRefresh});
+
+  final VoidCallback onBack;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        const SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Business inbox', style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: B2BSpacing.xxs),
+              Text('Notifications', style: Theme.of(context).textTheme.headlineMedium),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: onRefresh,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _InboxHero extends StatelessWidget {
+  const _InboxHero({
     required this.totalCount,
     required this.unreadCount,
     required this.unreadOnly,
@@ -255,23 +277,28 @@ class _InboxSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return B2BSurface(
-      padding: const EdgeInsets.all(B2BSpacing.lg),
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: B2BGradients.primary,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        boxShadow: B2BShadows.hero,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
+                  color: Colors.white.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
                 child: const Icon(
                   Icons.notifications_active_outlined,
-                  color: AppColors.primary,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: B2BSpacing.md),
@@ -279,14 +306,21 @@ class _InboxSummary extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Business inbox',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    const Text(
+                      'Operational updates',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: B2BSpacing.xxs),
                     Text(
                       '$unreadCount unread · $totalCount total',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -297,29 +331,91 @@ class _InboxSummary extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: FilterChip(
-                  selected: unreadOnly,
-                  onSelected: (_) => onUnreadToggle(),
-                  avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
-                  label: const Text('Unread only'),
+                child: _HeroMetric(label: 'Unread', value: '$unreadCount'),
+              ),
+              const SizedBox(width: B2BSpacing.sm),
+              Expanded(
+                child: _HeroMetric(label: 'Total', value: '$totalCount'),
+              ),
+            ],
+          ),
+          const SizedBox(height: B2BSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: onUnreadToggle,
+                  icon: Icon(
+                    unreadOnly
+                        ? Icons.inbox_rounded
+                        : Icons.mark_email_unread_outlined,
+                  ),
+                  label: Text(unreadOnly ? 'Show all' : 'Unread only'),
                 ),
               ),
               const SizedBox(width: B2BSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: .35)),
+                  ),
                   onPressed: unreadCount == 0 || markingAll
                       ? null
                       : onMarkAllRead,
                   icon: markingAll
                       ? const SizedBox.square(
                           dimension: 17,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Icon(Icons.done_all_rounded, size: 19),
                   label: const Text('Mark all read'),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .11),
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: B2BSpacing.xxs),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -337,14 +433,21 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
         const Spacer(),
-        Text(
-          '$count',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w700,
-              ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceMuted,
+            borderRadius: BorderRadius.circular(B2BRadius.pill),
+          ),
+          child: Text(
+            '$count',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
         ),
       ],
     );
@@ -362,6 +465,7 @@ class _NotificationTile extends StatelessWidget {
     final visual = _visualFor(item.type);
     return B2BSurface(
       onTap: onTap,
+      padding: const EdgeInsets.all(B2BSpacing.md),
       backgroundColor: item.isRead ? AppColors.card : AppColors.primaryLight,
       borderColor: item.isRead
           ? AppColors.border
@@ -370,8 +474,8 @@ class _NotificationTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 46,
-            width: 46,
+            height: 48,
+            width: 48,
             decoration: BoxDecoration(
               color: visual.$2.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(B2BRadius.md),
@@ -388,7 +492,9 @@ class _NotificationTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.title,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
                       ),
                     ),
                     if (!item.isRead)
