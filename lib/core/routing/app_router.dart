@@ -9,6 +9,7 @@ import '../../features/dashboard/role_dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
+import '../../features/notifications/notification_rules_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/operations/operations_center_screen.dart';
@@ -25,6 +26,7 @@ import '../../features/pricing/dealer_pricing_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/reports/reports_screen.dart';
+import '../../features/sim_converter/sim_converter_screen.dart';
 import '../../features/support/support_screen.dart';
 import '../../features/wallet/role_finance_ledger_screen.dart';
 import '../../features/wallet/wallet_screen.dart';
@@ -52,7 +54,9 @@ abstract final class AppRoutes {
   static const wallet = '/wallet';
   static const reports = '/reports';
   static const notifications = '/notifications';
+  static const notificationRules = '/notifications/rules';
   static const operations = '/operations';
+  static const simConverter = '/sim-converter';
   static const settings = '/settings';
   static const support = '/support';
 }
@@ -165,8 +169,16 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
         builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
+        path: AppRoutes.notificationRules,
+        builder: (context, state) => const NotificationRulesScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.operations,
         builder: (context, state) => const OperationsCenterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.simConverter,
+        builder: (context, state) => const SimConverterScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,
