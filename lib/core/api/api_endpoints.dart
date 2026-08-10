@@ -5,6 +5,9 @@ class ApiEndpoints {
   static const String tokenRefresh = '/api/v1/auth/refresh/';
   static const String mobileDashboard = '/api/v1/mobile/dashboard/';
   static const String mobileAdminDashboard = '/api/v1/mobile/admin/dashboard/';
+  static const String mobileAdminOrders = '/api/v1/mobile/admin/orders/';
+  static const String mobileAdminActivityLogs =
+      '/api/v1/mobile/admin/activity-logs/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
