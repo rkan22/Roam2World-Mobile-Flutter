@@ -26,6 +26,15 @@ class ApiEndpoints {
   static const String resellerPendingDealerRequests =
       '/api/v1/resellers/dealer-requests/pending/';
 
+  // Reseller operations endpoints mirrored from the web B2B workspace.
+  static const String failedOrders = '/api/v1/orders/failed/';
+  static const String providerOperationLogs =
+      '/api/v1/provider-operations/logs/';
+  static const String webhookLogs = '/api/v1/webhooks/logs/';
+  static const String auditLogs = '/api/v1/audit/logs/';
+  static const String resellerDealerRequests =
+      '/api/v1/resellers/dealer-requests/';
+
   static String mobileOrderDetail(Object orderId) =>
       '/api/v1/mobile/orders/$orderId/';
 
