@@ -135,6 +135,15 @@ lib/features/
 - `/catalog-controls` exposes the live mobile package catalog, provider filtering and server-backed featured state for reseller review.
 - Catalog visibility/recommended writes remain intentionally read-only because the web implementation falls back to localStorage when `resellers/catalog-controls/` is unavailable; mobile will not create device-only business rules that can diverge from the server.
 
+### Notifications & Settings
+
+- The existing mobile notification inbox remains backed by `/api/v1/mobile/notifications/` with server read/unread and mark-all-read actions.
+- `/notifications/rules` uses the real `/api/v1/notifications/rules/` GET/POST contract for reseller alert policy.
+- Notification rules expose server-returned enabled state, threshold, unit, severity and delivery channels; no default/template rules are persisted locally when the service is unavailable.
+- Notifications links directly to Notification Rules, and Settings links to both the inbox and rules workspace.
+- Previous settings switches that only changed widget-local state were removed so the app does not imply server preferences were saved when they were not.
+- Theme selection remains device-side through `ThemeController`; reseller profile edit and password changes remain pending until the exact mobile-safe profile/password endpoint paths are validated.
+
 ## Dashboard migration rule
 
 The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
