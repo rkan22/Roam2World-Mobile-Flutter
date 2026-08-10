@@ -65,6 +65,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
         .toList();
   }
 
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/dashboard');
+  }
+
   @override
   Widget build(BuildContext context) {
     final visibleCustomers = _visibleCustomers;
@@ -92,7 +100,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               B2BSpacing.xxl,
             ),
             children: [
-              _Header(onBack: () => context.pop(), onRefresh: _load),
+              _Header(onBack: _handleBack, onRefresh: _load),
               const SizedBox(height: B2BSpacing.lg),
               if (!_loading && _error == null && visibleCustomers.isNotEmpty)
                 _CustomerOverview(
