@@ -37,4 +37,42 @@ void main() {
     expect(catalog.packages.first.formattedPrice, 'USD 15.50');
     expect(catalog.packages.first.countryCode, 'TR');
   });
+
+  test('parses and classifies Worldmove unified catalog packages', () {
+    final catalog = PackageCatalog.fromWorldmoveResponse({
+      'success': true,
+      'packages': [
+        {
+          'id': 'WM-E-J1-VDFES-XL',
+          'provider': 'worldmove',
+          'productName': 'Vodafone Travel XL',
+          'productRegion': 'Europe',
+          'package_type': 'ESIM',
+          'is_esim': true,
+          'price': '42.50',
+        },
+        {
+          'id': 'WM-TR-10GB-30D',
+          'provider': 'worldmove',
+          'name': 'Turkey 10GB 30 Days',
+          'productRegion': 'Turkey',
+          'package_type': 'SIMCARD',
+          'is_esim': false,
+          'price': '12.00',
+        },
+      ],
+    });
+
+    expect(catalog.packages, hasLength(2));
+    expect(catalog.packages.first.displayProvider, 'Vodafone');
+    expect(catalog.packages.first.operatorKey, 'vodafone');
+    expect(catalog.packages.first.destinationKey, 'europe');
+    expect(catalog.packages.first.dataLabel, '45 GB');
+    expect(catalog.packages.first.validityLabel, '30 Days');
+    expect(catalog.packages.first.packageType, 'esim');
+    expect(catalog.packages.last.displayProvider, 'T.T Turkey');
+    expect(catalog.packages.last.operatorKey, 'turkey');
+    expect(catalog.packages.last.destinationKey, 'turkey');
+    expect(catalog.packages.last.packageType, 'simcard');
+  });
 }

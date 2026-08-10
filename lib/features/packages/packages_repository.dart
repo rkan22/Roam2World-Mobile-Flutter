@@ -4,7 +4,8 @@ import '../../core/cache/timed_cache.dart';
 import 'package_catalog.dart';
 
 class PackagesRepository {
-  PackagesRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  PackagesRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
   final ApiClient _apiClient;
@@ -47,13 +48,7 @@ class PackagesRepository {
       while (hasMore && pageCount < 20) {
         final page = await _apiClient.get<PackageCatalog>(
           ApiEndpoints.mobilePackages,
-          queryParameters: {
-            'limit': limit,
-            'offset': offset,
-            if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
-            if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
-            if (normalizedType.isNotEmpty) 'package_type': normalizedType,
-          },
+          queryParameters: {'limit': limit, 'offset': offset},
           parser: PackageCatalog.fromResponse,
         );
 
@@ -61,7 +56,7 @@ class PackagesRepository {
         for (final package in page.packages) {
           final dedupeKey = package.id.isEmpty
               ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
-              : package.id;
+              : '${package.provider}|${package.id}';
           if (seenIds.add(dedupeKey)) {
             packages.add(package);
             added++;
@@ -75,7 +70,51 @@ class PackagesRepository {
         pageCount++;
       }
 
-      final catalog = PackageCatalog(packages: packages, hasMore: hasMore);
+      // The web Unified Catalog reads Worldmove from its dedicated source.
+      // Merge that source here too because the curated mobile endpoint can
+      // legitimately omit Worldmove families for destination-specific views.
+      try {
+        final worldmove = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.mobileWorldmovePackages,
+          queryParameters: const {'scope': 'all'},
+          parser: PackageCatalog.fromWorldmoveResponse,
+        );
+        for (final package in worldmove.packages) {
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) packages.add(package);
+        }
+      } catch (_) {
+        // Keep the remaining unified sources available if Worldmove is
+        // temporarily unhealthy, matching the web catalog's partial fallback.
+      }
+
+      final term = normalizedSearch.toLowerCase();
+      final filtered = packages.where((package) {
+        if (normalizedDestination.isNotEmpty &&
+            package.destinationKey.toLowerCase() !=
+                normalizedDestination.toLowerCase()) {
+          return false;
+        }
+        if (normalizedType.isNotEmpty &&
+            package.packageType.toLowerCase() != normalizedType.toLowerCase()) {
+          return false;
+        }
+        if (term.isNotEmpty &&
+            ![
+              package.name,
+              package.destination,
+              package.displayProvider,
+              package.provider,
+              package.id,
+              package.dataLabel,
+              package.validityLabel,
+            ].any((value) => value.toLowerCase().contains(term))) {
+          return false;
+        }
+        return true;
+      }).toList();
+
+      final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
       cache.set(catalog);
       return catalog;
     } catch (_) {
