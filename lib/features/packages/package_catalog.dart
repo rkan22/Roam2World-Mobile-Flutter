@@ -43,6 +43,10 @@ class MobilePackage {
     required this.packageType,
     required this.countryCode,
     required this.isFeatured,
+    required this.productKind,
+    required this.validityDays,
+    required this.dataGb,
+    required this.coverageCount,
   });
 
   final String id;
@@ -58,40 +62,66 @@ class MobilePackage {
   final String packageType;
   final String countryCode;
   final bool isFeatured;
+  final String productKind;
+  final int? validityDays;
+  final double? dataGb;
+  final int coverageCount;
 
   factory MobilePackage.fromJson(Map<String, dynamic> json) {
-    final countries = json['countries'];
-    final firstCountry = countries is List && countries.isNotEmpty && countries.first is Map
-        ? Map<String, dynamic>.from(countries.first as Map)
+    final countries = json['countries'] ?? json['coverage_countries'];
+    final countryList = countries is List ? countries : const [];
+    final firstCountry = countryList.isNotEmpty && countryList.first is Map
+        ? Map<String, dynamic>.from(countryList.first as Map)
         : const <String, dynamic>{};
     final dataQuantity = json['data_quantity'] ?? json['data_gb'] ?? json['data'];
     final dataUnit = json['data_unit']?.toString() ?? 'GB';
     final validity = json['package_validity'] ?? json['validity_days'] ?? json['validity'];
     final validityUnit = json['package_validity_unit']?.toString() ?? 'Days';
     final rawPrice = json['final_price'] ?? json['price'] ?? json['sale_price'] ?? 0;
+    final productType = (json['product_type'] ?? json['type'] ?? json['package_type'] ?? '')
+        .toString()
+        .toLowerCase();
+    final packageType = json['package_type']?.toString() ?? 'DATA-ONLY';
+    final numericData = double.tryParse(dataQuantity?.toString() ?? '');
+    final normalizedDataGb = dataUnit.toUpperCase() == 'MB' && numericData != null
+        ? numericData / 1024
+        : numericData;
 
     return MobilePackage(
       id: json['id']?.toString() ?? json['package_id']?.toString() ?? '',
       name: json['name']?.toString() ?? json['title']?.toString() ?? 'eSIM package',
-      provider: json['provider']?.toString() ?? '',
+      provider: json['provider']?.toString() ?? json['provider_id']?.toString() ?? '',
       displayProvider: json['display_provider']?.toString() ??
           json['provider_label']?.toString() ??
+          json['operator_name']?.toString() ??
+          json['provider_name']?.toString() ??
           json['provider']?.toString() ??
           'Roam2World',
       destination: json['destination_label']?.toString() ??
           json['coverage_label']?.toString() ??
+          json['region']?.toString() ??
           firstCountry['name']?.toString() ??
           'Global',
-      destinationKey: json['destination_key']?.toString() ?? '',
+      destinationKey: json['destination_key']?.toString() ??
+          json['region']?.toString().toLowerCase() ??
+          '',
       dataLabel: dataQuantity == null
           ? (json['unlimited'] == true ? 'Unlimited' : 'Data')
           : '$dataQuantity $dataUnit',
       validityLabel: validity == null ? 'Flexible' : '$validity $validityUnit',
       price: double.tryParse(rawPrice.toString()) ?? 0,
       currency: json['currency']?.toString() ?? 'USD',
-      packageType: json['package_type']?.toString() ?? 'DATA-ONLY',
-      countryCode: firstCountry['code']?.toString() ?? '',
+      packageType: packageType,
+      countryCode: firstCountry['code']?.toString() ??
+          json['country_code']?.toString() ??
+          '',
       isFeatured: json['is_featured'] == true,
+      productKind: productType.contains('simcard') || productType == 'sim'
+          ? 'SIM Card'
+          : 'eSIM',
+      validityDays: int.tryParse(validity?.toString() ?? ''),
+      dataGb: normalizedDataGb,
+      coverageCount: countryList.length,
     );
   }
 
