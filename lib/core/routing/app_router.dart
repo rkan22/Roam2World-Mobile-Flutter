@@ -11,6 +11,7 @@ import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/operations/operations_center_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/order_history.dart';
 import '../../features/orders/order_result.dart';
@@ -42,6 +43,7 @@ abstract final class AppRoutes {
   static const wallet = '/wallet';
   static const reports = '/reports';
   static const notifications = '/notifications';
+  static const operations = '/operations';
   static const settings = '/settings';
   static const support = '/support';
 }
@@ -132,6 +134,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.operations,
+        builder: (context, state) => const OperationsCenterScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,
