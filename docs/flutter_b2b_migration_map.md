@@ -63,20 +63,35 @@ lib/features/
 4. Advanced B2B: Coverage, Provider Operations, Failed Orders, Profitability, API Logs, Audit, Notifications, Reports.
 5. Role completion: Admin, Dealer, Client and Public User variants.
 
-## Dashboard implementation
+## Implemented foundation slices
 
-- `/dashboard` now targets a role-specific reseller dashboard foundation.
-- Dashboard periods map to API query values: `today`, `7d`, `30d`, `month`, `all`.
-- The parser accepts both the current flat mobile response and richer nested B2B `wallet`, `sales`, `customers`, `esims`, and `orders` payloads.
-- Revenue, profit, margin, successful orders, and customer count are shown only when returned by the server.
+### Reseller Dashboard
 
-## Unified catalog implementation
+- Role-specific mobile dashboard screen.
+- Period filters backed by the mobile API query (`today`, `7d`, `30d`, `month`, `all`).
+- Backward-compatible parsing for legacy flat mobile responses and richer nested B2B dashboard responses.
+- Optional revenue, profit, margin, successful order and customer KPIs render only when supplied by the API.
+- Wallet, eSIM KPIs, quick actions, recent orders, loading/error/stale states use the shared B2B design system.
 
-- Search and destination remain primary, one-tap controls.
-- Operator, product type, validity, and data filters are exposed through a native bottom sheet instead of desktop selects.
-- Catalog cards show provider/operator, SIM/eSIM type, data, validity, destination/coverage, featured state, and B2B price.
-- `MobilePackage` now preserves product kind, normalized data GB, validity days, and coverage count where the server provides them.
-- Advanced filters are forwarded to `/api/v1/mobile/packages/`; the UI does not fake filtering when the backend does not support a field.
+### Unified Catalog
+
+- Search and quick destination filters for All, Turkey, Europe and Global.
+- Mobile filter bottom sheet for operator, SIM/eSIM type, validity and data allowance.
+- Catalog cards surface provider, product kind, data, validity, coverage count, featured state and server-backed price.
+- Repository forwards supported filter inputs to the mobile packages endpoint and keeps stale-cache fallback behavior.
+
+### Client Management
+
+- Mobile reseller customer workspace modeled on the web Client Management flow.
+- Search plus All / Active / Pending filters.
+- Customer summaries are derived only from real mobile order history until a dedicated customer endpoint is available.
+- Customer Detail shows lifetime order volume, completed/pending order counts and customer-specific order history.
+- New Order actions route back into the Unified Catalog.
+- Email, phone and eSIM statistics are intentionally not fabricated when the mobile API does not provide them.
+
+## Dashboard migration rule
+
+The production reseller dashboard is `lib/features/dashboard/reseller_dashboard_screen.dart`. The older generic/reference dashboards remain available during migration but are not the target for the reseller route.
 
 ## Mobile UX rules
 
