@@ -5,7 +5,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/checkout/order_success_screen.dart';
 import '../../features/customers/customers_screen.dart';
-import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/dashboard/reseller_dashboard_screen.dart';
 import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esims_screen.dart';
@@ -52,7 +52,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
-      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const ResellerDashboardScreen()),
       GoRoute(path: AppRoutes.packages, builder: (context, state) => const PackagesScreen()),
       GoRoute(
         path: AppRoutes.packageDetail,
