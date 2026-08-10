@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/routing/app_role.dart';
 import '../auth/auth_repository.dart';
 import 'dashboard_screen_reference.dart';
+import 'partner_dashboard_screen.dart';
 
 class RoleDashboardScreen extends StatefulWidget {
   const RoleDashboardScreen({super.key, this.authRepository});
@@ -39,12 +40,10 @@ class _RoleDashboardScreenState extends State<RoleDashboardScreen> {
       );
     }
 
-    // The premium dashboard remains the visual source of truth. This role-aware
-    // entry point lets reseller/dealer-specific slices be introduced without
-    // replacing the shared dashboard or duplicating client/public behavior.
     return switch (role) {
-      AppRole.reseller || AppRole.dealer => DashboardScreen(
+      AppRole.reseller || AppRole.dealer => PartnerDashboardScreen(
           key: ValueKey<String>('partner-dashboard-${role.name}'),
+          role: role,
         ),
       AppRole.client || AppRole.publicUser => const DashboardScreen(
           key: ValueKey<String>('customer-dashboard'),
