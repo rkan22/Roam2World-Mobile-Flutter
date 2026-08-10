@@ -80,12 +80,24 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
             const SizedBox(height: B2BSpacing.lg),
             B2BSurface(
               padding: EdgeInsets.zero,
-              child: ListTile(
-                leading: const Icon(Icons.replay_circle_filled_outlined, color: AppColors.primary),
-                title: const Text('Provider retry queue', style: TextStyle(fontWeight: FontWeight.w900)),
-                subtitle: const Text('Review failed provider orders and run verified recovery actions'),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => context.push(AppRoutes.adminProviderRetry),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.replay_circle_filled_outlined, color: AppColors.primary),
+                    title: const Text('Provider retry queue', style: TextStyle(fontWeight: FontWeight.w900)),
+                    subtitle: const Text('Review failed provider orders and run verified recovery actions'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.adminProviderRetry),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.route_outlined, color: AppColors.primary),
+                    title: const Text('Provider routing', style: TextStyle(fontWeight: FontWeight.w900)),
+                    subtitle: const Text('Manage live B2B provider priority, primary route and availability'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.adminRouting),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: B2BSpacing.lg),
