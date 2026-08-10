@@ -19,6 +19,34 @@ class WalletData {
 
   bool get isDealer => role.toLowerCase() == 'dealer';
 
+  WalletData copyWith({List<WalletTransaction>? transactions}) => WalletData(
+        role: role,
+        currency: currency,
+        availableAmount: availableAmount,
+        currentAmount: currentAmount,
+        secondaryAmount: secondaryAmount,
+        secondaryLabel: secondaryLabel,
+        transactions: transactions ?? this.transactions,
+      );
+
+  double get totalCredits => transactions
+      .where((item) => item.normalizedType == 'credit')
+      .fold(0, (sum, item) => sum + item.absoluteAmount);
+
+  double get totalDebits => transactions
+      .where((item) => item.normalizedType == 'debit')
+      .fold(0, (sum, item) => sum + item.absoluteAmount);
+
+  double get totalRefunds => transactions
+      .where((item) => item.normalizedType == 'refund')
+      .fold(0, (sum, item) => sum + item.absoluteAmount);
+
+  int get failedCount => transactions
+      .where((item) => item.status.toLowerCase() == 'failed')
+      .length;
+
+  double get netMovement => totalCredits + totalRefunds - totalDebits;
+
   factory WalletData.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = root['data'] is Map
@@ -54,6 +82,31 @@ class WalletData {
   }
 }
 
+class WalletTransactionCatalog {
+  const WalletTransactionCatalog({required this.transactions, required this.count});
+
+  final List<WalletTransaction> transactions;
+  final int count;
+
+  factory WalletTransactionCatalog.fromResponse(dynamic response) {
+    final root = Map<String, dynamic>.from(response as Map);
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
+    final raw = data['transactions'] ?? data['results'] ?? root['transactions'] ?? const [];
+    final rows = raw is List
+        ? raw
+            .whereType<Map>()
+            .map((item) => WalletTransaction.fromJson(Map<String, dynamic>.from(item)))
+            .toList(growable: false)
+        : const <WalletTransaction>[];
+    return WalletTransactionCatalog(
+      transactions: rows,
+      count: int.tryParse((data['count'] ?? root['count'] ?? rows.length).toString()) ?? rows.length,
+    );
+  }
+}
+
 class WalletTransaction {
   const WalletTransaction({
     required this.id,
@@ -63,6 +116,9 @@ class WalletTransaction {
     required this.currency,
     required this.description,
     required this.createdAt,
+    required this.reference,
+    required this.provider,
+    required this.orderNumber,
   });
 
   final int id;
@@ -72,24 +128,54 @@ class WalletTransaction {
   final String currency;
   final String description;
   final DateTime? createdAt;
+  final String reference;
+  final String provider;
+  final String orderNumber;
 
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
+    final order = json['order'] is Map
+        ? Map<String, dynamic>.from(json['order'] as Map)
+        : const <String, dynamic>{};
     return WalletTransaction(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
-      type: json['transaction_type']?.toString() ?? 'transaction',
+      type: (json['transaction_type'] ?? json['type'] ?? 'transaction').toString(),
       status: json['status']?.toString() ?? '',
       amount: double.tryParse(json['amount']?.toString() ?? '') ?? 0,
       currency: json['currency']?.toString() ?? 'USD',
       description: json['description']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+      reference: (json['reference_id'] ?? json['reference'] ?? '').toString(),
+      provider: (json['provider'] ?? order['provider'] ?? '').toString(),
+      orderNumber: (order['order_number'] ?? json['order_number'] ?? '').toString(),
     );
   }
 
-  bool get isCredit {
-    final normalized = type.toLowerCase();
-    return normalized.contains('allocation') ||
+  String get normalizedType {
+    final normalized = type.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    if (normalized.contains('refund') ||
+        normalized.contains('reversal') ||
+        normalized.contains('return')) {
+      return 'refund';
+    }
+    if (normalized.contains('credit') ||
         normalized.contains('topup') ||
-        normalized.contains('credit') ||
-        normalized.contains('refund');
+        normalized.contains('allocation') ||
+        normalized.contains('deposit') ||
+        normalized.contains('fund')) {
+      return 'credit';
+    }
+    if (normalized.contains('debit') ||
+        normalized.contains('purchase') ||
+        normalized.contains('order') ||
+        normalized.contains('charge') ||
+        normalized.contains('deduct')) {
+      return 'debit';
+    }
+    return normalized;
   }
+
+  double get absoluteAmount => amount.abs();
+  bool get isCredit => normalizedType == 'credit' || normalizedType == 'refund';
+  bool get isDebit => normalizedType == 'debit';
+  bool get isRefund => normalizedType == 'refund';
 }
