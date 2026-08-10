@@ -21,7 +21,21 @@ class PackagesScreen extends StatefulWidget {
 class _PackagesScreenState extends State<PackagesScreen> {
   final _repository = PackagesRepository();
   final _searchController = TextEditingController();
-  final _filters = const ['All', 'Data', 'Voice', 'Data + Voice'];
+  final _filters = const [
+    ('All', ''),
+    ('eSIM', 'esim'),
+    ('SimCard', 'simcard'),
+  ];
+  final _operators = const [
+    ('All Operators', ''),
+    ('Vodafone', 'vodafone'),
+    ('Orange Europe', 'worldmove'),
+    ('Orange World', 'orange-world'),
+    ('KPN Europe', 'kpn'),
+    ('T.T Turkey', 'turkey'),
+    ('Orange Big Data', 'flexnet'),
+    ('Orange Balkans', 'orange-balkans'),
+  ];
   final _destinations = const [
     ('🌐', 'All', ''),
     ('🇹🇷', 'Turkey', 'turkey'),
@@ -33,6 +47,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
   List<MobilePackage> _packages = const [];
   int _selectedFilter = 0;
   int _selectedDestination = 0;
+  int _selectedOperator = 0;
   bool _loading = true;
   bool _showingStaleData = false;
   String? _error;
@@ -78,12 +93,15 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
   }
 
-  String? get _packageType => switch (_selectedFilter) {
-        1 => 'DATA-ONLY',
-        2 => 'VOICE',
-        3 => 'DATA-VOICE',
-        _ => null,
-      };
+  String? get _packageType => _filters[_selectedFilter].$2.isEmpty
+      ? null
+      : _filters[_selectedFilter].$2;
+
+  List<MobilePackage> get _visiblePackages {
+    final selected = _operators[_selectedOperator].$2;
+    if (selected.isEmpty) return _packages;
+    return _packages.where((item) => item.operatorKey == selected).toList();
+  }
 
   void _onSearchChanged(String _) {
     _searchTimer?.cancel();
@@ -113,7 +131,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('eSIM Marketplace', style: theme.textTheme.headlineLarge),
+                        Text(
+                          'eSIM Marketplace',
+                          style: theme.textTheme.headlineLarge,
+                        ),
                         const SizedBox(height: 5),
                         Text(
                           'Choose the right plan for your customer in seconds.',
@@ -145,16 +166,32 @@ class _PackagesScreenState extends State<PackagesScreen> {
                         color: Colors.white.withValues(alpha: .14),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.public_rounded, color: Colors.white),
+                      child: const Icon(
+                        Icons.public_rounded,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Global coverage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                          Text(
+                            'Global coverage',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
                           SizedBox(height: 4),
-                          Text('Search local, regional and global reseller plans.', style: TextStyle(color: Colors.white70, height: 1.35)),
+                          Text(
+                            'Search local, regional and global reseller plans.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              height: 1.35,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -181,7 +218,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              _SectionTitle(title: 'Destinations', trailing: '${_packages.length} plans'),
+              _SectionTitle(
+                title: 'Destinations',
+                trailing: '${_visiblePackages.length} plans',
+              ),
               const SizedBox(height: 12),
               SizedBox(
                 height: 86,
@@ -204,6 +244,23 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+              Text('Operators', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _operators.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) => ChoiceChip(
+                    label: Text(_operators[index].$1),
+                    selected: _selectedOperator == index,
+                    onSelected: (_) =>
+                        setState(() => _selectedOperator = index),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
               SizedBox(
                 height: 42,
                 child: ListView.separated(
@@ -211,7 +268,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   itemCount: _filters.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, index) => ChoiceChip(
-                    label: Text(_filters[index]),
+                    label: Text(_filters[index].$1),
                     selected: _selectedFilter == index,
                     onSelected: (_) {
                       setState(() => _selectedFilter = index);
@@ -224,8 +281,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
               if (_loading)
                 const ContentLoadingState(label: 'Loading packages...')
               else if (_error != null && _packages.isEmpty)
-                ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
-              else if (_packages.isEmpty)
+                ContentErrorState(
+                  message: _error!,
+                  onRetry: () => _load(forceRefresh: true),
+                )
+              else if (_visiblePackages.isEmpty)
                 ContentEmptyState(
                   icon: Icons.inventory_2_outlined,
                   title: 'No packages found',
@@ -236,17 +296,26 @@ class _PackagesScreenState extends State<PackagesScreen> {
                     setState(() {
                       _selectedFilter = 0;
                       _selectedDestination = 0;
+                      _selectedOperator = 0;
                     });
                     _load();
                   },
                 )
               else
-                for (var index = 0; index < _packages.length; index++) ...[
+                for (
+                  var index = 0;
+                  index < _visiblePackages.length;
+                  index++
+                ) ...[
                   _PackageTile(
-                    package: _packages[index],
-                    onTap: () => context.push('/packages/detail', extra: _packages[index]),
+                    package: _visiblePackages[index],
+                    onTap: () => context.push(
+                      '/packages/detail',
+                      extra: _visiblePackages[index],
+                    ),
                   ),
-                  if (index != _packages.length - 1) const SizedBox(height: 12),
+                  if (index != _visiblePackages.length - 1)
+                    const SizedBox(height: 12),
                 ],
             ],
           ),
@@ -263,11 +332,18 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
-          Text(trailing, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      ),
+      Text(
+        trailing,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    ],
+  );
 }
 
 class _StaleDataBanner extends StatelessWidget {
@@ -275,24 +351,34 @@ class _StaleDataBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: AppColors.warning.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Could not refresh. Showing the last available packages.',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(child: Text('Could not refresh. Showing the last available packages.', style: TextStyle(fontWeight: FontWeight.w700))),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }
 
 class _Country extends StatelessWidget {
-  const _Country({required this.flag, required this.name, required this.selected, required this.onTap});
+  const _Country({
+    required this.flag,
+    required this.name,
+    required this.selected,
+    required this.onTap,
+  });
   final String flag;
   final String name;
   final bool selected;
@@ -314,10 +400,18 @@ class _Country extends StatelessWidget {
               width: 64,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: selected ? AppColors.primaryLight : theme.colorScheme.surface,
+                color: selected
+                    ? AppColors.primaryLight
+                    : theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: selected ? AppColors.primary : theme.colorScheme.outlineVariant),
-                boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+                border: Border.all(
+                  color: selected
+                      ? AppColors.primary
+                      : theme.colorScheme.outlineVariant,
+                ),
+                boxShadow: theme.brightness == Brightness.light
+                    ? B2BShadows.card
+                    : null,
               ),
               child: Text(flag, style: const TextStyle(fontSize: 25)),
             ),
@@ -326,7 +420,11 @@ class _Country extends StatelessWidget {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? AppColors.primary : null),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: selected ? AppColors.primary : null,
+              ),
             ),
           ],
         ),
@@ -354,7 +452,9 @@ class _PackageTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(B2BRadius.xl),
             border: Border.all(color: theme.colorScheme.outlineVariant),
-            boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+            boxShadow: theme.brightness == Brightness.light
+                ? B2BShadows.card
+                : null,
           ),
           child: Column(
             children: [
@@ -364,46 +464,95 @@ class _PackageTile extends StatelessWidget {
                     height: 54,
                     width: 54,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(17)),
-                    child: Text(_flagFor(package.countryCode), style: const TextStyle(fontSize: 27)),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                    child: Text(
+                      _flagFor(package.countryCode),
+                      style: const TextStyle(fontSize: 27),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(package.destination, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16.5)),
+                        Text(
+                          package.destination,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontSize: 16.5,
+                          ),
+                        ),
                         const SizedBox(height: 3),
-                        Text(package.displayProvider, style: theme.textTheme.bodySmall),
+                        Text(
+                          package.displayProvider,
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(package.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: AppColors.primary, fontSize: 17)),
+                  Text(
+                    package.formattedPrice,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 17,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Row(
                   children: [
-                    Expanded(child: _InlineMetric(icon: Icons.data_usage_rounded, value: package.dataLabel)),
+                    Expanded(
+                      child: _InlineMetric(
+                        icon: Icons.data_usage_rounded,
+                        value: package.dataLabel,
+                      ),
+                    ),
                     Container(width: 1, height: 26, color: AppColors.border),
-                    Expanded(child: _InlineMetric(icon: Icons.schedule_rounded, value: package.validityLabel)),
+                    Expanded(
+                      child: _InlineMetric(
+                        icon: Icons.schedule_rounded,
+                        value: package.validityLabel,
+                      ),
+                    ),
                     Container(width: 1, height: 26, color: AppColors.border),
-                    const Expanded(child: _InlineMetric(icon: Icons.network_cell_rounded, value: '4G / 5G')),
+                    const Expanded(
+                      child: _InlineMetric(
+                        icon: Icons.network_cell_rounded,
+                        value: '4G / 5G',
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
               Row(
                 children: [
-                  Text('Reseller-ready plan', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+                  Text(
+                    'Reseller-ready plan',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const Spacer(),
                   FilledButton(
                     onPressed: onTap,
-                    style: FilledButton.styleFrom(minimumSize: const Size(92, 40), padding: const EdgeInsets.symmetric(horizontal: 16)),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(92, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
                     child: const Text('View plan'),
                   ),
                 ],
@@ -423,16 +572,27 @@ class _InlineMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 5),
-          Flexible(child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5))),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, size: 16, color: AppColors.textSecondary),
+      const SizedBox(width: 5),
+      Flexible(
+        child: Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
+        ),
+      ),
+    ],
+  );
 }
 
 String _flagFor(String code) {
   if (code.length != 2) return '🌐';
-  return code.toUpperCase().codeUnits.map((unit) => String.fromCharCode(unit + 127397)).join();
+  return code
+      .toUpperCase()
+      .codeUnits
+      .map((unit) => String.fromCharCode(unit + 127397))
+      .join();
 }
