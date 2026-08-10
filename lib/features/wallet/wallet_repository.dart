@@ -68,5 +68,23 @@ class WalletRepository {
     return request;
   }
 
+  Future<WalletRequest> createDealerBalanceRequest({
+    required double amount,
+    required String currency,
+    String? note,
+  }) async {
+    final request = await _apiClient.post<WalletRequest>(
+      ApiEndpoints.dealerBalanceRequest,
+      data: {
+        'requested_amount': double.parse(amount.toStringAsFixed(2)),
+        'currency': currency.toUpperCase(),
+        'dealer_notes': note?.trim() ?? '',
+      },
+      parser: WalletRequest.fromResponse,
+    );
+    _cache.clear();
+    return request;
+  }
+
   void invalidateCache() => _cache.clear();
 }
