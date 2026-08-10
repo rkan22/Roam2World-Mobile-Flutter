@@ -56,7 +56,12 @@ class _R2WBottomNavState extends State<R2WBottomNav> {
             backgroundColor: Colors.transparent,
             onDestinationSelected: (index) {
               if (index == selected) return;
-              context.go(items[index].route);
+              final route = items[index].route;
+              if (_keepsBackHistory(route)) {
+                context.push(route);
+              } else {
+                context.go(route);
+              }
             },
             destinations: [
               for (final item in items)
@@ -72,6 +77,9 @@ class _R2WBottomNavState extends State<R2WBottomNav> {
     );
   }
 }
+
+bool _keepsBackHistory(String route) =>
+    route == '/reports' || route == '/operations';
 
 List<_NavItem> _itemsFor(AppRole role) {
   if (role == AppRole.client || role == AppRole.publicUser) {
