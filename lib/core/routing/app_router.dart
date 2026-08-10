@@ -20,6 +20,7 @@ import '../../features/packages/package_catalog.dart';
 import '../../features/packages/package_detail_screen.dart';
 import '../../features/packages/packages_screen.dart';
 import '../../features/pricing/customer_pricing_screen.dart';
+import '../../features/pricing/dealer_pricing_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/settings_screen.dart';
 import '../../features/reports/reports_screen.dart';
@@ -38,6 +39,7 @@ abstract final class AppRoutes {
   static const customers = '/customers';
   static const clients = '/clients';
   static const customerPricing = '/pricing/customer';
+  static const dealerPricing = '/dealers/pricing';
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const orders = '/orders';
@@ -107,6 +109,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(
         path: AppRoutes.customerPricing,
         builder: (context, state) => const CustomerPricingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dealerPricing,
+        builder: (context, state) => const DealerPricingScreen(),
       ),
       GoRoute(
         path: AppRoutes.esims,
