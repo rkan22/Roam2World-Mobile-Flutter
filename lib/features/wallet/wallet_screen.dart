@@ -39,9 +39,7 @@ class _WalletScreenState extends State<WalletScreen> {
       _error = null;
     });
     try {
-      final wallet = await _repository.fetchWallet(
-        forceRefresh: forceRefresh,
-      );
+      final wallet = await _repository.fetchWallet(forceRefresh: forceRefresh);
       if (!mounted) return;
       setState(() {
         _wallet = wallet;
@@ -84,9 +82,7 @@ class _WalletScreenState extends State<WalletScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> submit() async {
-            if (!(formKey.currentState?.validate() ?? false) || submitting) {
-              return;
-            }
+            if (!(formKey.currentState?.validate() ?? false) || submitting) return;
             setSheetState(() {
               submitting = true;
               submitError = null;
@@ -106,16 +102,13 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
               );
+              await _load(forceRefresh: true);
             } on ApiException catch (error) {
               setSheetState(() => submitError = error.message);
             } catch (_) {
-              setSheetState(
-                () => submitError = 'Top-up request could not be created.',
-              );
+              setSheetState(() => submitError = 'Top-up request could not be created.');
             } finally {
-              if (sheetContext.mounted) {
-                setSheetState(() => submitting = false);
-              }
+              if (sheetContext.mounted) setSheetState(() => submitting = false);
             }
           }
 
@@ -132,25 +125,34 @@ class _WalletScreenState extends State<WalletScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(B2BRadius.md),
+                    ),
+                    child: const Icon(Icons.add_card_rounded, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: B2BSpacing.md),
                   Text(
                     'Request wallet top-up',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: B2BSpacing.xs),
                   const Text(
-                    'Your available balance changes after the request is approved.',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    'Create a funding request for your business wallet. Your available funds update after approval.',
+                    style: TextStyle(color: AppColors.textSecondary, height: 1.45),
                   ),
                   const SizedBox(height: B2BSpacing.lg),
                   TextFormField(
                     controller: amountController,
                     enabled: !submitting,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Amount',
+                      labelText: 'Top-up amount',
                       prefixText: '${wallet.currency} ',
+                      prefixIcon: const Icon(Icons.payments_outlined),
                     ),
                     validator: (value) {
                       final amount = double.tryParse(value?.trim() ?? '');
@@ -166,7 +168,8 @@ class _WalletScreenState extends State<WalletScreen> {
                     enabled: !submitting,
                     maxLines: 3,
                     decoration: const InputDecoration(
-                      labelText: 'Note (optional)',
+                      labelText: 'Reference note (optional)',
+                      prefixIcon: Icon(Icons.notes_rounded),
                     ),
                   ),
                   if (submitError != null) ...[
@@ -180,15 +183,15 @@ class _WalletScreenState extends State<WalletScreen> {
                     ),
                   ],
                   const SizedBox(height: B2BSpacing.lg),
-                  ElevatedButton(
+                  FilledButton.icon(
                     onPressed: submitting ? null : submit,
-                    child: submitting
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
+                    icon: submitting
+                        ? const SizedBox.square(
+                            dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Send request'),
+                        : const Icon(Icons.arrow_upward_rounded),
+                    label: Text(submitting ? 'Sending request...' : 'Send top-up request'),
                   ),
                 ],
               ),
@@ -243,7 +246,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _content(WalletData wallet) {
     final transactions = _visibleTransactions(wallet);
-
     return WalletAdaptiveSections(
       summary: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,18 +325,15 @@ class _Header extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         const SizedBox(width: B2BSpacing.sm),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Wallet', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: B2BSpacing.xxs),
               Text(
-                'Wallet',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
-              ),
-              SizedBox(height: B2BSpacing.xxs),
-              Text(
-                'Manage your business funds and transaction history',
-                style: TextStyle(color: AppColors.textSecondary),
+                'Business funds & settlement activity',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
@@ -362,68 +361,147 @@ class _BalanceHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(B2BSpacing.xl),
       decoration: BoxDecoration(
         gradient: B2BGradients.primary,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
-        boxShadow: B2BShadows.elevated,
+        boxShadow: B2BShadows.hero,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: B2BSpacing.sm,
-                  vertical: B2BSpacing.xs,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -45,
+              top: -55,
+              child: Container(
+                width: 180,
+                height: 180,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(B2BRadius.pill),
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: .08),
                 ),
-                child: Text(
-                  wallet.role.isEmpty
-                      ? 'BUSINESS WALLET'
-                      : wallet.role.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: .8,
+              ),
+            ),
+            Positioned(
+              left: -75,
+              bottom: -95,
+              child: Container(
+                width: 230,
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(B2BRadius.full),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: .07),
+                    width: 26,
                   ),
                 ),
               ),
-              const Spacer(),
-              const Icon(Icons.shield_outlined, color: Colors.white70),
-            ],
-          ),
-          const SizedBox(height: B2BSpacing.xl),
-          Text(
-            wallet.isDealer ? 'Available balance' : 'Available credit',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w700,
             ),
-          ),
-          const SizedBox(height: B2BSpacing.xs),
-          Text(
-            amount,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
+            Padding(
+              padding: const EdgeInsets.all(B2BSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: B2BSpacing.sm,
+                          vertical: B2BSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(B2BRadius.pill),
+                        ),
+                        child: Text(
+                          wallet.role.isEmpty
+                              ? 'BUSINESS WALLET'
+                              : wallet.role.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: .8,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(B2BRadius.md),
+                        ),
+                        child: const Icon(Icons.shield_outlined, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: B2BSpacing.xl),
+                  Text(
+                    wallet.isDealer ? 'Available balance' : 'Available credit',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: B2BSpacing.xs),
+                  Text(
+                    amount,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: B2BSpacing.xs),
+                  Text(
+                    wallet.isDealer
+                        ? 'Available for new orders and settlements'
+                        : 'Available credit for new eSIM orders',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: B2BSpacing.xl),
+                  Row(
+                    children: [
+                      FilledButton.icon(
+                        onPressed: onTopUp,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                        ),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Add funds'),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: B2BSpacing.sm,
+                          vertical: B2BSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: .14),
+                          borderRadius: BorderRadius.circular(B2BRadius.pill),
+                        ),
+                        child: Text(
+                          wallet.currency,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: B2BSpacing.xl),
-          FilledButton.tonalIcon(
-            onPressed: onTopUp,
-            icon: const Icon(Icons.add_card_rounded),
-            label: const Text('Request top-up'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -440,12 +518,9 @@ class _SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: B2BSpacing.xxs),
-        Text(subtitle, style: const TextStyle(color: AppColors.textSecondary)),
+        Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
@@ -514,8 +589,7 @@ class _TransactionTile extends StatelessWidget {
     final sign = positive ? '+' : '-';
     final date = transaction.createdAt == null
         ? transaction.status
-        : DateFormat('dd MMM yyyy, HH:mm')
-            .format(transaction.createdAt!.toLocal());
+        : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal());
     final title = transaction.description.isEmpty
         ? _titleCase(transaction.type)
         : transaction.description;
@@ -567,12 +641,19 @@ class _TransactionTile extends StatelessWidget {
               ),
               if (transaction.status.isNotEmpty) ...[
                 const SizedBox(height: B2BSpacing.xxs),
-                Text(
-                  _titleCase(transaction.status),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(B2BRadius.pill),
+                  ),
+                  child: Text(
+                    _titleCase(transaction.status),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
@@ -590,9 +671,6 @@ String _titleCase(String value) {
   return normalized
       .split(' ')
       .where((part) => part.isNotEmpty)
-      .map(
-        (part) =>
-            '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
-      )
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
       .join(' ');
 }
