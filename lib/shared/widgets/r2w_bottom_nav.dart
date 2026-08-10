@@ -88,7 +88,7 @@ List<_NavItem> _itemsFor(AppRole role) {
     return const [
       _NavItem('/dashboard', 'Home', Icons.home_outlined, Icons.home_rounded),
       _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
-      _NavItem('/notifications', 'Ops', Icons.monitor_heart_outlined, Icons.monitor_heart_rounded),
+      _NavItem('/operations', 'Ops', Icons.monitor_heart_outlined, Icons.monitor_heart_rounded),
       _NavItem('/reports', 'Reports', Icons.analytics_outlined, Icons.analytics_rounded),
       _NavItem('/profile', 'More', Icons.grid_view_outlined, Icons.grid_view_rounded),
     ];
