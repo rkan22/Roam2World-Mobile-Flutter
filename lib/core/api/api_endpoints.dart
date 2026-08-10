@@ -21,6 +21,8 @@ class ApiEndpoints {
       '/api/v1/mobile/admin/routing-rules/';
   static const String mobileAdminRoutingOverride =
       '/api/v1/mobile/admin/routing-rules/override/';
+  static const String mobileB2BProviderHealth =
+      '/api/v1/mobile/b2b/provider-health/';
   static const String manualAdminProducts =
       '/api/v1/admin/manual-fulfillment/products/';
   static const String manualAdminSimInventory =
