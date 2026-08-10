@@ -86,6 +86,7 @@ class MobilePackage {
     final normalizedDataGb = dataUnit.toUpperCase() == 'MB' && numericData != null
         ? numericData / 1024
         : numericData;
+    final region = json['region']?.toString() ?? '';
 
     return MobilePackage(
       id: json['id']?.toString() ?? json['package_id']?.toString() ?? '',
@@ -99,12 +100,11 @@ class MobilePackage {
           'Roam2World',
       destination: json['destination_label']?.toString() ??
           json['coverage_label']?.toString() ??
-          json['region']?.toString() ??
+          (region.isNotEmpty ? region : null) ??
           firstCountry['name']?.toString() ??
           'Global',
       destinationKey: json['destination_key']?.toString() ??
-          json['region']?.toString().toLowerCase() ??
-          '',
+          (region.isNotEmpty ? region.toLowerCase() : ''),
       dataLabel: dataQuantity == null
           ? (json['unlimited'] == true ? 'Unlimited' : 'Data')
           : '$dataQuantity $dataUnit',
