@@ -5,6 +5,31 @@ class ApiEndpoints {
   static const String tokenRefresh = '/api/v1/auth/refresh/';
   static const String mobileDashboard = '/api/v1/mobile/dashboard/';
   static const String mobileAdminDashboard = '/api/v1/mobile/admin/dashboard/';
+  static const String mobileAdminResellers = '/api/v1/mobile/admin/resellers/';
+  static const String mobileAdminDealers = '/api/v1/mobile/admin/dealers/';
+  static const String mobileAdminOrders = '/api/v1/mobile/admin/orders/';
+  static const String mobileAdminPricing = '/api/v1/mobile/admin/pricing/';
+  static const String mobileAdminReports = '/api/v1/mobile/admin/reports/';
+  static const String mobileAdminSystemHealth = '/api/v1/mobile/admin/system-health/';
+  static const String mobileAdminActivityLogs = '/api/v1/mobile/admin/activity-logs/';
+  static const String mobileAdminSupportTickets = '/api/v1/mobile/admin/support-tickets/';
+  static const String mobileAdminProviderRetryQueue =
+      '/api/v1/mobile/admin/provider-retry-queue/';
+  static const String mobileAdminProviderCallbackLogs =
+      '/api/v1/mobile/admin/provider-callback-logs/';
+  static const String mobileAdminRoutingRules =
+      '/api/v1/mobile/admin/routing-rules/';
+  static const String mobileAdminRoutingOverride =
+      '/api/v1/mobile/admin/routing-rules/override/';
+  static const String manualAdminProducts =
+      '/api/v1/admin/manual-fulfillment/products/';
+  static const String manualAdminSimInventory =
+      '/api/v1/admin/manual-fulfillment/sim-inventory/';
+  static const String manualAdminTasks =
+      '/api/v1/admin/manual-fulfillment/tasks/';
+  static const String manualCatalogProducts =
+      '/api/v1/mobile/b2b/manual/products/';
+  static const String manualRequest = '/api/v1/mobile/b2b/manual/request/';
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileFeaturedPackages =
       '/api/v1/mobile/packages/featured/';
@@ -62,6 +87,33 @@ class ApiEndpoints {
 
   static String mobileNotificationUnread(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/unread/';
+
+  static String mobileAdminProviderRetryDetail(Object itemId) =>
+      '/api/v1/mobile/admin/provider-retry-queue/$itemId/';
+
+  static String mobileAdminProviderRetryAction(Object itemId) =>
+      '/api/v1/mobile/admin/provider-retry-queue/$itemId/action/';
+
+  static String mobileAdminProviderCallbackLogDetail(Object logId) =>
+      '/api/v1/mobile/admin/provider-callback-logs/$logId/';
+
+  static String mobileAdminRoutingRuleDetail(Object ruleId) =>
+      '/api/v1/mobile/admin/routing-rules/$ruleId/';
+
+  static String manualAdminProductDetail(Object packageId) =>
+      '/api/v1/admin/manual-fulfillment/products/$packageId/';
+
+  static String manualAdminAssignQr(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/assign-qr/';
+
+  static String manualAdminActivateSim(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/activate-sim/';
+
+  static String manualAdminCancelTask(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/cancel/';
+
+  static String manualAdminSendToFlexnet(Object taskId) =>
+      '/api/v1/admin/manual-fulfillment/tasks/$taskId/send-to-flexnet/';
 
   static String mobileDealerAllocateBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/allocate-balance/';

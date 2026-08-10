@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/routing/app_role.dart';
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_metric_card.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
+import '../auth/auth_repository.dart';
 import 'operations_data.dart';
 import 'operations_repository.dart';
 
@@ -19,8 +22,10 @@ class OperationsCenterScreen extends StatefulWidget {
 
 class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
   final _repository = OperationsRepository();
+  final _authRepository = AuthRepository();
   final _search = TextEditingController();
   OperationsData? _data;
+  AppRole _role = AppRole.unknown;
   bool _loading = true;
   String? _error;
   int _tab = 0;
@@ -29,6 +34,7 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadRole();
     _search.addListener(() => setState(() {}));
   }
 
@@ -36,6 +42,12 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRole() async {
+    final session = await _authRepository.readStoredProfile();
+    if (!mounted) return;
+    setState(() => _role = parseAppRole(session?.role));
   }
 
   Future<void> _load() async {
@@ -53,13 +65,24 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
     }
   }
 
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(AppRoutes.dashboard);
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = _data;
     final reviewLogs = data?.logs.where((item) => item.needsReview).length ?? 0;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _handleBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Operations Center'),
         actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
       ),
@@ -125,6 +148,47 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
   Widget _overview(OperationsData data) {
     final recent = data.auditEvents.take(5).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (_role == AppRole.admin) ...[
+        B2BSurface(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.business_center_outlined, color: AppColors.primary),
+                title: const Text('Admin resellers', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Live reseller directory and active counts'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.adminResellers),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.storefront_outlined, color: AppColors.primary),
+                title: const Text('Admin dealers', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Live dealer directory and active counts'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.adminDealers),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.insights_outlined, color: AppColors.primary),
+                title: const Text('Pricing & reports', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Live admin pricing inventory and business totals'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.adminCommercial),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.support_agent_rounded, color: AppColors.primary),
+                title: const Text('Support & system health', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Admin support queue and backend health'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.support),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: B2BSpacing.lg),
+      ],
       B2BSurface(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Queue health', style: Theme.of(context).textTheme.titleLarge),

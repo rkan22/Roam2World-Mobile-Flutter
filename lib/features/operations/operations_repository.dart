@@ -38,14 +38,34 @@ class OperationsRepository {
       ),
     );
 
-    final dedicatedAudit = await _safeList<AuditEventItem>(
+    final adminAudit = await _safeList<AuditEventItem>(
       () => _apiClient.get<List<AuditEventItem>>(
-        ApiEndpoints.auditLogs,
+        ApiEndpoints.mobileAdminActivityLogs,
         parser: (response) => _rows(response)
-            .map((item) => AuditEventItem.fromJson(item))
+            .map(
+              (item) => AuditEventItem.fromJson(
+                {
+                  ...item,
+                  'action': item['type'] ?? item['title'] ?? 'activity',
+                  'target': item['title'] ?? 'Platform',
+                },
+                source: 'admin',
+              ),
+            )
             .toList(growable: false),
       ),
     );
+
+    final dedicatedAudit = adminAudit.isNotEmpty
+        ? adminAudit
+        : await _safeList<AuditEventItem>(
+            () => _apiClient.get<List<AuditEventItem>>(
+              ApiEndpoints.auditLogs,
+              parser: (response) => _rows(response)
+                  .map((item) => AuditEventItem.fromJson(item))
+                  .toList(growable: false),
+            ),
+          );
 
     final auditEvents = dedicatedAudit.isNotEmpty
         ? dedicatedAudit
