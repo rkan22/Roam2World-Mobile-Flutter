@@ -556,10 +556,7 @@ class _PackageTile extends StatelessWidget {
                       color: AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(17),
                     ),
-                    child: Text(
-                      _flagFor(package.countryCode),
-                      style: const TextStyle(fontSize: 27),
-                    ),
+                    child: _CountryVisual(code: package.countryCode),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -676,11 +673,32 @@ class _InlineMetric extends StatelessWidget {
   );
 }
 
-String _flagFor(String code) {
-  if (code.length != 2) return '🌐';
-  return code
-      .toUpperCase()
-      .codeUnits
-      .map((unit) => String.fromCharCode(unit + 127397))
-      .join();
+class _CountryVisual extends StatelessWidget {
+  const _CountryVisual({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    if (code.length != 2) {
+      return const Icon(
+        Icons.public_rounded,
+        color: AppColors.primary,
+        size: 27,
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        'https://flagcdn.com/w80/${code.toLowerCase()}.png',
+        width: 34,
+        height: 24,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(
+          Icons.public_rounded,
+          color: AppColors.primary,
+          size: 27,
+        ),
+      ),
+    );
+  }
 }

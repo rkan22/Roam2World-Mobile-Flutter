@@ -116,6 +116,7 @@ class MobilePackage {
     required this.packageType,
     required this.countryCode,
     required this.isFeatured,
+    this.supportedCountries = const [],
   });
 
   final String id;
@@ -131,6 +132,7 @@ class MobilePackage {
   final String packageType;
   final String countryCode;
   final bool isFeatured;
+  final List<PackageCountry> supportedCountries;
 
   factory MobilePackage.fromJson(Map<String, dynamic> json) {
     final countries = json['countries'];
@@ -138,6 +140,7 @@ class MobilePackage {
         countries is List && countries.isNotEmpty && countries.first is Map
         ? Map<String, dynamic>.from(countries.first as Map)
         : const <String, dynamic>{};
+    final supportedCountries = _countriesFromJson(json);
     final identityText = [
       json['id'],
       json['wmproductId'],
@@ -182,13 +185,7 @@ class MobilePackage {
           json['productCode']?.toString() ??
           json['code']?.toString() ??
           '',
-      name:
-          json['name']?.toString() ??
-          json['package_name']?.toString() ??
-          json['productName']?.toString() ??
-          json['planName']?.toString() ??
-          json['title']?.toString() ??
-          'eSIM package',
+      name: _packageName(json, identityText, dataQuantity, validity),
       provider: json['provider']?.toString() ?? '',
       displayProvider: _displayProvider(json, identityText),
       destination:
@@ -215,6 +212,7 @@ class MobilePackage {
       ),
       countryCode: firstCountry['code']?.toString() ?? '',
       isFeatured: json['is_featured'] == true,
+      supportedCountries: supportedCountries,
     );
   }
 
@@ -241,7 +239,73 @@ class MobilePackage {
     packageType: packageType,
     countryCode: countryCode,
     isFeatured: isFeatured,
+    supportedCountries: supportedCountries,
   );
+
+  static String _packageName(
+    Map<String, dynamic> json,
+    String identityText,
+    dynamic data,
+    dynamic validity,
+  ) {
+    final provider = json['provider']?.toString().toLowerCase() ?? '';
+    if (provider == 'tgt') {
+      final code = identityText.toUpperCase();
+      final type = code.contains('E-185-SC-') ? 'SIM Card' : 'eSIM';
+      final parts = <String>['Orange Balkans', type];
+      if (data != null) parts.add('${_cleanNumber(data)}GB');
+      if (validity != null) parts.add('${_cleanNumber(validity)} Days');
+      return parts.join(' ');
+    }
+    return json['name']?.toString() ??
+        json['package_name']?.toString() ??
+        json['productName']?.toString() ??
+        json['planName']?.toString() ??
+        json['title']?.toString() ??
+        'eSIM package';
+  }
+
+  static String _cleanNumber(dynamic value) {
+    final parsed = num.tryParse('$value');
+    return parsed == null
+        ? '$value'
+        : parsed == parsed.roundToDouble()
+        ? '${parsed.toInt()}'
+        : '$parsed';
+  }
+
+  static List<PackageCountry> _countriesFromJson(Map<String, dynamic> json) {
+    final raw =
+        json['supported_countries'] ??
+        json['supportedCountries'] ??
+        json['coverage_countries'] ??
+        json['coverageCountries'] ??
+        json['country_list'] ??
+        json['countryList'] ??
+        json['countries'] ??
+        const [];
+    if (raw is! List) return const [];
+    return raw
+        .map((item) {
+          if (item is Map) {
+            final value = Map<String, dynamic>.from(item);
+            return PackageCountry(
+              name:
+                  '${value['name'] ?? value['country_name'] ?? value['country'] ?? value['code'] ?? ''}',
+              code:
+                  '${value['code'] ?? value['country_code'] ?? value['iso2'] ?? ''}'
+                      .toUpperCase(),
+            );
+          }
+          final text = '$item'.trim();
+          return PackageCountry(
+            name: text,
+            code: text.length == 2 ? text.toUpperCase() : '',
+          );
+        })
+        .where((item) => item.name.isNotEmpty)
+        .toList(growable: false);
+  }
 
   String get operatorKey {
     final code = id.toUpperCase();
@@ -353,4 +417,11 @@ class MobilePackage {
         json['provider']?.toString() ??
         'Roam2World';
   }
+}
+
+class PackageCountry {
+  const PackageCountry({required this.name, required this.code});
+
+  final String name;
+  final String code;
 }
