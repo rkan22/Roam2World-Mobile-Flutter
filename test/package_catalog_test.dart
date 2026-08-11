@@ -151,4 +151,31 @@ void main() {
     expect(package.validityLabel, '30 Days');
     expect(package.destinationKey, 'europe');
   });
+
+  test('simplifies TGT names and preserves supported countries', () {
+    final catalog = PackageCatalog.fromProviderResponse(
+      {
+        'data': [
+          {
+            'productCode': 'E-185-ES-AU-EO1-T-30D-10GB',
+            'planName': 'E-185-ES-AU-EO1-T-30D-10GB',
+            'dataAmount': 10,
+            'validityDays': 30,
+            'supportedCountries': [
+              {'name': 'Germany', 'code': 'DE'},
+              {'name': 'France', 'code': 'FR'},
+            ],
+            'price': '9.00',
+          },
+        ],
+      },
+      provider: 'tgt',
+      displayProvider: 'Orange Balkans',
+    );
+
+    final package = catalog.packages.single;
+    expect(package.name, 'Orange Balkans eSIM 10GB 30 Days');
+    expect(package.supportedCountries, hasLength(2));
+    expect(package.supportedCountries.first.code, 'DE');
+  });
 }
