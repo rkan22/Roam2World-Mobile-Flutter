@@ -195,7 +195,7 @@ int _toInt(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
 String _friendlyProductName(String raw) {
   final value = raw.trim();
   final upper = value.toUpperCase();
-  final data = RegExp(
+  var data = RegExp(
     r'(\d+)\s*GB',
     caseSensitive: false,
   ).firstMatch(value)?.group(1);
@@ -203,6 +203,29 @@ String _friendlyProductName(String raw) {
     r'(\d+)\s*(?:D|DAYS?)',
     caseSensitive: false,
   ).firstMatch(value)?.group(1);
+  if (upper.contains('WM-E-J1-VDFES-XXL')) {
+    data = '60';
+  } else if (upper.contains('WM-E-J1-VDFES-XL')) {
+    data = '45';
+  } else if (upper.contains('WM-E-J1-VDFES-M')) {
+    data = '25';
+  } else if (upper.contains('WM-E-J1-WLD-O-MINI-30D')) {
+    data = '3';
+  } else if (upper.contains('WM-E-J1-WLD-O-14D')) {
+    data = '20';
+  }
+  if (upper.contains('WM-')) {
+    final destination = upper.contains('WM-TR-')
+        ? 'Turkey'
+        : upper.contains('WM-E-J1-WLD-')
+        ? 'Global'
+        : 'Europe';
+    return [
+      destination,
+      if (data != null) '${data}GB',
+      if (days != null) '$days Days',
+    ].join(' ');
+  }
   if (upper.contains('E-185-') || upper.contains('E-184-')) {
     final type = upper.contains('-SC-') ? 'SIM Card' : 'eSIM';
     return [

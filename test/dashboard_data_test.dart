@@ -85,4 +85,22 @@ void main() {
       'Orange Balkans SIM Card 20GB 60 Days',
     );
   });
+
+  test('simplifies Worldmove package codes in recent orders', () {
+    final data = DashboardData.fromResponse({
+      'data': {
+        'recent_orders': [
+          {'product_name': 'WM-TR-10GB-30D'},
+          {'product_name': 'WM-E-J1-WLD-O-MINI-30D'},
+          {'product_name': 'WM-E-J1-VDFES-XL'},
+        ],
+      },
+    });
+
+    expect(data.recentOrders.map((order) => order.productName), [
+      'Turkey 10GB 30 Days',
+      'Global 3GB 30 Days',
+      'Europe 45GB',
+    ]);
+  });
 }
