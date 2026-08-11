@@ -280,17 +280,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Flexible(
-                            child: Text(
-                              balance,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 27,
-                                height: 1,
-                                letterSpacing: -0.8,
-                                fontWeight: FontWeight.w800,
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                balance,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 27,
+                                  height: 1,
+                                  letterSpacing: -0.8,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           ),
@@ -318,12 +321,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      Text(
-                        balance,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                      SizedBox(
+                        width: double.infinity,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            balance,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
                       ),
                       const Spacer(),
@@ -473,15 +483,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         soft: AppColors.warningSoft,
       ),
     ];
-    return SizedBox(
-      height: 126,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: metrics.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
-        itemBuilder: (context, index) =>
-            SizedBox(width: 112, child: _metricCard(metrics[index])),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: metrics.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.55,
       ),
+      itemBuilder: (context, index) => _metricCard(metrics[index]),
     );
   }
 

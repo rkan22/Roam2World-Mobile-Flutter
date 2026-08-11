@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/routing/app_role.dart';
 import '../auth/auth_repository.dart';
+import 'admin_dashboard_screen.dart';
 import 'dashboard_screen_reference.dart';
 import 'live_business_dashboard_screen.dart';
 
@@ -35,22 +36,23 @@ class _RoleDashboardScreenState extends State<RoleDashboardScreen> {
   Widget build(BuildContext context) {
     final role = _role;
     if (role == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return switch (role) {
-      AppRole.admin || AppRole.reseller || AppRole.dealer => LiveBusinessDashboardScreen(
-          key: ValueKey<String>('approved-demo-dashboard-${role.name}'),
-          role: role,
-        ),
+      AppRole.admin => const AdminDashboardScreen(
+        key: ValueKey<String>('admin-dashboard'),
+      ),
+      AppRole.reseller || AppRole.dealer => LiveBusinessDashboardScreen(
+        key: ValueKey<String>('approved-demo-dashboard-${role.name}'),
+        role: role,
+      ),
       AppRole.client || AppRole.publicUser => const DashboardScreen(
-          key: ValueKey<String>('customer-dashboard'),
-        ),
+        key: ValueKey<String>('customer-dashboard'),
+      ),
       AppRole.unknown => const DashboardScreen(
-          key: ValueKey<String>('business-dashboard-unknown'),
-        ),
+        key: ValueKey<String>('business-dashboard-unknown'),
+      ),
     };
   }
 }
