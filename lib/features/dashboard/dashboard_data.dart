@@ -34,6 +34,7 @@ class DashboardData {
     required this.currency,
     required this.todaySales,
     required this.monthlySales,
+    required this.totalEsimCount,
     required this.activeEsimCount,
     required this.expiredEsimCount,
     required this.recentOrders,
@@ -44,6 +45,7 @@ class DashboardData {
   final String currency;
   final double todaySales;
   final double monthlySales;
+  final int totalEsimCount;
   final int activeEsimCount;
   final int expiredEsimCount;
   final List<DashboardOrderSummary> recentOrders;
@@ -51,16 +53,22 @@ class DashboardData {
   DashboardData copyWith({
     double? balance,
     String? currency,
+    double? todaySales,
+    double? monthlySales,
+    int? totalEsimCount,
+    int? activeEsimCount,
+    int? expiredEsimCount,
     List<DashboardOrderSummary>? recentOrders,
   }) {
     return DashboardData(
       role: role,
       balance: balance ?? this.balance,
       currency: currency ?? this.currency,
-      todaySales: todaySales,
-      monthlySales: monthlySales,
-      activeEsimCount: activeEsimCount,
-      expiredEsimCount: expiredEsimCount,
+      todaySales: todaySales ?? this.todaySales,
+      monthlySales: monthlySales ?? this.monthlySales,
+      totalEsimCount: totalEsimCount ?? this.totalEsimCount,
+      activeEsimCount: activeEsimCount ?? this.activeEsimCount,
+      expiredEsimCount: expiredEsimCount ?? this.expiredEsimCount,
       recentOrders: recentOrders ?? this.recentOrders,
     );
   }
@@ -68,6 +76,11 @@ class DashboardData {
   factory DashboardData.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
+    final metrics = _map(
+      data['metrics'] ?? data['statistics'] ?? data['stats'],
+    );
+    final sales = _map(data['sales_overview'] ?? metrics['sales']);
+    final esims = _map(data['esim_stats'] ?? metrics['esims']);
     final balanceValue = data['current_credit'] ?? data['current_balance'];
     final orders = data['recent_orders'] as List? ?? const [];
 
@@ -75,10 +88,54 @@ class DashboardData {
       role: data['role']?.toString() ?? '',
       balance: _toDouble(balanceValue),
       currency: data['currency']?.toString() ?? 'USD',
-      todaySales: _toDouble(data['today_sales']),
-      monthlySales: _toDouble(data['monthly_sales']),
-      activeEsimCount: _toInt(data['active_esim_count']),
-      expiredEsimCount: _toInt(data['expired_esim_count']),
+      todaySales: _toDouble(
+        _first([
+          data['today_sales'],
+          data['todaySales'],
+          sales['today_sales'],
+          sales['todaySales'],
+        ]),
+      ),
+      monthlySales: _toDouble(
+        _first([
+          data['total_sales'],
+          data['monthly_sales'],
+          data['totalSales'],
+          data['monthlySales'],
+          sales['total_sales'],
+          sales['monthly_sales'],
+        ]),
+      ),
+      totalEsimCount: _toInt(
+        _first([
+          data['total_esim_count'],
+          data['total_esims'],
+          data['totalEsims'],
+          metrics['total_esims'],
+          esims['total'],
+          esims['total_esims'],
+        ]),
+      ),
+      activeEsimCount: _toInt(
+        _first([
+          data['active_esim_count'],
+          data['active_esims'],
+          data['activeEsims'],
+          metrics['active_esims'],
+          esims['active'],
+          esims['active_esims'],
+        ]),
+      ),
+      expiredEsimCount: _toInt(
+        _first([
+          data['expired_esim_count'],
+          data['expired_esims'],
+          data['expiredEsims'],
+          metrics['expired_esims'],
+          esims['expired'],
+          esims['expired_esims'],
+        ]),
+      ),
       recentOrders: orders
           .whereType<Map>()
           .map(
@@ -112,6 +169,9 @@ class DashboardData {
       monthlySales: _toDouble(
         salesOverview['total_sales'] ?? revenue['total_sales'],
       ),
+      totalEsimCount: _toInt(
+        metrics['total_esim_count'] ?? metrics['total_esims'],
+      ),
       activeEsimCount: _toInt(metrics['active_esim_count']),
       expiredEsimCount: _toInt(metrics['expired_esim_count']),
       recentOrders: orders
@@ -129,3 +189,13 @@ double _toDouble(dynamic value) =>
     double.tryParse(value?.toString() ?? '') ?? 0;
 
 int _toInt(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
+
+Map<String, dynamic> _map(dynamic value) =>
+    value is Map ? Map<String, dynamic>.from(value) : const {};
+
+dynamic _first(List<dynamic> values) {
+  for (final value in values) {
+    if (value != null && value.toString().trim().isNotEmpty) return value;
+  }
+  return null;
+}

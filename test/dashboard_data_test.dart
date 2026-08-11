@@ -11,6 +11,7 @@ void main() {
         'currency': 'USD',
         'today_sales': '20.00',
         'monthly_sales': '740.25',
+        'total_esim_count': 15,
         'active_esim_count': 12,
         'expired_esim_count': 3,
         'recent_orders': [
@@ -29,8 +30,28 @@ void main() {
     expect(data.role, 'reseller');
     expect(data.balance, 125.5);
     expect(data.monthlySales, 740.25);
+    expect(data.totalEsimCount, 15);
     expect(data.activeEsimCount, 12);
     expect(data.recentOrders.single.orderNumber, 'R2W-009');
+  });
+
+  test('accepts web dashboard KPI aliases and nested statistics', () {
+    final data = DashboardData.fromResponse({
+      'data': {
+        'role': 'reseller',
+        'totalSales': '1820.75',
+        'statistics': {
+          'total_esims': 28,
+          'active_esims': 21,
+          'expired_esims': 7,
+        },
+      },
+    });
+
+    expect(data.monthlySales, 1820.75);
+    expect(data.totalEsimCount, 28);
+    expect(data.activeEsimCount, 21);
+    expect(data.expiredEsimCount, 7);
   });
 
   test('uses dealer current balance field', () {

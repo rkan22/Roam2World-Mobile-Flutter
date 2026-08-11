@@ -141,9 +141,15 @@ class _PremiumHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Welcome back,', style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                'Welcome back,',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: B2BSpacing.xs),
-              Text('Partner 👋', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Partner 👋',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: B2BSpacing.sm),
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -158,10 +164,10 @@ class _PremiumHeader extends StatelessWidget {
                   child: Text(
                     roleLabel.toUpperCase(),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.warning,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: .4,
-                        ),
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: .4,
+                    ),
                   ),
                 ),
               ),
@@ -207,9 +213,9 @@ class _WalletHero extends StatelessWidget {
                 child: Text(
                   'Available wallet balance',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const Icon(Icons.arrow_forward_rounded, color: Colors.white70),
@@ -221,9 +227,9 @@ class _WalletHero extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  fontSize: 34,
-                ),
+              color: Colors.white,
+              fontSize: 34,
+            ),
           ),
           const SizedBox(height: B2BSpacing.lg),
           Row(
@@ -232,9 +238,9 @@ class _WalletHero extends StatelessWidget {
                 child: Text(
                   'Ready for new eSIM orders',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               FilledButton.icon(
@@ -265,14 +271,14 @@ class _KpiGrid extends StatelessWidget {
     return DashboardKpiLayout(
       children: [
         B2BMetricCard(
-          label: "Today's sales",
-          value: '${data.currency} ${data.todaySales.toStringAsFixed(2)}',
-          icon: Icons.trending_up_rounded,
-          trend: 'Live performance',
+          label: 'Total eSIMs',
+          value: '${data.totalEsimCount}',
+          icon: Icons.sim_card_rounded,
+          trend: 'All eSIMs',
           trendPositive: true,
         ),
         B2BMetricCard(
-          label: 'Monthly revenue',
+          label: 'Total Sales',
           value: '${data.currency} ${data.monthlySales.toStringAsFixed(2)}',
           icon: Icons.bar_chart_rounded,
           trend: 'Current month',
@@ -364,9 +370,9 @@ class _QuickActionTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -474,11 +480,7 @@ class _SalesSparklinePainter extends CustomPainter {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.actionLabel,
-    this.onAction,
-  });
+  const _SectionHeader({required this.title, this.actionLabel, this.onAction});
 
   final String title;
   final String? actionLabel;
@@ -559,8 +561,8 @@ class _RecentOrders extends StatelessWidget {
                   Text(
                     orders[index].status,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),

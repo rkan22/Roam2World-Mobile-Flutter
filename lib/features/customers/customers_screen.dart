@@ -8,6 +8,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../orders/order_history.dart';
 import '../orders/orders_repository.dart';
+import 'customers_repository.dart';
 import 'widgets/customers_adaptive_grid.dart';
 
 class CustomersScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class CustomersScreen extends StatefulWidget {
 
 class _CustomersScreenState extends State<CustomersScreen> {
   final _repository = OrdersRepository();
+  final _customersRepository = CustomersRepository();
   final _searchController = TextEditingController();
   bool _loading = true;
   String? _error;
@@ -44,8 +46,20 @@ class _CustomersScreenState extends State<CustomersScreen> {
     });
     try {
       final history = await _repository.fetchOrders();
+      var directory = const CustomerDirectory(names: [], count: 0);
+      try {
+        directory = await _customersRepository.fetchCustomers();
+      } catch (_) {
+        // Orders still provide a useful customer fallback if the directory is
+        // temporarily unavailable.
+      }
       if (!mounted) return;
-      setState(() => _customers = _aggregateCustomers(history.orders));
+      setState(
+        () => _customers = _aggregateCustomers(
+          history.orders,
+          directoryNames: directory.names,
+        ),
+      );
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -84,8 +98,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
       0,
       (sum, customer) => sum + customer.totalSpend,
     );
-    final currency =
-        visibleCustomers.isEmpty ? 'USD' : visibleCustomers.first.currency;
+    final currency = visibleCustomers.isEmpty
+        ? 'USD'
+        : visibleCustomers.first.currency;
 
     return Scaffold(
       body: SafeArea(
@@ -139,8 +154,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   message: _customers.isEmpty
                       ? 'Customers are created automatically from completed and pending B2B orders.'
                       : 'Try another company or customer name.',
-                  actionLabel:
-                      _customers.isEmpty ? 'Create first sale' : 'Clear search',
+                  actionLabel: _customers.isEmpty
+                      ? 'Create first sale'
+                      : 'Clear search',
                   onAction: _customers.isEmpty
                       ? () => context.go('/packages')
                       : _searchController.clear,
@@ -156,10 +172,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     Text(
                       '${visibleCustomers.length} accounts',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -365,8 +380,20 @@ class _OverviewValue extends StatelessWidget {
   }
 }
 
-List<_CustomerSummary> _aggregateCustomers(List<MobileOrderSummary> orders) {
+List<_CustomerSummary> _aggregateCustomers(
+  List<MobileOrderSummary> orders, {
+  List<String> directoryNames = const [],
+}) {
   final grouped = <String, _CustomerSummary>{};
+  for (final name in directoryNames) {
+    grouped[name.toLowerCase()] = _CustomerSummary(
+      name: name,
+      orders: 0,
+      totalSpend: 0,
+      currency: 'USD',
+      lastOrderAt: null,
+    );
+  }
   for (final order in orders) {
     final name = order.customerName.trim();
     if (name.isEmpty) continue;
@@ -457,8 +484,8 @@ class _CustomerCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: B2BSpacing.xxs),
                     Row(
@@ -477,10 +504,8 @@ class _CustomerCard extends StatelessWidget {
                             'Active · ${_formatDate(customer.lastOrderAt)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                         ),
                       ],
@@ -532,23 +557,24 @@ class _CustomerMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: B2BSpacing.xxs),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
         ),
       ],
     );
