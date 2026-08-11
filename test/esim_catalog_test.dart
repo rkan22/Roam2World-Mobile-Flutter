@@ -30,4 +30,29 @@ void main() {
     expect(catalog.esims.single.isInstalled, isTrue);
     expect(catalog.esims.single.hasQr, isTrue);
   });
+
+  test('parses backend-priced renewal option metadata', () {
+    final option = MobileRenewalOption.fromJson({
+      'provider': 'tgt',
+      'display_provider': 'Orange Balkans',
+      'operation': 'renew',
+      'product_code': 'E-185-ES-AU-eO1-T-30D/60D-20GB',
+      'data_gb': 20,
+      'validity_days': 30,
+      'price': '14.75',
+      'currency': 'USD',
+      'pricing': {
+        'admin_markup_percent': '10.00',
+        'reseller_markup_percent': '5.00',
+        'dealer_markup_percent': '2.00',
+      },
+    });
+
+    expect(option.productCode, 'E-185-ES-AU-eO1-T-30D/60D-20GB');
+    expect(option.dataGb, 20);
+    expect(option.formattedPrice, 'USD 14.75');
+    expect(option.adminMarkupPercent, 10);
+    expect(option.resellerMarkupPercent, 5);
+    expect(option.dealerMarkupPercent, 2);
+  });
 }
