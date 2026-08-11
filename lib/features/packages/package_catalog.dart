@@ -122,6 +122,7 @@ class MobilePackage {
     required this.packageType,
     required this.countryCode,
     required this.isFeatured,
+    this.description = '',
     this.supportedCountries = const [],
   });
 
@@ -138,6 +139,7 @@ class MobilePackage {
   final String packageType;
   final String countryCode;
   final bool isFeatured;
+  final String description;
   final List<PackageCountry> supportedCountries;
 
   factory MobilePackage.fromJson(Map<String, dynamic> json) {
@@ -218,6 +220,7 @@ class MobilePackage {
       ),
       countryCode: firstCountry['code']?.toString() ?? '',
       isFeatured: json['is_featured'] == true,
+      description: _descriptionFromJson(json),
       supportedCountries: supportedCountries,
     );
   }
@@ -245,6 +248,7 @@ class MobilePackage {
     packageType: packageType,
     countryCode: countryCode,
     isFeatured: isFeatured,
+    description: description,
     supportedCountries: supportedCountries,
   );
 
@@ -255,6 +259,13 @@ class MobilePackage {
     dynamic validity,
   ) {
     final provider = json['provider']?.toString().toLowerCase() ?? '';
+    if (provider == 'worldmove') {
+      final destination = _worldmoveDestination(json, identityText);
+      final parts = <String>[destination];
+      if (data != null) parts.add('${_cleanNumber(data)}GB');
+      if (validity != null) parts.add('${_cleanNumber(validity)} Days');
+      return parts.join(' ');
+    }
     if (provider == 'tgt') {
       final code = identityText.toUpperCase();
       final type = code.contains('E-185-SC-') ? 'SIM Card' : 'eSIM';
@@ -269,6 +280,45 @@ class MobilePackage {
         json['planName']?.toString() ??
         json['title']?.toString() ??
         'eSIM package';
+  }
+
+  static String _worldmoveDestination(
+    Map<String, dynamic> json,
+    String identityText,
+  ) {
+    final normalized =
+        '${json['productRegion'] ?? ''} ${json['destination'] ?? ''} $identityText'
+            .toLowerCase();
+    if (normalized.contains('wm-tr-') ||
+        normalized.contains('turkey') ||
+        normalized.contains('turkiye')) {
+      return 'Turkey';
+    }
+    if (normalized.contains('wm-e-j1-wld-') ||
+        normalized.contains('global') ||
+        normalized.contains('world')) {
+      return 'Global';
+    }
+    if (normalized.contains('wm-eu-b-') ||
+        normalized.contains('wm-e-j1-') ||
+        normalized.contains('europe')) {
+      return 'Europe';
+    }
+    return 'Worldmove';
+  }
+
+  static String _descriptionFromJson(Map<String, dynamic> json) {
+    for (final value in [
+      json['description'],
+      json['package_description'],
+      json['plan_description'],
+      json['product_description'],
+      json['short_description'],
+    ]) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) return text;
+    }
+    return '';
   }
 
   static String _cleanNumber(dynamic value) {
