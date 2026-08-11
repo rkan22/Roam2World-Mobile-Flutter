@@ -67,4 +67,22 @@ void main() {
     expect(data.balance, 44.1);
     expect(data.currency, 'USD');
   });
+
+  test('simplifies provider package names in recent orders', () {
+    final data = DashboardData.fromResponse({
+      'data': {
+        'recent_orders': [
+          {
+            'product_name': 'E-185-SC-AU-eO1-T-60D-20GB',
+            'total_amount': '15.00',
+          },
+        ],
+      },
+    });
+
+    expect(
+      data.recentOrders.single.productName,
+      'Orange Balkans SIM Card 20GB 60 Days',
+    );
+  });
 }
