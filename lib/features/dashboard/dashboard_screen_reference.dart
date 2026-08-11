@@ -714,12 +714,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: AppColors.orange,
         onTap: () => context.go('/orders'),
       ),
-      _ActionData(
-        label: 'NekoKopla',
-        icon: Icons.qr_code_2_rounded,
-        color: AppColors.navy,
-        onTap: _openNekoKopla,
-      ),
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+        _ActionData(
+          label: 'NekoKopla',
+          icon: Icons.qr_code_2_rounded,
+          color: AppColors.navy,
+          onTap: _openNekoKopla,
+        ),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
