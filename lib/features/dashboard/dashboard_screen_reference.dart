@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -26,7 +25,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _channel = MethodChannel('com.roam2world.mobile/lpa');
   late final DashboardRepository _repository;
   DashboardData? _data;
   Object? _error;
@@ -726,12 +724,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: AppColors.orange,
         onTap: () => context.go('/orders'),
       ),
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS))
         _ActionData(
-          label: 'NekoKopla',
+          label: 'NekokoLPA',
           icon: Icons.qr_code_2_rounded,
           color: AppColors.navy,
-          onTap: _openNekoKopla,
+          onTap: () => context.push('/nekoko-lpa'),
         ),
     ];
     return Container(
@@ -796,18 +796,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     ),
   );
-
-  Future<void> _openNekoKopla() async {
-    try {
-      await _channel.invokeMethod<void>('openNekoko');
-    } on PlatformException catch (error) {
-      if (!mounted) return;
-      _showMessage(error.message ?? 'NekoKopla could not be opened.');
-    } on MissingPluginException {
-      if (!mounted) return;
-      _showMessage('NekoKopla is available on supported Android devices.');
-    }
-  }
 
   Widget _staleBanner() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),

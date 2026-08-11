@@ -21,6 +21,7 @@ import '../../features/esims/esim_history_screen.dart';
 import '../../features/esims/esims_screen.dart';
 import '../../features/notifications/notification_rules_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
+import '../../features/nekoko/nekoko_lpa_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/operations/operations_center_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
@@ -75,6 +76,7 @@ abstract final class AppRoutes {
   static const wallet = '/wallet';
   static const reports = '/reports';
   static const notifications = '/notifications';
+  static const nekokoLpa = '/nekoko-lpa';
   static const notificationRules = '/notifications/rules';
   static const operations = '/operations';
   static const simConverter = '/sim-converter';
@@ -234,6 +236,12 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.nekokoLpa,
+        builder: (context, state) => NekokoLpaScreen(
+          activationCode: state.extra is String ? state.extra! as String : null,
+        ),
       ),
       GoRoute(
         path: AppRoutes.notificationRules,

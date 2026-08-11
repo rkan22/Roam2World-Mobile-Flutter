@@ -20,19 +20,19 @@ import UIKit
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     channel.setMethodCallHandler { call, result in
-      guard call.method == "getCapability" else {
+      switch call.method {
+      case "getCapability":
+        result([
+          "platform": "ios",
+          "esimSupported": false,
+          "directInstallSupported": false,
+          "transport": "nekoko_embedded",
+          "nekokoAvailable": true,
+          "reason": "The integrated NekokoLPA2 reader flow is available. A supported card reader is required on iOS.",
+        ])
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-
-      // iOS does not expose a general-purpose third-party LPA/eUICC APDU API.
-      // Keep this conservative until an Apple-supported entitlement/API path is available.
-      result([
-        "platform": "ios",
-        "esimSupported": false,
-        "directInstallSupported": false,
-        "reason": "Direct third-party LPA installation is not enabled for this iOS build. Use the system-supported activation flow.",
-      ])
     }
   }
 }
