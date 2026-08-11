@@ -726,7 +726,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: AppColors.orange,
         onTap: () => context.go('/orders'),
       ),
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS))
         _ActionData(
           label: 'NekoKopla',
           icon: Icons.qr_code_2_rounded,
@@ -805,7 +807,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _showMessage(error.message ?? 'NekoKopla could not be opened.');
     } on MissingPluginException {
       if (!mounted) return;
-      _showMessage('NekoKopla is available on supported Android devices.');
+      _showMessage('NekoKopla could not be opened on this device.');
     }
   }
 
