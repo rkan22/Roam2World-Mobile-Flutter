@@ -569,6 +569,16 @@ class _PackageTile extends StatelessWidget {
                             fontSize: 16.5,
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          package.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         Text(
                           package.displayProvider,
@@ -587,6 +597,15 @@ class _PackageTile extends StatelessWidget {
                   ),
                 ],
               ),
+              if (package.supportedCountries.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _CoveragePreview(
+                    countries: package.supportedCountries,
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -650,6 +669,63 @@ class _PackageTile extends StatelessWidget {
   }
 }
 
+class _CoveragePreview extends StatelessWidget {
+  const _CoveragePreview({required this.countries});
+
+  final List<PackageCountry> countries;
+
+  @override
+  Widget build(BuildContext context) {
+    const previewLimit = 4;
+    final visible = countries.take(previewLimit).toList(growable: false);
+    final remaining = countries.length - visible.length;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (final country in visible)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: AppColors.primaryLight),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CountryVisual(code: country.code, compact: true),
+                const SizedBox(width: 5),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 74),
+                  child: Text(
+                    country.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (remaining > 0)
+          Text(
+            '+$remaining countries',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _InlineMetric extends StatelessWidget {
   const _InlineMetric({required this.icon, required this.value});
   final IconData icon;
@@ -674,29 +750,30 @@ class _InlineMetric extends StatelessWidget {
 }
 
 class _CountryVisual extends StatelessWidget {
-  const _CountryVisual({required this.code});
+  const _CountryVisual({required this.code, this.compact = false});
   final String code;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     if (code.length != 2) {
-      return const Icon(
+      return Icon(
         Icons.public_rounded,
         color: AppColors.primary,
-        size: 27,
+        size: compact ? 15 : 27,
       );
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: Image.network(
         'https://flagsapi.com/${code.toUpperCase()}/flat/64.png',
-        width: 34,
-        height: 24,
+        width: compact ? 20 : 34,
+        height: compact ? 14 : 24,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Icon(
+        errorBuilder: (context, error, stackTrace) => Icon(
           Icons.public_rounded,
           color: AppColors.primary,
-          size: 27,
+          size: compact ? 15 : 27,
         ),
       ),
     );

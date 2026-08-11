@@ -149,6 +149,27 @@ class PackageDetailScreen extends StatelessWidget {
                 ),
               ),
             ],
+            if (package.description.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text('About this plan', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(B2BRadius.xl),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                  boxShadow: theme.brightness == Brightness.light
+                      ? B2BShadows.card
+                      : null,
+                ),
+                child: Text(
+                  package.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(18),
@@ -337,11 +358,7 @@ class _PlanMetric extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
+  const _InfoRow({required this.icon, required this.title, required this.body});
   final IconData icon;
   final String title;
   final String body;
@@ -364,10 +381,7 @@ class _InfoRow extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(body, style: Theme.of(context).textTheme.bodyMedium),
           ],
