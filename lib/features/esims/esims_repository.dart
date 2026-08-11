@@ -75,9 +75,9 @@ class EsimsRepository {
       data: {
         'esim_id': id,
         'source': 'mobile',
-        if (productCode != null) 'product_code': productCode,
-        if (dataGb != null) 'renewal_data_gb': dataGb,
-        if (finalPrice != null) 'final_price': finalPrice,
+        'product_code': productCode,
+        'renewal_data_gb': dataGb,
+        'final_price': finalPrice,
       },
       parser: (response) {
         final root = Map<String, dynamic>.from(response as Map);
@@ -93,7 +93,7 @@ class EsimsRepository {
         'esim_id': id,
         'renewal_data_gb': dataGb,
         'source': 'mobile',
-        if (finalPrice != null) 'final_price': finalPrice,
+        'final_price': finalPrice,
       },
       parser: (response) {
         final root = Map<String, dynamic>.from(response as Map);

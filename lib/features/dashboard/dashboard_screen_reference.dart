@@ -827,12 +827,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
   );
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   String _friendlyRole(String role) {
     final value = role.trim();
     if (value.isEmpty) return 'Partner';
