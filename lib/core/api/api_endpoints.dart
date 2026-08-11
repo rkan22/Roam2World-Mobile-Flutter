@@ -64,6 +64,10 @@ class ApiEndpoints {
   static const String dealerClients = '/api/v1/esim/dealer/clients/';
   static const String mobileEsimHistory = '/api/v1/mobile/esim-history/';
   static const String mobileTgtCheckGb = '/api/v1/mobile/tgt/check-gb/';
+  static const String mobileTgtRenew = '/api/v1/mobile/tgt/esim/renew/';
+  static const String mobileWorldmoveTopup = '/api/v1/mobile/worldmove/topup/';
+  static const String mobileVodafoneRenew =
+      '/api/v1/mobile/airhub/vodafone/renew/';
   static const String mobileWallet = '/api/v1/mobile/wallet/';
   static const String mobileWalletRequests = '/api/v1/mobile/wallet/requests/';
   static const String mobileTransactions = '/api/v1/mobile/transactions/';

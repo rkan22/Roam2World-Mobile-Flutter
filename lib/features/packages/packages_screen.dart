@@ -367,16 +367,16 @@ class _CatalogFilterPanel extends StatelessWidget {
             ? B2BShadows.card
             : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 8),
+        initiallyExpanded: false,
+        title: Text('Catalog filters', style: theme.textTheme.titleMedium),
+        subtitle: Text(
+          'Operator, type, validity, data and search',
+          style: theme.textTheme.bodySmall,
+        ),
         children: [
-          Text('Catalog filters', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(
-            'Filter by operator, product type, validity, data and plan name.',
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 16),
           _FilterField(
             label: 'Operator',
             child: DropdownButtonFormField<String>(
@@ -689,7 +689,7 @@ class _CountryVisual extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: Image.network(
-        'https://flagcdn.com/w80/${code.toLowerCase()}.png',
+        'https://flagsapi.com/${code.toUpperCase()}/flat/64.png',
         width: 34,
         height: 24,
         fit: BoxFit.cover,

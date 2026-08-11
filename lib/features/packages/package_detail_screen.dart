@@ -207,7 +207,6 @@ class PackageDetailScreen extends StatelessWidget {
                     icon: Icons.inventory_2_outlined,
                     title: 'Package',
                     body: package.name,
-                    trailing: '#${package.id}',
                   ),
                   const Divider(height: 28),
                   _InfoRow(
@@ -342,12 +341,10 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
-    this.trailing,
   });
   final IconData icon;
   final String title;
   final String body;
-  final String? trailing;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -367,22 +364,9 @@ class _InfoRow extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                if (trailing != null)
-                  Text(
-                    trailing!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-              ],
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 4),
             Text(body, style: Theme.of(context).textTheme.bodyMedium),
@@ -406,12 +390,27 @@ class _CountryFlag extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(7),
       child: Image.network(
-        'https://flagcdn.com/w80/${code.toLowerCase()}.png',
+        'https://flagsapi.com/${code.toUpperCase()}/flat/64.png',
         width: width,
         height: width * .7,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.public_rounded, color: Colors.white, size: 30),
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: width * .7,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            code.toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
       ),
     );
   }
