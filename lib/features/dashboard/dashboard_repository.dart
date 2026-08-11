@@ -3,6 +3,7 @@ import '../../core/api/api_endpoints.dart';
 import '../../core/cache/timed_cache.dart';
 import '../../core/routing/app_role.dart';
 import '../../core/storage/token_storage.dart';
+import '../esims/esim_catalog.dart';
 import '../orders/order_history.dart';
 import '../wallet/wallet_data.dart';
 import 'dashboard_data.dart';
@@ -89,7 +90,32 @@ class DashboardRepository {
         ApiEndpoints.mobileOrders,
         parser: OrderHistory.fromResponse,
       );
+      final successfulOrders = history.orders
+          .where((order) {
+            final status = order.status.toLowerCase();
+            return status != 'failed' &&
+                status != 'cancelled' &&
+                status != 'canceled' &&
+                status != 'refunded';
+          })
+          .toList(growable: false);
+      final now = DateTime.now();
+      final todaySales = successfulOrders
+          .where((order) {
+            final createdAt = order.createdAt?.toLocal();
+            return createdAt != null &&
+                createdAt.year == now.year &&
+                createdAt.month == now.month &&
+                createdAt.day == now.day;
+          })
+          .fold<double>(0, (sum, order) => sum + order.amount);
+      final totalSales = successfulOrders.fold<double>(
+        0,
+        (sum, order) => sum + order.amount,
+      );
       result = result.copyWith(
+        todaySales: result.todaySales == 0 ? todaySales : null,
+        monthlySales: result.monthlySales == 0 ? totalSales : null,
         recentOrders: history.orders
             .take(5)
             .map((order) {
@@ -106,6 +132,38 @@ class DashboardRepository {
       );
     } catch (_) {
       // Preserve recent orders from the dashboard endpoint on partial failure.
+    }
+
+    try {
+      final catalog = await _apiClient.get<EsimCatalog>(
+        ApiEndpoints.mobileEsims,
+        queryParameters: const {'limit': 200},
+        parser: EsimCatalog.fromResponse,
+      );
+      final now = DateTime.now();
+      final expired = catalog.esims.where((esim) {
+        final status = esim.status.toLowerCase();
+        return status == 'expired' ||
+            (esim.expiresAt != null && esim.expiresAt!.isBefore(now));
+      }).length;
+      const activeStatuses = {
+        'active',
+        'activated',
+        'assigned',
+        'provisioned',
+        'ready',
+      };
+      final active = catalog.esims.where((esim) {
+        return activeStatuses.contains(esim.status.toLowerCase()) &&
+            (esim.expiresAt == null || esim.expiresAt!.isAfter(now));
+      }).length;
+      result = result.copyWith(
+        totalEsimCount: catalog.count,
+        activeEsimCount: result.activeEsimCount == 0 ? active : null,
+        expiredEsimCount: result.expiredEsimCount == 0 ? expired : null,
+      );
+    } catch (_) {
+      // The dashboard metrics remain available if the eSIM list is down.
     }
     return result;
   }

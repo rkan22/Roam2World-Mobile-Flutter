@@ -13,7 +13,11 @@ import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 
 class PartnerDashboardScreen extends StatefulWidget {
-  const PartnerDashboardScreen({super.key, required this.role, this.repository});
+  const PartnerDashboardScreen({
+    super.key,
+    required this.role,
+    this.repository,
+  });
 
   final AppRole role;
   final DashboardRepository? repository;
@@ -54,7 +58,8 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Partner dashboard could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Partner dashboard could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -101,36 +106,36 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
   }
 
   Widget _header() => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${widget.role.label} Workspace',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: B2BSpacing.xxs),
-                Text(
-                  _isReseller
-                      ? 'Manage sales, dealer network and commercial controls.'
-                      : 'Manage customer sales, pricing and wallet activity.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${widget.role.label} Workspace',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
-          ),
-          IconButton.filledTonal(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          const SizedBox(width: B2BSpacing.xs),
-          IconButton.filledTonal(
-            onPressed: () => context.push('/profile'),
-            icon: const Icon(Icons.person_outline_rounded),
-          ),
-        ],
-      );
+            const SizedBox(height: B2BSpacing.xxs),
+            Text(
+              _isReseller
+                  ? 'Manage sales, dealer network and commercial controls.'
+                  : 'Manage customer sales, pricing and wallet activity.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+      IconButton.filledTonal(
+        onPressed: () => context.push('/notifications'),
+        icon: const Icon(Icons.notifications_none_rounded),
+      ),
+      const SizedBox(width: B2BSpacing.xs),
+      IconButton.filledTonal(
+        onPressed: () => context.push('/profile'),
+        icon: const Icon(Icons.person_outline_rounded),
+      ),
+    ],
+  );
 
   Widget _content(DashboardData data) {
     final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
@@ -148,14 +153,14 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
           childAspectRatio: 1.35,
           children: [
             B2BMetricCard(
-              label: 'Monthly sales',
+              label: 'Total Sales',
               value: _money(data.monthlySales, currency),
               icon: Icons.trending_up_rounded,
             ),
             B2BMetricCard(
-              label: 'Today sales',
-              value: _money(data.todaySales, currency),
-              icon: Icons.today_rounded,
+              label: 'Total eSIMs',
+              value: '${data.totalEsimCount}',
+              icon: Icons.sim_card_rounded,
             ),
             B2BMetricCard(
               label: 'Active eSIMs',
@@ -170,7 +175,10 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
           ],
         ),
         const SizedBox(height: B2BSpacing.xl),
-        Text('Business controls', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Business controls',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: B2BSpacing.xs),
         Text(
           _isReseller
@@ -221,9 +229,12 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
               ),
               const Spacer(),
               IconButton(
-                onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
+                onPressed: () =>
+                    setState(() => _balanceVisible = !_balanceVisible),
                 icon: Icon(
-                  _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _balanceVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   color: Colors.white,
                 ),
               ),
@@ -231,8 +242,13 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
           ),
           const SizedBox(height: B2BSpacing.lg),
           Text(
-            _isReseller ? 'Available partner credit' : 'Available dealer balance',
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+            _isReseller
+                ? 'Available partner credit'
+                : 'Available dealer balance',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: B2BSpacing.xs),
           Text(
@@ -275,20 +291,60 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
   Widget _workspaceActions() {
     final actions = _isReseller
         ? const [
-            _WorkspaceAction('Dealer Network', Icons.storefront_outlined, '/dealers'),
-            _WorkspaceAction('Dealer Pricing', Icons.percent_rounded, '/dealers/pricing'),
-            _WorkspaceAction('Finance Ledger', Icons.receipt_long_outlined, '/finance'),
-            _WorkspaceAction('Operations', Icons.monitor_heart_outlined, '/operations'),
-            _WorkspaceAction('Notification Rules', Icons.notifications_active_outlined, '/notifications/rules'),
-            _WorkspaceAction('SIM Converter', Icons.sim_card_download_outlined, '/sim-converter'),
+            _WorkspaceAction(
+              'Dealer Network',
+              Icons.storefront_outlined,
+              '/dealers',
+            ),
+            _WorkspaceAction(
+              'Dealer Pricing',
+              Icons.percent_rounded,
+              '/dealers/pricing',
+            ),
+            _WorkspaceAction(
+              'Finance Ledger',
+              Icons.receipt_long_outlined,
+              '/finance',
+            ),
+            _WorkspaceAction(
+              'Operations',
+              Icons.monitor_heart_outlined,
+              '/operations',
+            ),
+            _WorkspaceAction(
+              'Notification Rules',
+              Icons.notifications_active_outlined,
+              '/notifications/rules',
+            ),
+            _WorkspaceAction(
+              'SIM Converter',
+              Icons.sim_card_download_outlined,
+              '/sim-converter',
+            ),
             _WorkspaceAction('Clients', Icons.groups_outlined, '/clients'),
             _WorkspaceAction('Reports', Icons.analytics_outlined, '/reports'),
           ]
         : const [
-            _WorkspaceAction('Customer Pricing', Icons.percent_rounded, '/pricing/customer'),
-            _WorkspaceAction('Finance Ledger', Icons.receipt_long_outlined, '/finance'),
-            _WorkspaceAction('Notification Rules', Icons.notifications_active_outlined, '/notifications/rules'),
-            _WorkspaceAction('SIM Converter', Icons.sim_card_download_outlined, '/sim-converter'),
+            _WorkspaceAction(
+              'Customer Pricing',
+              Icons.percent_rounded,
+              '/pricing/customer',
+            ),
+            _WorkspaceAction(
+              'Finance Ledger',
+              Icons.receipt_long_outlined,
+              '/finance',
+            ),
+            _WorkspaceAction(
+              'Notification Rules',
+              Icons.notifications_active_outlined,
+              '/notifications/rules',
+            ),
+            _WorkspaceAction(
+              'SIM Converter',
+              Icons.sim_card_download_outlined,
+              '/sim-converter',
+            ),
             _WorkspaceAction('Clients', Icons.groups_outlined, '/clients'),
             _WorkspaceAction('Orders', Icons.shopping_bag_outlined, '/orders'),
             _WorkspaceAction('eSIMs', Icons.sim_card_outlined, '/esims'),
@@ -343,9 +399,15 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
         Row(
           children: [
             Expanded(
-              child: Text('Recent orders', style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Recent orders',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
-            TextButton(onPressed: () => context.push('/orders'), child: const Text('View all')),
+            TextButton(
+              onPressed: () => context.push('/orders'),
+              child: const Text('View all'),
+            ),
           ],
         ),
         const SizedBox(height: B2BSpacing.sm),
@@ -376,8 +438,12 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
                         Text(
                           order.createdAt == null
                               ? order.orderNumber
-                              : DateFormat('dd MMM · HH:mm').format(order.createdAt!.toLocal()),
-                          style: const TextStyle(color: AppColors.textSecondary),
+                              : DateFormat(
+                                  'dd MMM · HH:mm',
+                                ).format(order.createdAt!.toLocal()),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -411,20 +477,22 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
   }
 
   Widget _staleBanner() => Container(
-        padding: const EdgeInsets.all(B2BSpacing.sm),
-        decoration: BoxDecoration(
-          color: AppColors.warningSoft,
-          borderRadius: BorderRadius.circular(B2BRadius.md),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    padding: const EdgeInsets.all(B2BSpacing.sm),
+    decoration: BoxDecoration(
+      color: AppColors.warningSoft,
+      borderRadius: BorderRadius.circular(B2BRadius.md),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.info_outline_rounded, color: AppColors.warning),
+        SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Text('Showing the last available partner dashboard data.'),
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.info_outline_rounded, color: AppColors.warning),
-            SizedBox(width: B2BSpacing.sm),
-            Expanded(child: Text('Showing the last available partner dashboard data.')),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 
   String _money(double value, String currency) =>
       NumberFormat.currency(name: currency, symbol: '$currency ').format(value);

@@ -60,6 +60,8 @@ class ApiEndpoints {
       '/api/v1/mobile/packages/featured/';
   static const String mobileOrders = '/api/v1/mobile/orders/';
   static const String mobileEsims = '/api/v1/mobile/esims/';
+  static const String resellerClients = '/api/v1/esim/reseller/clients/';
+  static const String dealerClients = '/api/v1/esim/dealer/clients/';
   static const String mobileEsimHistory = '/api/v1/mobile/esim-history/';
   static const String mobileTgtCheckGb = '/api/v1/mobile/tgt/check-gb/';
   static const String mobileWallet = '/api/v1/mobile/wallet/';
