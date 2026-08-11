@@ -93,6 +93,9 @@ class MobileEsim {
     required this.activationCode,
     required this.qrCode,
     required this.expiresAt,
+    this.actualProvider = '',
+    this.packageId = '',
+    this.providerOrderId = '',
   });
 
   final int id;
@@ -105,6 +108,9 @@ class MobileEsim {
   final String activationCode;
   final String qrCode;
   final DateTime? expiresAt;
+  final String actualProvider;
+  final String packageId;
+  final String providerOrderId;
 
   factory MobileEsim.fromJson(Map<String, dynamic> json) {
     DateTime? parseDate(dynamic value) =>
@@ -134,9 +140,23 @@ class MobileEsim {
       activationCode: json['activation_code']?.toString() ?? '',
       qrCode: json['qr_code']?.toString() ?? '',
       expiresAt: parseDate(json['expires_at'] ?? json['expiry_date']),
+      actualProvider:
+          json['actual_provider']?.toString() ??
+          json['provider']?.toString() ??
+          '',
+      packageId:
+          json['package_id']?.toString() ??
+          json['product_id']?.toString() ??
+          json['wmproductId']?.toString() ??
+          '',
+      providerOrderId:
+          json['provider_order_id']?.toString() ??
+          json['order_id']?.toString() ??
+          '',
     );
   }
 
   bool get isInstalled => installStatus.toLowerCase().contains('install');
   bool get hasQr => qrCode.isNotEmpty || activationCode.isNotEmpty;
+  String get providerKey => actualProvider.isEmpty ? provider : actualProvider;
 }

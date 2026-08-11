@@ -19,6 +19,7 @@ import '../../features/esims/esim_catalog.dart';
 import '../../features/esims/esim_detail_screen.dart';
 import '../../features/esims/esim_history_screen.dart';
 import '../../features/esims/esims_screen.dart';
+import '../../features/esims/tgt_bulk_operations_screen.dart';
 import '../../features/notifications/notification_rules_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/nekoko/nekoko_lpa_screen.dart';
@@ -70,6 +71,7 @@ abstract final class AppRoutes {
   static const esims = '/esims';
   static const esimDetail = '/esims/detail';
   static const esimHistory = '/esims/history';
+  static const tgtBulkOperations = '/esims/tgt-bulk';
   static const orders = '/orders';
   static const orderDetail = '/orders/detail';
   static const profile = '/profile';
@@ -202,6 +204,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.onboarding}) {
       GoRoute(
         path: AppRoutes.esimHistory,
         builder: (context, state) => const EsimHistoryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.tgtBulkOperations,
+        builder: (context, state) => const TgtBulkOperationsScreen(),
       ),
       GoRoute(
         path: AppRoutes.esimDetail,

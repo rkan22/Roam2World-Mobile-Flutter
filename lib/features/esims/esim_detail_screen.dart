@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,9 @@ import '../../shared/widgets/content_state.dart';
 import 'esim_catalog.dart';
 import 'esims_repository.dart';
 import 'lpa_install_screen.dart';
+import 'provider_lifecycle_repository.dart';
+import '../packages/package_catalog.dart';
+import '../packages/packages_repository.dart';
 
 class EsimDetailScreen extends StatefulWidget {
   const EsimDetailScreen({super.key, required this.initialEsim});
@@ -22,9 +27,12 @@ class EsimDetailScreen extends StatefulWidget {
 
 class _EsimDetailScreenState extends State<EsimDetailScreen> {
   final _repository = EsimsRepository();
+  final _lifecycleRepository = ProviderLifecycleRepository();
+  final _packagesRepository = PackagesRepository();
   late MobileEsim _esim;
   bool _loading = true;
   bool _renewing = false;
+  bool _operating = false;
   String? _error;
 
   @override
@@ -67,10 +75,62 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     ).push(MaterialPageRoute(builder: (_) => LpaInstallScreen(esim: _esim)));
   }
 
-  Future<void> _renewTgt() async {
+  Future<void> _renewWithBackendOptions() async {
     setState(() => _renewing = true);
     try {
-      final message = await _repository.renewTgtEsim(_esim.id);
+      final options = await _repository.fetchRenewalOptions(_esim);
+      if (!mounted) return;
+      if (options.isEmpty) {
+        throw const ApiException(message: 'No renewal option is available.');
+      }
+      setState(() => _renewing = false);
+      final selected = await showModalBottomSheet<MobileRenewalOption>(
+        context: context,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            children: [
+              Text('Renew eSIM', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 6),
+              Text(
+                'Prices include the backend pricing and markup rules.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 14),
+              for (final option in options)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    '${option.dataGb} GB · ${option.validityDays} days',
+                  ),
+                  subtitle: Text(option.displayProvider),
+                  trailing: Text(
+                    option.formattedPrice,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  onTap: () => Navigator.pop(context, option),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (selected == null || !mounted) return;
+      setState(() => _renewing = true);
+      final provider = _esim.providerKey.toLowerCase();
+      final message = provider.contains('tgt') || provider.contains('balkan')
+          ? await _repository.renewTgtEsim(
+              _esim.id,
+              productCode: selected.productCode,
+              dataGb: selected.dataGb,
+              finalPrice: selected.price,
+            )
+          : await _repository.renewVodafoneEsim(
+              _esim.id,
+              selected.dataGb,
+              finalPrice: selected.price,
+            );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -86,47 +146,60 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     }
   }
 
-  Future<void> _renewVodafone() async {
-    final dataGb = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Vodafone renewal',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Select the 30-day renewal package.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              for (final value in const [200, 400, 500]) ...[
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context, value),
-                  child: Text('${value}GB · 30 Days'),
+  Future<void> _refreshProviderData() async {
+    setState(() => _operating = true);
+    try {
+      final provider = _esim.providerKey.toLowerCase();
+      final ProviderOperationResult result;
+      if (provider.contains('flexnet')) {
+        result = await _lifecycleRepository.syncFlexnetEsim(_esim.id);
+      } else if (provider.contains('worldmove')) {
+        result = await _lifecycleRepository.checkWorldmoveUsage(
+          iccid: _esim.iccid,
+          orderId: _esim.providerOrderId,
+        );
+      } else if (provider.contains('airhub') || provider.contains('vodafone')) {
+        result = await _lifecycleRepository.checkAirhubUsage(
+          orderId: _esim.providerOrderId,
+          iccid: _esim.iccid,
+        );
+      } else if (provider.contains('esimcard')) {
+        result = await _lifecycleRepository.checkEsimcardUsage(
+          _esim.iccid.isEmpty ? '${_esim.id}' : _esim.iccid,
+        );
+      } else {
+        result = await _lifecycleRepository.checkSmartUsage(
+          provider: provider,
+          esimId: '${_esim.id}',
+          iccid: _esim.iccid,
+          orderId: _esim.providerOrderId,
+        );
+      }
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Live provider status',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                SelectableText(
+                  const JsonEncoder.withIndent('  ').convert(result.data),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
-            ],
+            ),
           ),
         ),
-      ),
-    );
-    if (dataGb == null || !mounted) return;
-    setState(() => _renewing = true);
-    try {
-      final message = await _repository.renewVodafoneEsim(_esim.id, dataGb);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      );
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
@@ -134,7 +207,95 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
-      if (mounted) setState(() => _renewing = false);
+      if (mounted) setState(() => _operating = false);
+    }
+  }
+
+  Future<void> _topUpWorldmove() async {
+    if (_esim.iccid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('A SIM or ICCID number is required for top-up.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _operating = true);
+    try {
+      final catalog = await _packagesRepository.fetchPackages(
+        forceRefresh: true,
+      );
+      final packages = catalog.packages
+          .where((item) => item.provider.toLowerCase().contains('worldmove'))
+          .toList(growable: false);
+      if (!mounted) return;
+      if (packages.isEmpty) {
+        throw const ApiException(
+          message: 'No Worldmove top-up package is available.',
+        );
+      }
+      setState(() => _operating = false);
+      final selected = await showModalBottomSheet<MobilePackage>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (context) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * .7,
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              itemCount: packages.length + 1,
+              separatorBuilder: (_, _) => const Divider(),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Choose Worldmove top-up',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  );
+                }
+                final package = packages[index - 1];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(package.name),
+                  subtitle: Text(
+                    '${package.dataLabel} · ${package.validityLabel}',
+                  ),
+                  trailing: Text(
+                    package.formattedPrice,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  onTap: () => Navigator.pop(context, package),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      if (selected == null || !mounted) return;
+      setState(() => _operating = true);
+      final result = await _lifecycleRepository.topUpWorldmove(
+        packageId: selected.id,
+        simNumber: _esim.iccid,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.message.isEmpty ? 'Top-up completed.' : result.message,
+          ),
+        ),
+      );
+      await _load();
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _operating = false);
     }
   }
 
@@ -350,10 +511,23 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 _InfoCard(esim: _esim, expiryLabel: _date(_esim.expiresAt)),
-                if (_esim.provider.toLowerCase().contains('tgt')) ...[
+                OutlinedButton.icon(
+                  onPressed: _operating ? null : _refreshProviderData,
+                  icon: _operating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.sync_rounded),
+                  label: Text(
+                    _operating ? 'Checking provider…' : 'Check live usage',
+                  ),
+                ),
+                if (_esim.providerKey.toLowerCase().contains('tgt')) ...[
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: _renewing ? null : _renewTgt,
+                    onPressed: _renewing ? null : _renewWithBackendOptions,
                     icon: _renewing
                         ? const SizedBox(
                             width: 18,
@@ -364,19 +538,19 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                     label: Text(_renewing ? 'Renewing...' : 'Renew TGT eSIM'),
                   ),
                 ],
-                if (_esim.provider.toLowerCase().contains('worldmove')) ...[
+                if (_esim.providerKey.toLowerCase().contains('worldmove')) ...[
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: () => context.go('/packages'),
+                    onPressed: _operating ? null : _topUpWorldmove,
                     icon: const Icon(Icons.add_card_rounded),
-                    label: const Text('Choose Worldmove top-up'),
+                    label: const Text('Top up Worldmove SIM'),
                   ),
                 ],
-                if (_esim.provider.toLowerCase().contains('vodafone') ||
-                    _esim.provider.toLowerCase().contains('airhub')) ...[
+                if (_esim.providerKey.toLowerCase().contains('vodafone') ||
+                    _esim.providerKey.toLowerCase().contains('airhub')) ...[
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: _renewing ? null : _renewVodafone,
+                    onPressed: _renewing ? null : _renewWithBackendOptions,
                     icon: const Icon(Icons.autorenew_rounded),
                     label: const Text('Renew Vodafone eSIM'),
                   ),

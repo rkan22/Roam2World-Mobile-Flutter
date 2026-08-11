@@ -130,4 +130,21 @@ class DealerNetworkRepository {
       parser: (data) => data,
     );
   }
+
+  Future<void> setDealerSuspended(
+    int dealerId, {
+    required bool suspended,
+    String? reason,
+  }) async {
+    await _apiClient.post<dynamic>(
+      suspended
+          ? ApiEndpoints.mobileDealerSuspend(dealerId)
+          : ApiEndpoints.mobileDealerActivate(dealerId),
+      data: {
+        if (suspended && reason?.trim().isNotEmpty == true)
+          'reason': reason!.trim(),
+      },
+      parser: (data) => data,
+    );
+  }
 }
