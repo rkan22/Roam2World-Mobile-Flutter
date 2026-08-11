@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../nekoko/nekoko_lpa_screen.dart';
 import 'esim_catalog.dart';
 import 'lpa_bridge.dart';
 
@@ -49,7 +50,11 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   }
 
   Future<void> _handoffToNekoko() async {
-    await _runOperation(() => _bridge.handoffToNekoko(_activationCode));
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => NekokoLpaScreen(activationCode: _activationCode),
+      ),
+    );
   }
 
   Future<void> _runOperation(Future<LpaInstallResult> Function() action) async {
@@ -95,7 +100,11 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 textAlign: TextAlign.center,
               ),
             ] else if (_installed) ...[
-              const Icon(Icons.check_circle_rounded, size: 84, color: Colors.green),
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 84,
+                color: Colors.green,
+              ),
               const SizedBox(height: 18),
               const Text(
                 'eSIM başarıyla yüklendi',
@@ -115,7 +124,11 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 label: const Text('Tamam'),
               ),
             ] else if (_handedOff) ...[
-              const Icon(Icons.open_in_new_rounded, size: 84, color: AppColors.primary),
+              const Icon(
+                Icons.open_in_new_rounded,
+                size: 84,
+                color: AppColors.primary,
+              ),
               const SizedBox(height: 18),
               const Text(
                 'NekokoLPA2 açıldı',
@@ -149,10 +162,13 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 capability.directInstallSupported
                     ? 'eSIM kuruluma hazır'
                     : capability.nekokoAvailable
-                        ? 'NekokoLPA2 transport hazır'
-                        : 'Doğrudan LPA kullanılamıyor',
+                    ? 'NekokoLPA2 Roam2World içinde hazır'
+                    : 'Doğrudan LPA kullanılamıyor',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
@@ -203,18 +219,22 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                         )
                       : const Icon(Icons.install_mobile_rounded),
                   label: Text(
-                    _installing ? 'Android onayı bekleniyor…' : 'Android ile Kur',
+                    _installing
+                        ? 'Android onayı bekleniyor…'
+                        : 'Android ile Kur',
                   ),
                 ),
               if (capability.nekokoAvailable) ...[
-                if (capability.directInstallSupported) const SizedBox(height: 10),
+                if (capability.directInstallSupported)
+                  const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: _installing ? null : _handoffToNekoko,
                   icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('NekokoLPA2 ile Devam Et'),
+                  label: const Text('NekokoLPA2 Kurulumunu Aç'),
                 ),
               ],
-              if (!capability.directInstallSupported && !capability.nekokoAvailable) ...[
+              if (!capability.directInstallSupported &&
+                  !capability.nekokoAvailable) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -238,7 +258,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
             if (!_installed && !_handedOff) ...[
               const SizedBox(height: 10),
               OutlinedButton(
-                onPressed: _installing ? null : () => Navigator.of(context).pop(),
+                onPressed: _installing
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Geri'),
               ),
             ],
@@ -255,32 +277,32 @@ class _EsimCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          esim.packageName,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              esim.packageName,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              esim.provider,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            if (esim.iccid.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                'ICCID  ${esim.iccid}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ],
+        const SizedBox(height: 8),
+        Text(
+          esim.provider,
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
-      );
+        if (esim.iccid.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            'ICCID  ${esim.iccid}',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ],
+    ),
+  );
 }

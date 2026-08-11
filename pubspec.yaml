@@ -20,8 +20,11 @@ dependencies:
   qr_flutter: ^4.1.0
   cached_network_image: ^3.4.1
   fl_chart: ^1.2.0
+  flutter_riverpod: ^3.3.1
   roam_lpa_core:
     path: packages/roam_lpa_core
+  nlpa2:
+    path: vendor/NekokoLPA2
 
 dev_dependencies:
   flutter_test:
