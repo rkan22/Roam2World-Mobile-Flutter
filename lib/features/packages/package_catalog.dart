@@ -30,7 +30,13 @@ class PackageCatalog {
 
   factory PackageCatalog.fromWorldmoveResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
-    final rawPackages = root['packages'] ?? root['data'] ?? const [];
+    final nested = root['data'];
+    final rawPackages =
+        root['packages'] ??
+        (nested is Map
+            ? nested['packages'] ?? nested['results'] ?? nested['items']
+            : nested) ??
+        const [];
     return PackageCatalog(
       packages: rawPackages is List
           ? rawPackages
@@ -289,18 +295,21 @@ class MobilePackage {
         .map((item) {
           if (item is Map) {
             final value = Map<String, dynamic>.from(item);
+            final code =
+                '${value['code'] ?? value['country_code'] ?? value['iso2'] ?? ''}'
+                    .toUpperCase();
+            final name =
+                '${value['name'] ?? value['country_name'] ?? value['country'] ?? code}';
             return PackageCountry(
-              name:
-                  '${value['name'] ?? value['country_name'] ?? value['country'] ?? value['code'] ?? ''}',
-              code:
-                  '${value['code'] ?? value['country_code'] ?? value['iso2'] ?? ''}'
-                      .toUpperCase(),
+              name: name.length == 2 ? _countryName(code) : name,
+              code: code,
             );
           }
           final text = '$item'.trim();
+          final code = text.length == 2 ? text.toUpperCase() : '';
           return PackageCountry(
-            name: text,
-            code: text.length == 2 ? text.toUpperCase() : '',
+            name: code.isEmpty ? text : _countryName(code),
+            code: code,
           );
         })
         .where((item) => item.name.isNotEmpty)
@@ -425,3 +434,42 @@ class PackageCountry {
   final String name;
   final String code;
 }
+
+String _countryName(String code) =>
+    const {
+      'AT': 'Austria',
+      'BE': 'Belgium',
+      'BG': 'Bulgaria',
+      'CH': 'Switzerland',
+      'CY': 'Cyprus',
+      'CZ': 'Czechia',
+      'DE': 'Germany',
+      'DK': 'Denmark',
+      'EE': 'Estonia',
+      'ES': 'Spain',
+      'FI': 'Finland',
+      'FR': 'France',
+      'GB': 'United Kingdom',
+      'GR': 'Greece',
+      'HR': 'Croatia',
+      'HU': 'Hungary',
+      'IE': 'Ireland',
+      'IS': 'Iceland',
+      'IT': 'Italy',
+      'LT': 'Lithuania',
+      'LU': 'Luxembourg',
+      'LV': 'Latvia',
+      'MT': 'Malta',
+      'NL': 'Netherlands',
+      'NO': 'Norway',
+      'PL': 'Poland',
+      'PT': 'Portugal',
+      'RO': 'Romania',
+      'RS': 'Serbia',
+      'SE': 'Sweden',
+      'SI': 'Slovenia',
+      'SK': 'Slovakia',
+      'TR': 'Turkey',
+      'UA': 'Ukraine',
+    }[code] ??
+    code;

@@ -6,19 +6,24 @@ class EsimCatalog {
 
   factory EsimCatalog.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
-    final data = root['data'] is Map
-        ? Map<String, dynamic>.from(root['data'] as Map)
-        : root;
-    final raw = data['esims'] ?? data['results'] ?? const [];
+    final nested = root['data'];
+    final data = nested is Map ? Map<String, dynamic>.from(nested) : root;
+    final raw = nested is List
+        ? nested
+        : data['esims'] ?? data['results'] ?? data['items'] ?? const [];
     final esims = raw is List
         ? raw
-            .whereType<Map>()
-            .map((item) => MobileEsim.fromJson(Map<String, dynamic>.from(item)))
-            .toList()
+              .whereType<Map>()
+              .map(
+                (item) => MobileEsim.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
         : <MobileEsim>[];
     return EsimCatalog(
       esims: esims,
-      count: int.tryParse((data['count'] ?? esims.length).toString()) ?? esims.length,
+      count:
+          int.tryParse((data['count'] ?? esims.length).toString()) ??
+          esims.length,
     );
   }
 }
@@ -49,25 +54,28 @@ class MobileEsim {
   final DateTime? expiresAt;
 
   factory MobileEsim.fromJson(Map<String, dynamic> json) {
-    DateTime? parseDate(dynamic value) => value == null
-        ? null
-        : DateTime.tryParse(value.toString());
+    DateTime? parseDate(dynamic value) =>
+        value == null ? null : DateTime.tryParse(value.toString());
 
     return MobileEsim(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       iccid: json['iccid']?.toString() ?? '',
-      provider: json['display_provider']?.toString() ??
+      provider:
+          json['display_provider']?.toString() ??
           json['provider']?.toString() ??
           'Roam2World',
-      packageName: json['package_name']?.toString() ??
+      packageName:
+          json['package_name']?.toString() ??
           json['bundle_name']?.toString() ??
           json['plan_name']?.toString() ??
           'eSIM package',
-      customerName: json['customer_name']?.toString() ??
+      customerName:
+          json['customer_name']?.toString() ??
           json['delivery_recipient_name']?.toString() ??
           '',
       status: json['status']?.toString() ?? 'ready',
-      installStatus: json['install_status']?.toString() ??
+      installStatus:
+          json['install_status']?.toString() ??
           json['profile_status']?.toString() ??
           '',
       activationCode: json['activation_code']?.toString() ?? '',

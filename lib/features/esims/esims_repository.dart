@@ -3,7 +3,8 @@ import '../../core/api/api_endpoints.dart';
 import 'esim_catalog.dart';
 
 class EsimsRepository {
-  EsimsRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  EsimsRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -30,6 +31,28 @@ class EsimsRepository {
             ? Map<String, dynamic>.from(data['esim'] as Map)
             : data;
         return MobileEsim.fromJson(item);
+      },
+    );
+  }
+
+  Future<String> renewTgtEsim(int id) {
+    return _apiClient.post<String>(
+      ApiEndpoints.mobileTgtRenew,
+      data: {'esim_id': id, 'source': 'mobile'},
+      parser: (response) {
+        final root = Map<String, dynamic>.from(response as Map);
+        return '${root['message'] ?? root['data']?['message'] ?? 'Renewal submitted.'}';
+      },
+    );
+  }
+
+  Future<String> renewVodafoneEsim(int id, int dataGb) {
+    return _apiClient.post<String>(
+      ApiEndpoints.mobileVodafoneRenew,
+      data: {'esim_id': id, 'renewal_data_gb': dataGb, 'source': 'mobile'},
+      parser: (response) {
+        final root = Map<String, dynamic>.from(response as Map);
+        return '${root['message'] ?? 'Vodafone renewal submitted.'}';
       },
     );
   }

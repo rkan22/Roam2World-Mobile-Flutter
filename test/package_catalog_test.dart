@@ -76,6 +76,23 @@ void main() {
     expect(catalog.packages.last.packageType, 'simcard');
   });
 
+  test('accepts a nested Worldmove package list', () {
+    final catalog = PackageCatalog.fromWorldmoveResponse({
+      'data': {
+        'packages': [
+          {
+            'id': 'WM-E-J1-O-T20',
+            'provider': 'worldmove',
+            'name': 'Orange Europe 20GB',
+            'price': '12.00',
+          },
+        ],
+      },
+    });
+
+    expect(catalog.packages.single.id, 'WM-E-J1-O-T20');
+  });
+
   test('normalizes manual fulfillment catalog products', () {
     final catalog = PackageCatalog.fromManualResponse({
       'success': true,
