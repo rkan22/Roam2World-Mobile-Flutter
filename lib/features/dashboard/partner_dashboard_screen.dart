@@ -56,12 +56,17 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
         _stale = _repository.lastFetchUsedStale;
       });
     } on ApiException catch (error) {
-      if (mounted) setState(() => _error = error.message);
+      if (mounted) {
+        setState(() => _error = error.message);
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Partner dashboard could not be loaded.');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 

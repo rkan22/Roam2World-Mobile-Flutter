@@ -35,12 +35,17 @@ class _AdminCommercialScreenState extends State<AdminCommercialScreen> {
     });
     try {
       final data = await _repository.fetch();
-      if (mounted) setState(() => _data = data);
+      if (mounted) {
+        setState(() => _data = data);
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Admin commercial data could not be loaded.');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
