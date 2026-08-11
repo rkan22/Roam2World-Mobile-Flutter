@@ -207,13 +207,25 @@ class MobilePackage {
       validityLabel: validity == null ? 'Flexible' : '$validity $validityUnit',
       price: double.tryParse(rawPrice.toString()) ?? 0,
       currency: json['currency']?.toString() ?? 'USD',
-      packageType: _packageType(json['package_type'], json['is_esim']),
+      packageType: _packageType(
+        json['package_type'],
+        json['is_esim'],
+        identityText,
+        json['provider'],
+      ),
       countryCode: firstCountry['code']?.toString() ?? '',
       isFeatured: json['is_featured'] == true,
     );
   }
 
   String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
+
+  num? get dataGb => num.tryParse(
+    RegExp(r'\d+(?:\.\d+)?').firstMatch(dataLabel)?.group(0) ?? '',
+  );
+
+  int? get validityDays =>
+      int.tryParse(RegExp(r'\d+').firstMatch(validityLabel)?.group(0) ?? '');
 
   MobilePackage withPrice(double value) => MobilePackage(
     id: id,
@@ -306,16 +318,24 @@ class MobilePackage {
     return '';
   }
 
-  static String _packageType(dynamic value, dynamic isEsim) {
+  static String _packageType(
+    dynamic value,
+    dynamic isEsim,
+    String identityText,
+    dynamic provider,
+  ) {
     final normalized = value?.toString().trim().toLowerCase() ?? '';
+    final code = identityText.toUpperCase();
     if (isEsim == false ||
         normalized == 'sim' ||
         normalized == 'simcard' ||
-        normalized == 'physical_sim') {
+        normalized == 'physical_sim' ||
+        (provider?.toString().toLowerCase() == 'worldmove' &&
+            code.startsWith('WM-EU-B-')) ||
+        (provider?.toString().toLowerCase() == 'tgt' &&
+            code.contains('E-185-SC-'))) {
       return 'simcard';
     }
-    if (normalized == 'data-only') return 'data';
-    if (normalized == 'data-voice' || normalized == 'voice') return normalized;
     return 'esim';
   }
 

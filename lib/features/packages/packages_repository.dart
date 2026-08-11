@@ -172,54 +172,63 @@ class PackagesRepository {
     List<MobilePackage> packages,
   ) async {
     if (packages.isEmpty) return const [];
-    try {
-      return await _apiClient.post<List<MobilePackage>>(
-        ApiEndpoints.pricingBatchPreview,
-        data: {
-          'items': packages
-              .map(
-                (package) => {
-                  'provider': package.provider,
-                  'package_id': package.id,
-                  'provider_price': package.price,
-                  'country': package.destination,
-                  'region': package.destinationKey,
-                  'currency': package.currency,
-                },
-              )
-              .toList(),
-        },
-        parser: (response) {
-          final root = Map<String, dynamic>.from(response as Map);
-          final rows = root['data'];
-          if (rows is! List) return const [];
-          final priced = <MobilePackage>[];
-          for (
-            var index = 0;
-            index < rows.length && index < packages.length;
-            index++
-          ) {
-            final row = rows[index];
-            if (row is! Map) continue;
-            final pricing = row['pricing'];
-            if (pricing is! Map || pricing['is_price_visible'] != true) {
-              continue;
+    const batchSize = 250;
+    final pricedPackages = <MobilePackage>[];
+    for (var start = 0; start < packages.length; start += batchSize) {
+      final end = start + batchSize < packages.length
+          ? start + batchSize
+          : packages.length;
+      final batch = packages.sublist(start, end);
+      try {
+        final pricedBatch = await _apiClient.post<List<MobilePackage>>(
+          ApiEndpoints.pricingBatchPreview,
+          data: {
+            'items': batch
+                .map(
+                  (package) => {
+                    'provider': package.provider,
+                    'package_id': package.id,
+                    'provider_price': package.price,
+                    'country': package.destination,
+                    'region': package.destinationKey,
+                    'currency': package.currency,
+                  },
+                )
+                .toList(),
+          },
+          parser: (response) {
+            final root = Map<String, dynamic>.from(response as Map);
+            final rows = root['data'];
+            if (rows is! List) return const [];
+            final priced = <MobilePackage>[];
+            for (
+              var index = 0;
+              index < rows.length && index < batch.length;
+              index++
+            ) {
+              final row = rows[index];
+              if (row is! Map) continue;
+              final pricing = row['pricing'];
+              if (pricing is! Map || pricing['is_price_visible'] != true) {
+                continue;
+              }
+              final rawPrice =
+                  pricing['charge_amount'] ??
+                  pricing['after_admin'] ??
+                  pricing['final_customer_price'];
+              final price = double.tryParse('$rawPrice');
+              if (price != null) priced.add(batch[index].withPrice(price));
             }
-            final rawPrice =
-                pricing['charge_amount'] ??
-                pricing['after_admin'] ??
-                pricing['final_customer_price'];
-            final price = double.tryParse('$rawPrice');
-            if (price != null) priced.add(packages[index].withPrice(price));
-          }
-          return priced;
-        },
-      );
-    } catch (_) {
-      // Match web behavior: never expose provider cost when central pricing
-      // cannot confirm a customer-visible price.
-      return const [];
+            return priced;
+          },
+        );
+        pricedPackages.addAll(pricedBatch);
+      } catch (_) {
+        // Never expose provider cost when central pricing cannot confirm a
+        // customer-visible price. Other successful batches remain available.
+      }
     }
+    return pricedPackages;
   }
 
   Future<PackageCatalog> _fetchFirstProviderSource(
