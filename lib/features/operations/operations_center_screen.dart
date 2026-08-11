@@ -115,6 +115,14 @@ class _OperationsCenterScreenState extends State<OperationsCenterScreen> {
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: B2BSpacing.lg),
+            if (_role == AppRole.reseller || _role == AppRole.dealer) ...[
+              FilledButton.icon(
+                onPressed: () => context.push(AppRoutes.tgtBulkOperations),
+                icon: const Icon(Icons.playlist_add_check_circle_outlined),
+                label: const Text('Open TGT bulk operations'),
+              ),
+              const SizedBox(height: B2BSpacing.lg),
+            ],
             if (_loading && data == null)
               const ContentLoadingState(label: 'Syncing operations...')
             else if (_error != null && data == null)

@@ -3,6 +3,15 @@ class ApiEndpoints {
 
   static const String mobileLogin = '/api/v1/mobile/auth/login/';
   static const String tokenRefresh = '/api/v1/auth/refresh/';
+  static const String passwordResetRequest =
+      '/api/v1/auth/password-reset-request/';
+  static const String passwordResetVerifyOtp = '/api/v1/auth/otp-verify/';
+  static const String passwordResetResendOtp = '/api/v1/auth/resend-otp/';
+  static const String passwordResetConfirm =
+      '/api/v1/auth/password-reset-confirm/';
+  static const String passwordChange = '/api/v1/auth/password-change/';
+  static const String userProfile = '/api/v1/auth/profile/';
+  static const String updateUserProfile = '/api/v1/auth/update-profile/';
   static const String mobileDashboard = '/api/v1/mobile/dashboard/';
   static const String mobileAdminDashboard = '/api/v1/mobile/admin/dashboard/';
   static const String mobileAdminResellers = '/api/v1/mobile/admin/resellers/';
@@ -68,6 +77,19 @@ class ApiEndpoints {
   static String mobileTgtRenewalOptions(Object esimId) =>
       '/api/v1/mobile/tgt/esim/$esimId/renewal-options/';
   static const String mobileWorldmoveTopup = '/api/v1/mobile/worldmove/topup/';
+  static const String mobileWorldmoveUsage = '/api/v1/worldmove/usage-status/';
+  static const String mobileAirhubUsageCheck =
+      '/api/v1/mobile/b2b/airhub/usage-check/';
+  static const String mobileEsimcardUsageCheck =
+      '/api/v1/mobile/b2b/esimcard/usage-check/';
+  static const String mobileEsimcardTopupCheckout =
+      '/api/v1/mobile/b2b/esimcard/topup-checkout/';
+  static const String mobileSmartUsageCheck = '/api/v1/mobile/b2b/usage-check/';
+  static const String mobileTgtBulkTopup =
+      '/api/v1/mobile/b2b/tgt/balkans/bulk-topup/';
+  static const String mobileTgtBulkActivate =
+      '/api/v1/mobile/b2b/tgt/balkans/bulk-activate/';
+  static const String mobileDeviceToken = '/api/v1/mobile/device-token/';
   static const String mobileVodafoneRenew =
       '/api/v1/mobile/airhub/vodafone/renew/';
   static String mobileVodafoneRenewalOptions(Object esimId) =>
@@ -119,6 +141,9 @@ class ApiEndpoints {
   static String mobileEsimDetail(Object esimId) =>
       '/api/v1/mobile/esims/$esimId/';
 
+  static String mobileFlexnetEsimSync(Object esimId) =>
+      '/api/v1/mobile/b2b/flexnet/esims/$esimId/sync/';
+
   static String mobileEsimHistoryDetail(Object esimId) =>
       '/api/v1/mobile/esim-history/$esimId/';
 
@@ -140,6 +165,12 @@ class ApiEndpoints {
   static String mobileAdminRoutingRuleDetail(Object ruleId) =>
       '/api/v1/mobile/admin/routing-rules/$ruleId/';
 
+  static String mobileAdminResellerMarkup(Object resellerId) =>
+      '/api/v1/mobile/admin/resellers/$resellerId/markup/';
+
+  static String mobileAdminDealerMarkup(Object dealerId) =>
+      '/api/v1/mobile/admin/dealers/$dealerId/markup/';
+
   static String manualAdminProductDetail(Object packageId) =>
       '/api/v1/admin/manual-fulfillment/products/$packageId/';
 
@@ -160,6 +191,12 @@ class ApiEndpoints {
 
   static String mobileDealerModifyBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/modify-balance/';
+
+  static String mobileDealerSuspend(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/suspend/';
+
+  static String mobileDealerActivate(Object dealerId) =>
+      '/api/v1/mobile/dealers/$dealerId/activate/';
 
   static String mobileDealerWalletRequestApprove(Object requestId) =>
       '/api/v1/mobile/dealer-wallet-requests/$requestId/approve/';

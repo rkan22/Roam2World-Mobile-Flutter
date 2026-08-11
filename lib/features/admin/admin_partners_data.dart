@@ -20,11 +20,13 @@ class AdminPartnerList {
       active: int.tryParse((data['active'] ?? 0).toString()) ?? 0,
       items: rawItems is List
           ? rawItems
-              .whereType<Map>()
-              .map((item) => AdminPartnerItem.fromJson(
+                .whereType<Map>()
+                .map(
+                  (item) => AdminPartnerItem.fromJson(
                     Map<String, dynamic>.from(item),
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [],
     );
   }
@@ -36,20 +38,25 @@ class AdminPartnerItem {
     required this.companyName,
     required this.isActive,
     required this.createdAt,
+    required this.markupPercentage,
   });
 
   final int id;
   final String companyName;
   final bool isActive;
   final DateTime? createdAt;
+  final double markupPercentage;
 
   factory AdminPartnerItem.fromJson(Map<String, dynamic> json) {
     final rawActive = json['is_active'];
     return AdminPartnerItem(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       companyName: (json['company_name'] ?? '').toString(),
-      isActive: rawActive == true || rawActive?.toString().toLowerCase() == 'true',
+      isActive:
+          rawActive == true || rawActive?.toString().toLowerCase() == 'true',
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
+      markupPercentage:
+          double.tryParse((json['markup_percentage'] ?? 0).toString()) ?? 0,
     );
   }
 }

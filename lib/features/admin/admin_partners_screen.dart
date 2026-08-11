@@ -60,20 +60,91 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
     }
   }
 
+  Future<void> _editMarkup(AdminPartnerItem item) async {
+    final controller = TextEditingController(
+      text: item.markupPercentage.toStringAsFixed(2),
+    );
+    final value = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Edit ${widget.type == AdminPartnerType.resellers ? 'reseller' : 'dealer'} markup',
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Markup percentage',
+            suffixText: '%',
+            helperText: 'Allowed range: 0–100',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final parsed = double.tryParse(
+                controller.text.replaceAll(',', '.'),
+              );
+              if (parsed != null && parsed >= 0 && parsed <= 100) {
+                Navigator.pop(context, parsed);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (value == null || !mounted) return;
+    try {
+      if (widget.type == AdminPartnerType.resellers) {
+        await _repository.updateResellerMarkup(
+          resellerId: item.id,
+          markupPercentage: value,
+        );
+      } else {
+        await _repository.updateDealerMarkup(
+          dealerId: item.id,
+          markupPercentage: value,
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Markup updated successfully.')),
+      );
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Markup could not be updated: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = _data;
     final query = _search.text.trim().toLowerCase();
-    final visible = data?.items
-            .where((item) =>
-                query.isEmpty || item.companyName.toLowerCase().contains(query))
+    final visible =
+        data?.items
+            .where(
+              (item) =>
+                  query.isEmpty ||
+                  item.companyName.toLowerCase().contains(query),
+            )
             .toList(growable: false) ??
         const <AdminPartnerItem>[];
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.canPop() ? context.pop() : context.go('/operations'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/operations'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text('Admin $_title'),
@@ -151,7 +222,10 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
                 )
               else
                 for (final item in visible) ...[
-                  _PartnerTile(item: item),
+                  _PartnerTile(
+                    item: item,
+                    onEditMarkup: () => _editMarkup(item),
+                  ),
                   const SizedBox(height: B2BSpacing.sm),
                 ],
             ],
@@ -163,9 +237,10 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
 }
 
 class _PartnerTile extends StatelessWidget {
-  const _PartnerTile({required this.item});
+  const _PartnerTile({required this.item, required this.onEditMarkup});
 
   final AdminPartnerItem item;
+  final VoidCallback onEditMarkup;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +256,10 @@ class _PartnerTile extends StatelessWidget {
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(B2BRadius.md),
             ),
-            child: const Icon(Icons.apartment_rounded, color: AppColors.primary),
+            child: const Icon(
+              Icons.apartment_rounded,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: B2BSpacing.md),
           Expanded(
@@ -189,7 +267,9 @@ class _PartnerTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.companyName.isEmpty ? 'Partner #${item.id}' : item.companyName,
+                  item.companyName.isEmpty
+                      ? 'Partner #${item.id}'
+                      : item.companyName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w900),
@@ -204,20 +284,32 @@ class _PartnerTile extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: .1),
-              borderRadius: BorderRadius.circular(B2BRadius.pill),
-            ),
-            child: Text(
-              item.isActive ? 'Active' : 'Inactive',
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(B2BRadius.pill),
+                ),
+                child: Text(
+                  item.isActive ? 'Active' : 'Inactive',
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 5),
+              TextButton(
+                onPressed: onEditMarkup,
+                child: Text(
+                  '${item.markupPercentage.toStringAsFixed(2)}% markup',
+                ),
+              ),
+            ],
           ),
         ],
       ),

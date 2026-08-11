@@ -36,7 +36,7 @@ class EsimsRepository {
   }
 
   Future<List<MobileRenewalOption>> fetchRenewalOptions(MobileEsim esim) async {
-    final provider = esim.provider.toLowerCase();
+    final provider = esim.providerKey.toLowerCase();
     final path = provider.contains('tgt') || provider.contains('balkan')
         ? ApiEndpoints.mobileTgtRenewalOptions(esim.id)
         : provider.contains('vodafone') || provider.contains('airhub')
