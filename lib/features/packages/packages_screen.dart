@@ -21,11 +21,6 @@ class PackagesScreen extends StatefulWidget {
 class _PackagesScreenState extends State<PackagesScreen> {
   final _repository = PackagesRepository();
   final _searchController = TextEditingController();
-  final _filters = const [
-    ('All', ''),
-    ('eSIM', 'esim'),
-    ('SimCard', 'simcard'),
-  ];
   final _operators = const [
     ('All Operators', ''),
     ('Vodafone', 'vodafone'),
@@ -37,18 +32,30 @@ class _PackagesScreenState extends State<PackagesScreen> {
     ('Orange Balkans', 'orange-balkans'),
     ('Manual Fulfillment', 'manual'),
   ];
-  final _destinations = const [
-    ('🌐', 'All', ''),
-    ('🇹🇷', 'Turkey', 'turkey'),
-    ('🇪🇺', 'Europe', 'europe'),
-    ('🌍', 'Global', 'global'),
+  final _validityOptions = const [30, 60, 90];
+  final _dataOptions = const [
+    1,
+    3,
+    5,
+    10,
+    20,
+    30,
+    50,
+    60,
+    100,
+    135,
+    200,
+    300,
+    400,
+    500,
   ];
 
   Timer? _searchTimer;
   List<MobilePackage> _packages = const [];
-  int _selectedFilter = 0;
-  int _selectedDestination = 0;
-  int _selectedOperator = 0;
+  String _selectedType = '';
+  String _selectedOperator = '';
+  int? _selectedValidity;
+  num? _selectedData;
   bool _loading = true;
   bool _showingStaleData = false;
   String? _error;
@@ -73,9 +80,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
     });
     try {
       final catalog = await _repository.fetchPackages(
-        search: _searchController.text,
-        destination: _destinations[_selectedDestination].$3,
-        packageType: _packageType,
         forceRefresh: forceRefresh,
       );
       if (!mounted) return;
@@ -94,19 +98,47 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
   }
 
-  String? get _packageType => _filters[_selectedFilter].$2.isEmpty
-      ? null
-      : _filters[_selectedFilter].$2;
-
   List<MobilePackage> get _visiblePackages {
-    final selected = _operators[_selectedOperator].$2;
-    if (selected.isEmpty) return _packages;
-    return _packages.where((item) => item.operatorKey == selected).toList();
+    final term = _searchController.text.trim().toLowerCase();
+    return _packages
+        .where((item) {
+          if (_selectedOperator.isNotEmpty &&
+              item.operatorKey != _selectedOperator) {
+            return false;
+          }
+          if (_selectedType.isNotEmpty &&
+              item.packageType.toLowerCase() != _selectedType) {
+            return false;
+          }
+          if (_selectedValidity != null &&
+              item.validityDays != _selectedValidity) {
+            return false;
+          }
+          if (_selectedData != null && item.dataGb != _selectedData) {
+            return false;
+          }
+          if (term.isNotEmpty &&
+              ![
+                item.name,
+                item.destination,
+                item.displayProvider,
+                item.id,
+                item.dataLabel,
+                item.validityLabel,
+              ].any((value) => value.toLowerCase().contains(term))) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   void _onSearchChanged(String _) {
     _searchTimer?.cancel();
-    _searchTimer = Timer(const Duration(milliseconds: 450), _load);
+    _searchTimer = Timer(
+      const Duration(milliseconds: 250),
+      () => setState(() {}),
+    );
   }
 
   @override
@@ -200,83 +232,27 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: 'Search country, region or package',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            _load();
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                ),
+              _CatalogFilterPanel(
+                operators: _operators,
+                validityOptions: _validityOptions,
+                dataOptions: _dataOptions,
+                operator: _selectedOperator,
+                type: _selectedType,
+                validity: _selectedValidity,
+                data: _selectedData,
+                searchController: _searchController,
+                onOperatorChanged: (value) =>
+                    setState(() => _selectedOperator = value),
+                onTypeChanged: (value) => setState(() => _selectedType = value),
+                onValidityChanged: (value) =>
+                    setState(() => _selectedValidity = value),
+                onDataChanged: (value) => setState(() => _selectedData = value),
+                onSearchChanged: _onSearchChanged,
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 16),
               _SectionTitle(
-                title: 'Destinations',
+                title: 'Plans',
                 trailing: '${_visiblePackages.length} plans',
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 86,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _destinations.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    final item = _destinations[index];
-                    return _Country(
-                      flag: item.$1,
-                      name: item.$2,
-                      selected: _selectedDestination == index,
-                      onTap: () {
-                        setState(() => _selectedDestination = index);
-                        _load();
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text('Operators', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _operators.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) => ChoiceChip(
-                    label: Text(_operators[index].$1),
-                    selected: _selectedOperator == index,
-                    onSelected: (_) =>
-                        setState(() => _selectedOperator = index),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) => ChoiceChip(
-                    label: Text(_filters[index].$1),
-                    selected: _selectedFilter == index,
-                    onSelected: (_) {
-                      setState(() => _selectedFilter = index);
-                      _load();
-                    },
-                  ),
-                ),
               ),
               const SizedBox(height: 18),
               if (_loading)
@@ -290,16 +266,16 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ContentEmptyState(
                   icon: Icons.inventory_2_outlined,
                   title: 'No packages found',
-                  message: 'Try another search or destination.',
+                  message: 'Try changing or clearing the catalog filters.',
                   actionLabel: 'Clear filters',
                   onAction: () {
                     _searchController.clear();
                     setState(() {
-                      _selectedFilter = 0;
-                      _selectedDestination = 0;
-                      _selectedOperator = 0;
+                      _selectedType = '';
+                      _selectedOperator = '';
+                      _selectedValidity = null;
+                      _selectedData = null;
                     });
-                    _load();
                   },
                 )
               else
@@ -347,6 +323,178 @@ class _SectionTitle extends StatelessWidget {
   );
 }
 
+class _CatalogFilterPanel extends StatelessWidget {
+  const _CatalogFilterPanel({
+    required this.operators,
+    required this.validityOptions,
+    required this.dataOptions,
+    required this.operator,
+    required this.type,
+    required this.validity,
+    required this.data,
+    required this.searchController,
+    required this.onOperatorChanged,
+    required this.onTypeChanged,
+    required this.onValidityChanged,
+    required this.onDataChanged,
+    required this.onSearchChanged,
+  });
+
+  final List<(String, String)> operators;
+  final List<int> validityOptions;
+  final List<num> dataOptions;
+  final String operator;
+  final String type;
+  final int? validity;
+  final num? data;
+  final TextEditingController searchController;
+  final ValueChanged<String> onOperatorChanged;
+  final ValueChanged<String> onTypeChanged;
+  final ValueChanged<int?> onValidityChanged;
+  final ValueChanged<num?> onDataChanged;
+  final ValueChanged<String> onSearchChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Catalog filters', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Filter by operator, product type, validity, data and plan name.',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          _FilterField(
+            label: 'Operator',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(operator),
+              initialValue: operator,
+              isExpanded: true,
+              items: operators
+                  .map(
+                    (item) =>
+                        DropdownMenuItem(value: item.$2, child: Text(item.$1)),
+                  )
+                  .toList(),
+              onChanged: (value) => onOperatorChanged(value ?? ''),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _FilterField(
+            label: 'Type',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(type),
+              initialValue: type,
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: '', child: Text('All Types')),
+                DropdownMenuItem(value: 'esim', child: Text('eSIM')),
+                DropdownMenuItem(value: 'simcard', child: Text('SIM Card')),
+              ],
+              onChanged: (value) => onTypeChanged(value ?? ''),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _FilterField(
+                  label: 'Validity',
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey('validity-$validity'),
+                    initialValue: validity?.toString() ?? '',
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All')),
+                      ...validityOptions.map(
+                        (item) => DropdownMenuItem(
+                          value: '$item',
+                          child: Text('$item Days'),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        onValidityChanged(int.tryParse(value ?? '')),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _FilterField(
+                  label: 'Data',
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey('data-$data'),
+                    initialValue: data?.toString() ?? '',
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All')),
+                      ...dataOptions.map(
+                        (item) => DropdownMenuItem(
+                          value: '$item',
+                          child: Text('${item}GB'),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        onDataChanged(num.tryParse(value ?? '')),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _FilterField(
+            label: 'Search',
+            child: TextField(
+              controller: searchController,
+              onChanged: onSearchChanged,
+              decoration: const InputDecoration(
+                hintText: 'Search',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterField extends StatelessWidget {
+  const _FilterField({required this.label, required this.child});
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+          letterSpacing: .7,
+        ),
+      ),
+      const SizedBox(height: 6),
+      child,
+    ],
+  );
+}
+
 class _StaleDataBanner extends StatelessWidget {
   const _StaleDataBanner();
 
@@ -371,67 +519,6 @@ class _StaleDataBanner extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _Country extends StatelessWidget {
-  const _Country({
-    required this.flag,
-    required this.name,
-    required this.selected,
-    required this.onTap,
-  });
-  final String flag;
-  final String name;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              height: 54,
-              width: 64,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppColors.primaryLight
-                    : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.primary
-                      : theme.colorScheme.outlineVariant,
-                ),
-                boxShadow: theme.brightness == Brightness.light
-                    ? B2BShadows.card
-                    : null,
-              ),
-              child: Text(flag, style: const TextStyle(fontSize: 25)),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: selected ? AppColors.primary : null,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _PackageTile extends StatelessWidget {

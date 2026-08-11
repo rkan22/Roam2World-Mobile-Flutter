@@ -104,6 +104,25 @@ void main() {
     expect(package.dataLabel, '600 GB');
   });
 
+  test('classifies Worldmove physical SIM and exposes filter values', () {
+    final catalog = PackageCatalog.fromWorldmoveResponse({
+      'packages': [
+        {
+          'id': 'WM-EU-B-30D-20GB',
+          'provider': 'worldmove',
+          'productName': 'KPN Europe 20GB',
+          'productRegion': 'Europe',
+          'price': '18.00',
+        },
+      ],
+    });
+
+    final package = catalog.packages.single;
+    expect(package.packageType, 'simcard');
+    expect(package.dataGb, 20);
+    expect(package.validityDays, 30);
+  });
+
   test('normalizes a direct provider catalog response', () {
     final catalog = PackageCatalog.fromProviderResponse(
       {
