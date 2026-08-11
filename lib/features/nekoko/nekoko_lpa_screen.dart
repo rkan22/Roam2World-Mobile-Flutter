@@ -81,7 +81,7 @@ class _NekokoLpaScreenState extends State<NekokoLpaScreen> {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Roam2World eSIM Manager'),
+            Text('Nekoko internal tool'),
             Text(
               'Secure profile installation',
               style: TextStyle(
@@ -173,7 +173,7 @@ class _NekokoLoading extends StatelessWidget {
         CircularProgressIndicator(),
         SizedBox(height: 16),
         Text(
-          'Preparing secure eSIM manager…',
+          'Preparing internal eSIM workspace…',
           style: TextStyle(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w700,
