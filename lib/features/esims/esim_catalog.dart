@@ -28,6 +28,59 @@ class EsimCatalog {
   }
 }
 
+class MobileRenewalOption {
+  const MobileRenewalOption({
+    required this.provider,
+    required this.displayProvider,
+    required this.operation,
+    required this.productCode,
+    required this.dataGb,
+    required this.validityDays,
+    required this.price,
+    required this.currency,
+    required this.adminMarkupPercent,
+    required this.resellerMarkupPercent,
+    required this.dealerMarkupPercent,
+  });
+
+  final String provider;
+  final String displayProvider;
+  final String operation;
+  final String productCode;
+  final int dataGb;
+  final int validityDays;
+  final double price;
+  final String currency;
+  final double adminMarkupPercent;
+  final double resellerMarkupPercent;
+  final double dealerMarkupPercent;
+
+  factory MobileRenewalOption.fromJson(Map<String, dynamic> json) {
+    final pricing = json['pricing'] is Map
+        ? Map<String, dynamic>.from(json['pricing'] as Map)
+        : const <String, dynamic>{};
+    double number(dynamic value) => double.tryParse('$value') ?? 0;
+
+    return MobileRenewalOption(
+      provider: '${json['provider'] ?? ''}',
+      displayProvider:
+          '${json['display_provider'] ?? json['provider'] ?? 'Roam2World'}',
+      operation: '${json['operation'] ?? 'renew'}',
+      productCode:
+          '${json['product_code'] ?? json['plan_code'] ?? json['package_id'] ?? ''}',
+      dataGb: number(json['data_gb']).round(),
+      validityDays: number(json['validity_days']).round(),
+      price: number(json['price']),
+      currency: '${json['currency'] ?? 'USD'}',
+      adminMarkupPercent: number(pricing['admin_markup_percent']),
+      resellerMarkupPercent: number(pricing['reseller_markup_percent']),
+      dealerMarkupPercent: number(pricing['dealer_markup_percent']),
+    );
+  }
+
+  String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
+}
+
 class MobileEsim {
   const MobileEsim({
     required this.id,
