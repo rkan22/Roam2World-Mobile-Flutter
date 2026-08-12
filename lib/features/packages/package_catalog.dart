@@ -160,6 +160,8 @@ class MobilePackage {
       json['productName'],
       json['planName'],
       json['productRegion'],
+      json['operator_name'],
+      json['operator'],
     ].where((value) => value != null).join(' ');
     final parsedData = _dataFromText(identityText);
     final parsedValidity = _validityFromText(identityText);
@@ -368,25 +370,31 @@ class MobilePackage {
 
   String get operatorKey {
     final code = id.toUpperCase();
-    if (provider.toLowerCase() == 'worldmove') {
+    final providerKey = provider.toLowerCase();
+    final label = displayProvider.toLowerCase().trim();
+
+    if (providerKey == 'worldmove') {
       if (code.startsWith('WM-EU-B-')) return 'kpn';
       if (code.startsWith('WM-TR-')) return 'turkey';
       if (code.startsWith('WM-E-J1-WLD-')) return 'orange-world';
       if (code.contains('VDF') || code.contains('VODAFONE')) return 'vodafone';
       if (code.startsWith('WM-E-J1-O-')) return 'worldmove';
     }
-    final label = displayProvider.toLowerCase();
-    if (label.contains('vodafone') ||
-        provider.toLowerCase().contains('airhub')) {
-      return 'vodafone';
-    }
-    if (label.contains('big data') || provider.toLowerCase() == 'flexnet') {
-      return 'flexnet';
-    }
-    if (label.contains('balkan') || provider.toLowerCase() == 'tgt') {
-      return 'orange-balkans';
-    }
-    return provider.toLowerCase();
+
+    // Manual catalog products are still provider=manual. Their real operator
+    // is carried by operator_name/display_provider, so map that label to the
+    // same operator keys used by the web catalog.
+    if (label.contains('movistar')) return 'movistar';
+    if (label.contains('kpn')) return 'kpn';
+    if (label.contains('orange') && label.contains('europe')) return 'worldmove';
+    if (label.contains('orange') && label.contains('world')) return 'orange-world';
+    if (label.contains('orange') && label.contains('balkan')) return 'orange-balkans';
+    if (label.contains('t.t') || label.contains('turkey') || label.contains('turkiye')) return 'turkey';
+    if (label.contains('vodafone') || providerKey.contains('airhub')) return 'vodafone';
+    if (label.contains('big data') || providerKey == 'flexnet') return 'flexnet';
+    if (label.contains('balkan') || providerKey == 'tgt') return 'orange-balkans';
+
+    return providerKey;
   }
 
   static num? _dataFromText(String text) {
@@ -473,6 +481,7 @@ class MobilePackage {
     }
     return json['display_provider']?.toString() ??
         json['provider_label']?.toString() ??
+        json['operator_name']?.toString() ??
         json['provider']?.toString() ??
         'Roam2World';
   }
