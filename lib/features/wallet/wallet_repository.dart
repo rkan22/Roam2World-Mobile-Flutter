@@ -31,8 +31,7 @@ class WalletRepository {
         final page = await fetchTransactions();
         data = data.copyWith(transactions: page.transactions);
       } catch (_) {
-        // The wallet summary still contains the five most recent transactions,
-        // so it remains useful if the dedicated history endpoint is unavailable.
+        // Keep the wallet summary usable if transaction history is temporarily unavailable.
       }
       _cache.set(data);
       return data;
@@ -46,49 +45,13 @@ class WalletRepository {
     }
   }
 
-  /// Canonical B2B wallet contract. Kept separate from [fetchWallet] so the
-  /// existing finance UI can continue using its role-specific legacy summary
-  /// until its response contract is migrated explicitly.
+  /// B2B wallet status uses the live mobile wallet contract. Checkout itself
+  /// performs the atomic debit on the backend; the mobile client must not
+  /// perform a second charge.
   Future<WalletData> fetchSmartWalletStatus() {
     return _apiClient.get<WalletData>(
-      ApiEndpoints.mobileSmartWalletStatus,
+      ApiEndpoints.mobileWallet,
       parser: WalletData.fromResponse,
-    );
-  }
-
-  Future<dynamic> chargeOrder({
-    required Object orderId,
-    required double amount,
-    String? currency,
-    String? clientOrderId,
-  }) {
-    return _apiClient.post<dynamic>(
-      ApiEndpoints.mobileSmartWalletChargeOrder,
-      data: {
-        'order_id': orderId,
-        'amount': amount.toStringAsFixed(2),
-        if (currency != null && currency.trim().isNotEmpty)
-          'currency': currency.trim().toUpperCase(),
-        if (clientOrderId != null && clientOrderId.trim().isNotEmpty)
-          'client_order_id': clientOrderId.trim(),
-      },
-      parser: (response) => response,
-    );
-  }
-
-  Future<dynamic> refundOrder({
-    required Object orderId,
-    double? amount,
-    String? reason,
-  }) {
-    return _apiClient.post<dynamic>(
-      ApiEndpoints.mobileSmartWalletRefundOrder,
-      data: {
-        'order_id': orderId,
-        if (amount != null) 'amount': amount.toStringAsFixed(2),
-        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
-      },
-      parser: (response) => response,
     );
   }
 
