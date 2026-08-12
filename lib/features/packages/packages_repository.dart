@@ -36,12 +36,12 @@ class PackagesRepository {
 
     try {
       final catalog = await _apiClient.get<PackageCatalog>(
-        ApiEndpoints.mobileSmartPackages,
+        '/api/v1/mobile/b2b/packages/',
         queryParameters: {
           'limit': limit,
           if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
-          if (normalizedDestination.isNotEmpty) 'destination': normalizedDestination,
-          if (normalizedType.isNotEmpty) 'package_type': normalizedType,
+          if (normalizedDestination.isNotEmpty) 'category': normalizedDestination,
+          if (normalizedType.isNotEmpty) 'type': normalizedType,
         },
         parser: PackageCatalog.fromResponse,
       );
@@ -86,7 +86,7 @@ class PackagesRepository {
 
   Future<List<String>> fetchCategories() async {
     final response = await _apiClient.get<dynamic>(
-      ApiEndpoints.mobileSmartCategories,
+      '/api/v1/mobile/b2b/categories/',
       parser: (raw) => raw,
     );
     return _extractCategories(response);
