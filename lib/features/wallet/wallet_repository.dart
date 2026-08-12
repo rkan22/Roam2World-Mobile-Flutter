@@ -46,6 +46,52 @@ class WalletRepository {
     }
   }
 
+  /// Canonical B2B wallet contract. Kept separate from [fetchWallet] so the
+  /// existing finance UI can continue using its role-specific legacy summary
+  /// until its response contract is migrated explicitly.
+  Future<WalletData> fetchSmartWalletStatus() {
+    return _apiClient.get<WalletData>(
+      ApiEndpoints.mobileSmartWalletStatus,
+      parser: WalletData.fromResponse,
+    );
+  }
+
+  Future<dynamic> chargeOrder({
+    required Object orderId,
+    required double amount,
+    String? currency,
+    String? clientOrderId,
+  }) {
+    return _apiClient.post<dynamic>(
+      ApiEndpoints.mobileSmartWalletChargeOrder,
+      data: {
+        'order_id': orderId,
+        'amount': amount.toStringAsFixed(2),
+        if (currency != null && currency.trim().isNotEmpty)
+          'currency': currency.trim().toUpperCase(),
+        if (clientOrderId != null && clientOrderId.trim().isNotEmpty)
+          'client_order_id': clientOrderId.trim(),
+      },
+      parser: (response) => response,
+    );
+  }
+
+  Future<dynamic> refundOrder({
+    required Object orderId,
+    double? amount,
+    String? reason,
+  }) {
+    return _apiClient.post<dynamic>(
+      ApiEndpoints.mobileSmartWalletRefundOrder,
+      data: {
+        'order_id': orderId,
+        if (amount != null) 'amount': amount.toStringAsFixed(2),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+      parser: (response) => response,
+    );
+  }
+
   Future<WalletTransactionPage> fetchTransactions({
     int limit = 50,
     String? transactionType,
@@ -91,12 +137,8 @@ class WalletRepository {
     final path = switch ((isDealerRequest, approve)) {
       (true, true) => ApiEndpoints.mobileDealerWalletRequestApprove(request.id),
       (true, false) => ApiEndpoints.mobileDealerWalletRequestReject(request.id),
-      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(
-        request.id,
-      ),
-      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(
-        request.id,
-      ),
+      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(request.id),
+      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(request.id),
     };
     final result = await _apiClient.post<WalletRequest>(
       path,
