@@ -194,8 +194,19 @@ class PackagesRepository {
             return priced;
           },
         );
-        pricedPackages.addAll(pricedBatch);
-      } catch (_) {}
+        if (pricedBatch.isEmpty) {
+          pricedPackages.addAll(batch);
+        } else {
+          final pricedById = <String, MobilePackage>{
+            for (final item in pricedBatch) item.id: item,
+          };
+          pricedPackages.addAll(
+            batch.map((item) => pricedById[item.id] ?? item),
+          );
+        }
+      } catch (_) {
+        pricedPackages.addAll(batch);
+      }
     }
     return pricedPackages;
   }
