@@ -94,13 +94,13 @@ class ApiEndpoints {
       '/api/v1/mobile/smart/orders/$orderId/';
   static const String mobileSmartUsageCheck = '/api/v1/mobile/smart/usage-check/';
   static const String mobileSmartSimPackages =
-      '/api/v1/mobile/smart/sim-cards/packages/';
+      '/api/v1/mobile/b2b/sim-cards/packages/';
   static const String mobileSmartSimOrders =
-      '/api/v1/mobile/smart/sim-cards/orders/';
+      '/api/v1/mobile/b2b/sim-cards/orders/';
   static const String mobileSmartSimCheckout =
-      '/api/v1/mobile/smart/sim-cards/checkout/';
+      '/api/v1/mobile/b2b/sim-cards/orders/';
   static const String mobileSmartSimOrderHistory =
-      '/api/v1/mobile/smart/sim-cards/orders/history/';
+      '/api/v1/mobile/b2b/sim-cards/orders/';
   static const String mobileSmartWalletStatus =
       '/api/v1/mobile/smart/wallet/status/';
   static const String mobileSmartWalletChargeOrder =
@@ -161,82 +161,56 @@ class ApiEndpoints {
 
   static String mobileOrderDetail(Object orderId) =>
       '/api/v1/mobile/orders/$orderId/';
-
   static String mobileEsimDetail(Object esimId) =>
       '/api/v1/mobile/esims/$esimId/';
-
   static String mobileFlexnetEsimSync(Object esimId) =>
       '/api/v1/mobile/b2b/flexnet/esims/$esimId/sync/';
-
   static String mobileEsimHistoryDetail(Object esimId) =>
       '/api/v1/mobile/esim-history/$esimId/';
-
   static String mobileNotificationRead(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/read/';
-
   static String mobileNotificationUnread(Object notificationId) =>
       '/api/v1/mobile/notifications/$notificationId/unread/';
-
   static String mobileAdminProviderRetryDetail(Object itemId) =>
       '/api/v1/mobile/admin/provider-retry-queue/$itemId/';
-
   static String mobileAdminProviderRetryAction(Object itemId) =>
       '/api/v1/mobile/admin/provider-retry-queue/$itemId/action/';
-
   static String mobileAdminProviderCallbackLogDetail(Object logId) =>
       '/api/v1/mobile/admin/provider-callback-logs/$logId/';
-
   static String mobileAdminRoutingRuleDetail(Object ruleId) =>
       '/api/v1/mobile/admin/routing-rules/$ruleId/';
-
   static String mobileAdminResellerMarkup(Object resellerId) =>
       '/api/v1/mobile/admin/resellers/$resellerId/markup/';
-
   static String mobileAdminDealerMarkup(Object dealerId) =>
       '/api/v1/mobile/admin/dealers/$dealerId/markup/';
-
   static String manualAdminProductDetail(Object packageId) =>
       '/api/v1/admin/manual-fulfillment/products/$packageId/';
-
   static String manualAdminAssignQr(Object taskId) =>
       '/api/v1/admin/manual-fulfillment/tasks/$taskId/assign-qr/';
-
   static String manualAdminActivateSim(Object taskId) =>
       '/api/v1/admin/manual-fulfillment/tasks/$taskId/activate-sim/';
-
   static String manualAdminCancelTask(Object taskId) =>
       '/api/v1/admin/manual-fulfillment/tasks/$taskId/cancel/';
-
   static String manualAdminSendToFlexnet(Object taskId) =>
       '/api/v1/admin/manual-fulfillment/tasks/$taskId/send-to-flexnet/';
-
   static String mobileDealerAllocateBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/allocate-balance/';
-
   static String mobileDealerModifyBalance(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/modify-balance/';
-
   static String mobileDealerSuspend(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/suspend/';
-
   static String mobileDealerActivate(Object dealerId) =>
       '/api/v1/mobile/dealers/$dealerId/activate/';
-
   static String mobileDealerWalletRequestApprove(Object requestId) =>
       '/api/v1/mobile/dealer-wallet-requests/$requestId/approve/';
-
   static String mobileDealerWalletRequestReject(Object requestId) =>
       '/api/v1/mobile/dealer-wallet-requests/$requestId/reject/';
-
   static String mobileResellerWalletRequestApprove(Object requestId) =>
       '/api/v1/mobile/reseller-wallet-requests/$requestId/approve/';
-
   static String mobileResellerWalletRequestReject(Object requestId) =>
       '/api/v1/mobile/reseller-wallet-requests/$requestId/reject/';
-
   static String adminWalletTopUpAdjust(Object requestId) =>
       '/api/v1/admin/wallet/topups/$requestId/adjust/';
-
   static String adminWalletTopUpRefund(Object requestId) =>
       '/api/v1/admin/wallet/topups/$requestId/refund/';
 }
