@@ -31,8 +31,7 @@ class WalletRepository {
         final page = await fetchTransactions();
         data = data.copyWith(transactions: page.transactions);
       } catch (_) {
-        // The wallet summary still contains the five most recent transactions,
-        // so it remains useful if the dedicated history endpoint is unavailable.
+        // Keep the wallet summary usable if transaction history is temporarily unavailable.
       }
       _cache.set(data);
       return data;
@@ -44,6 +43,16 @@ class WalletRepository {
       }
       rethrow;
     }
+  }
+
+  /// B2B wallet status uses the live mobile wallet contract. Checkout itself
+  /// performs the atomic debit on the backend; the mobile client must not
+  /// perform a second charge.
+  Future<WalletData> fetchSmartWalletStatus() {
+    return _apiClient.get<WalletData>(
+      ApiEndpoints.mobileWallet,
+      parser: WalletData.fromResponse,
+    );
   }
 
   Future<WalletTransactionPage> fetchTransactions({
@@ -91,12 +100,8 @@ class WalletRepository {
     final path = switch ((isDealerRequest, approve)) {
       (true, true) => ApiEndpoints.mobileDealerWalletRequestApprove(request.id),
       (true, false) => ApiEndpoints.mobileDealerWalletRequestReject(request.id),
-      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(
-        request.id,
-      ),
-      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(
-        request.id,
-      ),
+      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(request.id),
+      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(request.id),
     };
     final result = await _apiClient.post<WalletRequest>(
       path,
