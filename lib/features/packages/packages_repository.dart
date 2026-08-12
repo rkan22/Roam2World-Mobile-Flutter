@@ -1,4 +1,5 @@
 import '../../core/api/api_client.dart';
+import '../../core/api/api_endpoints.dart';
 import '../../core/cache/timed_cache.dart';
 import 'package_catalog.dart';
 
@@ -8,14 +9,6 @@ class PackagesRepository {
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
   final ApiClient _apiClient;
   bool lastFetchUsedStale = false;
-
-  static const _defaultCategories = <String>[
-    'orange_europe',
-    'orange_world',
-    'balkans',
-    'turkey',
-    'big_data',
-  ];
 
   Future<PackageCatalog> fetchPackages({
     String? search,
@@ -39,68 +32,114 @@ class PackagesRepository {
       cacheKey,
       () => TimedCache<PackageCatalog>(ttl: const Duration(minutes: 3)),
     );
-    if (!forceRefresh && cache.value != null) return cache.value!;
+    if (!forceRefresh) {
+      final cached = cache.value;
+      if (cached != null) return cached;
+    }
 
     try {
-      final categories = normalizedDestination.isNotEmpty
-          ? <String>[normalizedDestination]
-          : await _loadCatalogCategories();
-
-      final uniqueCategories = <String>{
-        ...categories.map((value) => value.trim().toLowerCase()),
-      }..removeWhere((value) => value.isEmpty || value == 'sim_card');
-
-      final catalogs = await Future.wait(
-        uniqueCategories.map(
-          (category) => _fetchCategory(
-            category,
-            search: normalizedSearch,
-            packageType: normalizedType,
-            limit: limit,
-          ),
-        ),
-      );
-
       final packages = <MobilePackage>[];
-      final seen = <String>{};
-      for (final catalog in catalogs) {
+      final externalPackages = <MobilePackage>[];
+      final seenIds = <String>{};
+      var offset = 0;
+      var hasMore = true;
+      var pageCount = 0;
+
+      while (hasMore && pageCount < 20) {
+        final page = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.mobilePackages,
+          queryParameters: {'limit': limit, 'offset': offset},
+          parser: PackageCatalog.fromResponse,
+        );
+
+        var added = 0;
+        for (final package in page.packages) {
+          final dedupeKey = package.id.isEmpty
+              ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
+              : '${package.provider}|${package.id}';
+          if (seenIds.add(dedupeKey)) {
+            packages.add(package);
+            added++;
+          }
+        }
+
+        hasMore = page.hasMore;
+        if (!hasMore || page.packages.isEmpty || added == 0) break;
+
+        offset += page.packages.length;
+        pageCount++;
+      }
+
+      try {
+        final worldmove = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.mobileWorldmovePackages,
+          queryParameters: const {'scope': 'all'},
+          parser: PackageCatalog.fromWorldmoveResponse,
+        );
+        for (final package in worldmove.packages) {
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) externalPackages.add(package);
+        }
+      } catch (_) {}
+
+      try {
+        final manual = await _apiClient.get<PackageCatalog>(
+          ApiEndpoints.manualCatalogProducts,
+          parser: PackageCatalog.fromManualResponse,
+        );
+        for (final package in manual.packages) {
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) externalPackages.add(package);
+        }
+      } catch (_) {}
+
+      for (final source in const [
+        (ApiEndpoints.airhubCatalogSources, 'airhub', 'Vodafone'),
+        (ApiEndpoints.flexnetCatalogSources, 'flexnet', 'Orange Big Data'),
+        (ApiEndpoints.tgtCatalogSources, 'tgt', 'Orange Balkans'),
+      ]) {
+        final catalog = await _fetchFirstProviderSource(
+          source.$1,
+          provider: source.$2,
+          displayProvider: source.$3,
+        );
         for (final package in catalog.packages) {
-          final key = package.id.isNotEmpty
-              ? '${package.provider}|${package.id}'
-              : '${package.provider}|${package.name}|${package.price}|${package.destinationKey}';
-          if (seen.add(key)) packages.add(package);
+          if (!_providerPackageAllowed(package)) continue;
+          final key = '${package.provider}|${package.id}';
+          if (seenIds.add(key)) externalPackages.add(package);
         }
       }
 
+      packages.addAll(await _applyCentralPricing(externalPackages));
+
+      final term = normalizedSearch.toLowerCase();
       final filtered = packages.where((package) {
         if (normalizedDestination.isNotEmpty &&
-            package.destinationKey.toLowerCase() !=
-                normalizedDestination.toLowerCase()) {
+            package.destinationKey.toLowerCase() != normalizedDestination.toLowerCase()) {
           return false;
         }
         if (normalizedType.isNotEmpty &&
             package.packageType.toLowerCase() != normalizedType.toLowerCase()) {
           return false;
         }
-        if (normalizedSearch.isEmpty) return true;
-        final term = normalizedSearch.toLowerCase();
-        return [
-          package.name,
-          package.destination,
-          package.displayProvider,
-          package.provider,
-          package.id,
-          package.dataLabel,
-          package.validityLabel,
-        ].any((value) => value.toLowerCase().contains(term));
-      }).toList(growable: false);
+        if (term.isNotEmpty &&
+            ![
+              package.name,
+              package.destination,
+              package.displayProvider,
+              package.provider,
+              package.id,
+              package.dataLabel,
+              package.validityLabel,
+            ].any((value) => value.toLowerCase().contains(term))) {
+          return false;
+        }
+        return true;
+      }).toList();
 
-      final result = PackageCatalog(
-        packages: filtered,
-        hasMore: catalogs.any((catalog) => catalog.hasMore),
-      );
-      cache.set(result);
-      return result;
+      final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
+      cache.set(catalog);
+      return catalog;
     } catch (_) {
       final stale = cache.staleValue;
       if (stale != null) {
@@ -111,65 +150,99 @@ class PackagesRepository {
     }
   }
 
-  Future<PackageCatalog> _fetchCategory(
-    String category, {
-    required String search,
-    required String packageType,
-    required int limit,
-  }) {
-    return _apiClient.get<PackageCatalog>(
-      '/api/v1/mobile/b2b/packages/',
-      queryParameters: {
-        'limit': limit,
-        'category': category,
-        if (search.isNotEmpty) 'search': search,
-        if (packageType.isNotEmpty) 'type': packageType,
-      },
-      parser: PackageCatalog.fromResponse,
-    );
-  }
-
-  Future<List<String>> _loadCatalogCategories() async {
-    try {
-      final categories = await fetchCategories();
-      final normalized = categories
-          .map((value) => value.trim().toLowerCase())
-          .where((value) => value.isNotEmpty)
-          .toList(growable: false);
-      if (normalized.isNotEmpty) return normalized;
-    } catch (_) {
-      // Use the known smart categories when the category endpoint is temporarily unavailable.
-    }
-    return _defaultCategories;
-  }
-
-  Future<List<String>> fetchCategories() async {
-    final response = await _apiClient.get<dynamic>(
-      '/api/v1/mobile/b2b/categories/',
-      parser: (raw) => raw,
-    );
-    return _extractCategories(response);
-  }
-
-  List<String> _extractCategories(dynamic response) {
-    if (response is List) {
-      return response
-          .whereType<Map>()
-          .map((item) => '${item['slug'] ?? item['id'] ?? item['name'] ?? ''}'.trim())
-          .where((value) => value.isNotEmpty)
-          .toList(growable: false);
-    }
-    if (response is Map) {
-      final data = response['data'] ?? response['categories'] ?? response['results'];
-      if (data is List) return _extractCategories(data);
-    }
-    return const [];
-  }
-
   void invalidateCache() {
     for (final cache in _caches.values) {
       cache.clear();
     }
     _caches.clear();
+  }
+
+  Future<List<MobilePackage>> _applyCentralPricing(List<MobilePackage> packages) async {
+    if (packages.isEmpty) return const [];
+    const batchSize = 250;
+    final pricedPackages = <MobilePackage>[];
+    for (var start = 0; start < packages.length; start += batchSize) {
+      final end = start + batchSize < packages.length ? start + batchSize : packages.length;
+      final batch = packages.sublist(start, end);
+      try {
+        final pricedBatch = await _apiClient.post<List<MobilePackage>>(
+          ApiEndpoints.pricingBatchPreview,
+          data: {
+            'items': batch.map((package) => {
+              'provider': package.provider,
+              'package_id': package.id,
+              'provider_price': package.price,
+              'country': package.destination,
+              'region': package.destinationKey,
+              'currency': package.currency,
+            }).toList(),
+          },
+          parser: (response) {
+            final root = Map<String, dynamic>.from(response as Map);
+            final rows = root['data'];
+            if (rows is! List) return const [];
+            final priced = <MobilePackage>[];
+            for (var index = 0; index < rows.length && index < batch.length; index++) {
+              final row = rows[index];
+              if (row is! Map) continue;
+              final pricing = row['pricing'];
+              if (pricing is! Map || pricing['is_price_visible'] != true) continue;
+              final rawPrice = pricing['charge_amount'] ?? pricing['after_admin'] ?? pricing['final_customer_price'];
+              final price = double.tryParse('$rawPrice');
+              if (price != null) priced.add(batch[index].withPrice(price));
+            }
+            return priced;
+          },
+        );
+        pricedPackages.addAll(pricedBatch);
+      } catch (_) {}
+    }
+    return pricedPackages;
+  }
+
+  Future<PackageCatalog> _fetchFirstProviderSource(
+    List<String> paths, {
+    required String provider,
+    required String displayProvider,
+  }) async {
+    for (final path in paths) {
+      try {
+        final catalog = await _apiClient.get<PackageCatalog>(
+          path,
+          parser: (response) => PackageCatalog.fromProviderResponse(
+            response,
+            provider: provider,
+            displayProvider: displayProvider,
+          ),
+        );
+        if (catalog.packages.isNotEmpty) return catalog;
+      } catch (_) {}
+    }
+    return const PackageCatalog(packages: [], hasMore: false);
+  }
+
+  bool _providerPackageAllowed(MobilePackage package) {
+    if (package.id.isEmpty) return false;
+    if (package.provider != 'tgt') return true;
+    return const {
+      'E-185-SC-AU-EO1-T-30D/60D-1GB',
+      'E-185-SC-AU-EO1-T-30D/60D-3GB',
+      'E-185-SC-AU-EO1-T-30D/60D-5GB',
+      'E-185-SC-AU-EO1-T-30D/60D-10GB',
+      'E-185-SC-AU-EO1-T-30D/60D-20GB',
+      'E-185-SC-AU-EO1-T-30D/60D-30GB',
+      'E-185-SC-AU-EO1-T-30D/60D-50GB',
+      'E-185-ES-AU-EO1-T-30D/60D-1GB',
+      'E-185-ES-AU-EO1-T-30D/60D-3GB',
+      'E-185-ES-AU-EO1-T-30D/60D-5GB',
+      'E-185-ES-AU-EO1-T-30D/60D-10GB',
+      'E-185-ES-AU-EO1-T-30D/60D-20GB',
+      'E-185-ES-AU-EO1-T-30D/60D-30GB',
+      'E-185-ES-AU-EO1-T-30D/60D-50GB',
+      'E-185-SC-AU-EO1-T-CTM-60D/60D-20GB',
+      'E-185-SC-AU-EO1-T-CTM-60D/60D-60GB',
+      'E-185-ES-AU-EO1-T-CTM-60D/60D-20GB',
+      'E-185-ES-AU-EO1-T-CTM-60D/60D-60GB',
+    }.contains(package.id.toUpperCase());
   }
 }
