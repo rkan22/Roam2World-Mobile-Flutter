@@ -64,7 +64,7 @@ class DashboardRepository {
     var result = dashboard;
     try {
       final wallet = await _apiClient.get<WalletData>(
-        ApiEndpoints.mobileSmartWalletStatus,
+        ApiEndpoints.mobileWallet,
         parser: WalletData.fromResponse,
       );
       result = result.copyWith(balance: wallet.currentAmount, currency: wallet.currency);
@@ -72,7 +72,7 @@ class DashboardRepository {
 
     try {
       final history = await _apiClient.get<OrderHistory>(
-        ApiEndpoints.mobileSmartOrders,
+        ApiEndpoints.mobileOrders,
         parser: OrderHistory.fromResponse,
       );
       final successfulOrders = history.orders.where((order) {
