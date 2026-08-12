@@ -16,6 +16,10 @@ class OrdersRepository {
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
 
+  // Kept in-memory for the lifetime of the repository so a retry after a
+  // timeout uses the same idempotency key instead of creating a second order.
+  final Map<String, String> _checkoutClientOrderIds = <String, String>{};
+
   Future<OrderHistory> fetchOrders({String? status, String? search}) async {
     final profile = await _tokenStorage.readProfile();
     final role = parseAppRole(profile?['role']?.toString());
@@ -62,7 +66,7 @@ class OrdersRepository {
     String? email,
     String? imei,
     String? simNumber,
-  }) {
+  }) async {
     final isAdmin = package.provider.toLowerCase() == 'manual';
     if (isAdmin) {
       return _createLegacyManualOrder(
@@ -75,26 +79,68 @@ class OrdersRepository {
       );
     }
 
-    final clientOrderId = _newClientOrderId();
-    return _apiClient.post<MobileOrderResult>(
-      '/api/v1/mobile/b2b/checkout/',
-      data: {
-        'category': package.packageType.isNotEmpty
-            ? package.packageType
-            : package.destinationKey,
-        'package_id': package.id,
-        'quantity': 1,
-        'customer_first_name': firstName.trim(),
-        'customer_last_name': lastName.trim(),
-        'customer_phone': phone.trim(),
-        if (email != null && email.trim().isNotEmpty)
-          'customer_email': email.trim(),
-        'client_order_id': clientOrderId,
-        if (simNumber != null && simNumber.trim().isNotEmpty)
-          'sim_iccid': simNumber.replaceAll(RegExp(r'\D'), ''),
-      },
-      parser: (response) => MobileOrderResult.fromResponse(response),
+    final key = _checkoutKey(
+      package: package,
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
+      email: email,
+      imei: imei,
+      simNumber: simNumber,
     );
+    final clientOrderId = _checkoutClientOrderIds.putIfAbsent(
+      key,
+      _newClientOrderId,
+    );
+
+    try {
+      final result = await _apiClient.post<MobileOrderResult>(
+        '/api/v1/mobile/b2b/checkout/',
+        data: {
+          'category': package.packageType.isNotEmpty
+              ? package.packageType
+              : package.destinationKey,
+          'package_id': package.id,
+          'quantity': 1,
+          'customer_first_name': firstName.trim(),
+          'customer_last_name': lastName.trim(),
+          'customer_phone': phone.trim(),
+          if (email != null && email.trim().isNotEmpty)
+            'customer_email': email.trim(),
+          'client_order_id': clientOrderId,
+          if (simNumber != null && simNumber.trim().isNotEmpty)
+            'sim_iccid': simNumber.replaceAll(RegExp(r'\D'), ''),
+        },
+        parser: (response) => MobileOrderResult.fromResponse(response),
+      );
+      _checkoutClientOrderIds.remove(key);
+      return result;
+    } catch (_) {
+      // Keep the key: a caller retrying after a timeout must hit the same
+      // backend idempotency record. It is cleared only after success.
+      rethrow;
+    }
+  }
+
+  String _checkoutKey({
+    required MobilePackage package,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    String? email,
+    String? imei,
+    String? simNumber,
+  }) {
+    return [
+      package.id,
+      package.packageType,
+      firstName.trim().toLowerCase(),
+      lastName.trim().toLowerCase(),
+      phone.trim(),
+      email?.trim().toLowerCase() ?? '',
+      imei?.trim() ?? '',
+      simNumber?.replaceAll(RegExp(r'\D'), '') ?? '',
+    ].join('|');
   }
 
   Future<MobileOrderResult> _createLegacyManualOrder({
