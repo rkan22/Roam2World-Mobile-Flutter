@@ -84,7 +84,31 @@ class ApiEndpoints {
       '/api/v1/mobile/b2b/esimcard/usage-check/';
   static const String mobileEsimcardTopupCheckout =
       '/api/v1/mobile/b2b/esimcard/topup-checkout/';
-  static const String mobileSmartUsageCheck = '/api/v1/mobile/b2b/usage-check/';
+  static const String mobileSmartHealth = '/api/v1/mobile/smart/health/';
+  static const String mobileSmartCategories = '/api/v1/mobile/smart/categories/';
+  static const String mobileSmartPackages = '/api/v1/mobile/smart/packages/';
+  static const String mobileSmartCreateOrder = '/api/v1/mobile/smart/orders/create/';
+  static const String mobileSmartCheckout = '/api/v1/mobile/smart/checkout/';
+  static const String mobileSmartOrders = '/api/v1/mobile/smart/orders/';
+  static String mobileSmartOrderDetail(Object orderId) =>
+      '/api/v1/mobile/smart/orders/$orderId/';
+  static const String mobileSmartUsageCheck = '/api/v1/mobile/smart/usage-check/';
+  static const String mobileSmartSimPackages =
+      '/api/v1/mobile/smart/sim-cards/packages/';
+  static const String mobileSmartSimOrders =
+      '/api/v1/mobile/smart/sim-cards/orders/';
+  static const String mobileSmartSimCheckout =
+      '/api/v1/mobile/smart/sim-cards/checkout/';
+  static const String mobileSmartSimOrderHistory =
+      '/api/v1/mobile/smart/sim-cards/orders/history/';
+  static const String mobileSmartWalletStatus =
+      '/api/v1/mobile/smart/wallet/status/';
+  static const String mobileSmartWalletChargeOrder =
+      '/api/v1/mobile/smart/wallet/charge-order/';
+  static const String mobileSmartWalletRefundOrder =
+      '/api/v1/mobile/smart/wallet/refund-order/';
+  static const String mobileSmartWalletTransactions =
+      '/api/v1/mobile/smart/wallet/transactions/';
   static const String mobileTgtBulkTopup =
       '/api/v1/mobile/b2b/tgt/balkans/bulk-topup/';
   static const String mobileTgtBulkActivate =
