@@ -187,17 +187,17 @@ class MobilePackage {
   }
 
   static List<PackageCountry> _countries(Map<String, dynamic> j) {
-    final raw = j['supported_countries'] ?? j['supportedCountries'] ?? j['coverage_countries'] ?? j['coverageCountries'] ?? j['country_codes'] ?? j['countryCodes'] ?? j['countries'] ?? const [];
+    final raw = j['supported_countries'] ?? j['supportedCountries'] ?? j['coverage_countries'] ?? j['coverageCountries'] ?? j['country_list'] ?? j['countryList'] ?? j['country_codes'] ?? j['countryCodes'] ?? j['countries'] ?? const [];
     if (raw is! List) return const [];
     return raw.map((item) {
       if (item is Map) {
         final m = Map<String, dynamic>.from(item);
         final code = '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'.toUpperCase();
         final name = '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? code}';
-        return PackageCountry(name: name.length == 2 ? code : name, code: code);
+        return PackageCountry(name: name.length == 2 ? _countryName(code) : name, code: code);
       }
       final text = '$item'.trim(), code = text.length == 2 ? text.toUpperCase() : '';
-      return PackageCountry(name: code.isEmpty ? text : code, code: code);
+      return PackageCountry(name: code.isEmpty ? text : _countryName(code), code: code);
     }).where((c) => c.name.isNotEmpty).toList(growable: false);
   }
 
@@ -267,3 +267,41 @@ int? _validityFromText(String text) {
   if (text.toUpperCase().contains('WM-E-J1-VDFES-')) return 30;
   return null;
 }
+
+String _countryName(String code) =>
+    const {
+      'AT': 'Austria',
+      'BE': 'Belgium',
+      'BG': 'Bulgaria',
+      'CH': 'Switzerland',
+      'CY': 'Cyprus',
+      'CZ': 'Czechia',
+      'DE': 'Germany',
+      'DK': 'Denmark',
+      'EE': 'Estonia',
+      'ES': 'Spain',
+      'FI': 'Finland',
+      'FR': 'France',
+      'GB': 'United Kingdom',
+      'GR': 'Greece',
+      'HR': 'Croatia',
+      'HU': 'Hungary',
+      'IE': 'Ireland',
+      'IS': 'Iceland',
+      'IT': 'Italy',
+      'LT': 'Lithuania',
+      'LU': 'Luxembourg',
+      'LV': 'Latvia',
+      'MT': 'Malta',
+      'NL': 'Netherlands',
+      'NO': 'Norway',
+      'PL': 'Poland',
+      'PT': 'Portugal',
+      'RO': 'Romania',
+      'RS': 'Serbia',
+      'SE': 'Sweden',
+      'SI': 'Slovenia',
+      'SK': 'Slovakia',
+      'TR': 'Turkey',
+      'UA': 'Ukraine',
+    }[code] ?? code;
