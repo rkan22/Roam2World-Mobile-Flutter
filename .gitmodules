@@ -1,4 +1,4 @@
 [submodule "vendor/NekokoLPA2"]
 	path = vendor/NekokoLPA2
-	url = https://github.com/iebb/NekokoLPA2.git
+	url = https://github.com/rkan22/NekokoLPA2.git
 	branch = master
