@@ -28,7 +28,7 @@ class OrdersRepository {
     }
 
     final history = await _apiClient.get<OrderHistory>(
-      isAdmin ? ApiEndpoints.mobileAdminOrders : ApiEndpoints.mobileSmartOrders,
+      isAdmin ? ApiEndpoints.mobileAdminOrders : ApiEndpoints.mobileOrders,
       queryParameters: query,
       parser: OrderHistory.fromResponse,
     );
@@ -77,8 +77,11 @@ class OrdersRepository {
 
     final clientOrderId = _newClientOrderId();
     return _apiClient.post<MobileOrderResult>(
-      ApiEndpoints.mobileSmartCreateOrder,
+      '/api/v1/mobile/b2b/checkout/',
       data: {
+        'category': package.packageType.isNotEmpty
+            ? package.packageType
+            : package.destinationKey,
         'package_id': package.id,
         'quantity': 1,
         'customer_first_name': firstName.trim(),
