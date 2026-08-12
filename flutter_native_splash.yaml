@@ -1,0 +1,15 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  # Full Roam2World B2B artwork for iOS and Android < 12.
+  background_image: assets/splash/roam2world_b2b_splash_native.png
+  fullscreen: true
+
+  # Android 12+ uses the system splash contract: solid background + launcher icon.
+  android_12:
+    color: "#050B18"
+    color_dark: "#050B18"
+    icon_background_color: "#050B18"
+    icon_background_color_dark: "#050B18"
