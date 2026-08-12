@@ -22,7 +22,6 @@ class DashboardRepository {
   final TimedCache<DashboardData> _adminCache = TimedCache<DashboardData>(
     ttl: const Duration(seconds: 60),
   );
-
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
   final AppRole role;
@@ -38,25 +37,17 @@ class DashboardRepository {
     lastFetchUsedStale = false;
     final effectiveRole = await _effectiveRole();
     final cache = effectiveRole == AppRole.admin ? _adminCache : _tenantCache;
-
     if (!forceRefresh) {
       final cached = cache.value;
       if (cached != null) return cached;
     }
-
     try {
       final isAdmin = effectiveRole == AppRole.admin;
       var data = await _apiClient.get<DashboardData>(
-        isAdmin
-            ? ApiEndpoints.mobileAdminDashboard
-            : ApiEndpoints.mobileDashboard,
-        parser: isAdmin
-            ? DashboardData.fromAdminResponse
-            : DashboardData.fromResponse,
+        isAdmin ? ApiEndpoints.mobileAdminDashboard : ApiEndpoints.mobileDashboard,
+        parser: isAdmin ? DashboardData.fromAdminResponse : DashboardData.fromResponse,
       );
-      if (!isAdmin) {
-        data = await _enrichPartnerDashboard(data);
-      }
+      if (!isAdmin) data = await _enrichPartnerDashboard(data);
       cache.set(data);
       return data;
     } catch (_) {
@@ -65,7 +56,6 @@ class DashboardRepository {
         lastFetchUsedStale = true;
         return stale;
       }
-
       rethrow;
     }
   }
@@ -74,65 +64,42 @@ class DashboardRepository {
     var result = dashboard;
     try {
       final wallet = await _apiClient.get<WalletData>(
-        ApiEndpoints.mobileWallet,
+        ApiEndpoints.mobileSmartWalletStatus,
         parser: WalletData.fromResponse,
       );
-      result = result.copyWith(
-        balance: wallet.currentAmount,
-        currency: wallet.currency,
-      );
-    } catch (_) {
-      // The dashboard payload remains usable if the wallet service is down.
-    }
+      result = result.copyWith(balance: wallet.currentAmount, currency: wallet.currency);
+    } catch (_) {}
 
     try {
       final history = await _apiClient.get<OrderHistory>(
-        ApiEndpoints.mobileOrders,
+        ApiEndpoints.mobileSmartOrders,
         parser: OrderHistory.fromResponse,
       );
-      final successfulOrders = history.orders
-          .where((order) {
-            final status = order.status.toLowerCase();
-            return status != 'failed' &&
-                status != 'cancelled' &&
-                status != 'canceled' &&
-                status != 'refunded';
-          })
-          .toList(growable: false);
+      final successfulOrders = history.orders.where((order) {
+        final status = order.status.toLowerCase();
+        return status != 'failed' && status != 'cancelled' &&
+            status != 'canceled' && status != 'refunded';
+      }).toList(growable: false);
       final now = DateTime.now();
-      final todaySales = successfulOrders
-          .where((order) {
-            final createdAt = order.createdAt?.toLocal();
-            return createdAt != null &&
-                createdAt.year == now.year &&
-                createdAt.month == now.month &&
-                createdAt.day == now.day;
-          })
-          .fold<double>(0, (sum, order) => sum + order.amount);
-      final totalSales = successfulOrders.fold<double>(
-        0,
-        (sum, order) => sum + order.amount,
-      );
+      final todaySales = successfulOrders.where((order) {
+        final createdAt = order.createdAt?.toLocal();
+        return createdAt != null && createdAt.year == now.year &&
+            createdAt.month == now.month && createdAt.day == now.day;
+      }).fold<double>(0, (sum, order) => sum + order.amount);
+      final totalSales = successfulOrders.fold<double>(0, (sum, order) => sum + order.amount);
       result = result.copyWith(
         todaySales: result.todaySales == 0 ? todaySales : null,
         monthlySales: result.monthlySales == 0 ? totalSales : null,
-        recentOrders: history.orders
-            .take(5)
-            .map((order) {
-              return DashboardOrderSummary(
-                id: order.id,
-                orderNumber: order.orderNumber,
-                productName: order.packageName,
-                status: order.status,
-                totalAmount: order.amount,
-                createdAt: order.createdAt,
-              );
-            })
-            .toList(growable: false),
+        recentOrders: history.orders.take(5).map((order) => DashboardOrderSummary(
+          id: order.id,
+          orderNumber: order.orderNumber,
+          productName: order.packageName,
+          status: order.status,
+          totalAmount: order.amount,
+          createdAt: order.createdAt,
+        )).toList(growable: false),
       );
-    } catch (_) {
-      // Preserve recent orders from the dashboard endpoint on partial failure.
-    }
+    } catch (_) {}
 
     try {
       final catalog = await _apiClient.get<EsimCatalog>(
@@ -143,16 +110,9 @@ class DashboardRepository {
       final now = DateTime.now();
       final expired = catalog.esims.where((esim) {
         final status = esim.status.toLowerCase();
-        return status == 'expired' ||
-            (esim.expiresAt != null && esim.expiresAt!.isBefore(now));
+        return status == 'expired' || (esim.expiresAt != null && esim.expiresAt!.isBefore(now));
       }).length;
-      const activeStatuses = {
-        'active',
-        'activated',
-        'assigned',
-        'provisioned',
-        'ready',
-      };
+      const activeStatuses = {'active', 'activated', 'assigned', 'provisioned', 'ready'};
       final active = catalog.esims.where((esim) {
         return activeStatuses.contains(esim.status.toLowerCase()) &&
             (esim.expiresAt == null || esim.expiresAt!.isAfter(now));
@@ -162,9 +122,7 @@ class DashboardRepository {
         activeEsimCount: result.activeEsimCount == 0 ? active : null,
         expiredEsimCount: result.expiredEsimCount == 0 ? expired : null,
       );
-    } catch (_) {
-      // The dashboard metrics remain available if the eSIM list is down.
-    }
+    } catch (_) {}
     return result;
   }
 
