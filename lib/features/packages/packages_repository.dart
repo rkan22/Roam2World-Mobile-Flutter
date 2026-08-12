@@ -9,6 +9,14 @@ class PackagesRepository {
   final ApiClient _apiClient;
   bool lastFetchUsedStale = false;
 
+  static const _defaultCategories = <String>[
+    'orange_europe',
+    'orange_world',
+    'balkans',
+    'turkey',
+    'big_data',
+  ];
+
   Future<PackageCatalog> fetchPackages({
     String? search,
     String? destination,
@@ -34,20 +42,40 @@ class PackagesRepository {
     if (!forceRefresh && cache.value != null) return cache.value!;
 
     try {
-      final catalog = await _apiClient.get<PackageCatalog>(
-        '/api/v1/mobile/b2b/packages/',
-        queryParameters: {
-          'limit': limit,
-          if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
-          if (normalizedDestination.isNotEmpty) 'category': normalizedDestination,
-          if (normalizedType.isNotEmpty) 'type': normalizedType,
-        },
-        parser: PackageCatalog.fromResponse,
+      final categories = normalizedDestination.isNotEmpty
+          ? <String>[normalizedDestination]
+          : await _loadCatalogCategories();
+
+      final uniqueCategories = <String>{
+        ...categories.map((value) => value.trim().toLowerCase()),
+      }..removeWhere((value) => value.isEmpty || value == 'sim_card');
+
+      final catalogs = await Future.wait(
+        uniqueCategories.map(
+          (category) => _fetchCategory(
+            category,
+            search: normalizedSearch,
+            packageType: normalizedType,
+            limit: limit,
+          ),
+        ),
       );
 
-      final filtered = catalog.packages.where((package) {
+      final packages = <MobilePackage>[];
+      final seen = <String>{};
+      for (final catalog in catalogs) {
+        for (final package in catalog.packages) {
+          final key = package.id.isNotEmpty
+              ? '${package.provider}|${package.id}'
+              : '${package.provider}|${package.name}|${package.price}|${package.destinationKey}';
+          if (seen.add(key)) packages.add(package);
+        }
+      }
+
+      final filtered = packages.where((package) {
         if (normalizedDestination.isNotEmpty &&
-            package.destinationKey.toLowerCase() != normalizedDestination.toLowerCase()) {
+            package.destinationKey.toLowerCase() !=
+                normalizedDestination.toLowerCase()) {
           return false;
         }
         if (normalizedType.isNotEmpty &&
@@ -69,7 +97,7 @@ class PackagesRepository {
 
       final result = PackageCatalog(
         packages: filtered,
-        hasMore: catalog.hasMore,
+        hasMore: catalogs.any((catalog) => catalog.hasMore),
       );
       cache.set(result);
       return result;
@@ -81,6 +109,38 @@ class PackagesRepository {
       }
       rethrow;
     }
+  }
+
+  Future<PackageCatalog> _fetchCategory(
+    String category, {
+    required String search,
+    required String packageType,
+    required int limit,
+  }) {
+    return _apiClient.get<PackageCatalog>(
+      '/api/v1/mobile/b2b/packages/',
+      queryParameters: {
+        'limit': limit,
+        'category': category,
+        if (search.isNotEmpty) 'search': search,
+        if (packageType.isNotEmpty) 'type': packageType,
+      },
+      parser: PackageCatalog.fromResponse,
+    );
+  }
+
+  Future<List<String>> _loadCatalogCategories() async {
+    try {
+      final categories = await fetchCategories();
+      final normalized = categories
+          .map((value) => value.trim().toLowerCase())
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false);
+      if (normalized.isNotEmpty) return normalized;
+    } catch (_) {
+      // Use the known smart categories when the category endpoint is temporarily unavailable.
+    }
+    return _defaultCategories;
   }
 
   Future<List<String>> fetchCategories() async {
