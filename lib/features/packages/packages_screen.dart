@@ -30,6 +30,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     ('T.T Turkey', 'turkey'),
     ('Orange Big Data', 'flexnet'),
     ('Orange Balkans', 'orange-balkans'),
+    ('Movistar', 'movistar'),
     ('Manual Fulfillment', 'manual'),
   ];
   final _validityOptions = const [30, 60, 90];
@@ -178,9 +179,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Global coverage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                          Text('Global coverage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                           SizedBox(height: 4),
-                          Text('Search local, regional and global reseller plans.', style: TextStyle(color: Colors.white70, height: 1.35)),
+                          Text('Compare operators and choose a package.', style: TextStyle(color: Colors.white70)),
                         ],
                       ),
                     ),
@@ -188,44 +189,60 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              _CatalogFilterPanel(
-                operators: _operators,
-                validityOptions: _validityOptions,
-                dataOptions: _dataOptions,
-                operator: _selectedOperator,
-                type: _selectedType,
-                validity: _selectedValidity,
-                data: _selectedData,
-                searchController: _searchController,
-                onOperatorChanged: (value) => setState(() => _selectedOperator = value),
-                onTypeChanged: (value) => setState(() => _selectedType = value),
-                onValidityChanged: (value) => setState(() => _selectedValidity = value),
-                onDataChanged: (value) => setState(() => _selectedData = value),
-                onSearchChanged: _onSearchChanged,
+              TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search destination, operator or package',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(onPressed: _clearFilters, icon: const Icon(Icons.clear_rounded)),
+                ),
               ),
-              const SizedBox(height: 16),
-              _SectionTitle(title: 'Plans', trailing: '${visible.length} plans'),
-              const SizedBox(height: 18),
-              if (_loading)
-                const ContentLoadingState(label: 'Loading packages...')
-              else if (_error != null && _packages.isEmpty)
-                ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _operators.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final operator = _operators[index];
+                    final selected = _selectedOperator == operator.$2;
+                    return ChoiceChip(
+                      label: Text(operator.$1),
+                      selected: selected,
+                      onSelected: (_) => setState(() => _selectedOperator = operator.$2),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (_error != null)
+                ErrorState(
+                  message: _error!,
+                  onRetry: _load,
+                )
+              else if (_loading)
+                const LoadingState()
               else if (visible.isEmpty)
-                ContentEmptyState(
-                  icon: Icons.inventory_2_outlined,
+                EmptyState(
                   title: 'No packages found',
-                  message: 'Try changing or clearing the catalog filters.',
+                  message: 'Try another operator, destination or data amount.',
                   actionLabel: 'Clear filters',
                   onAction: _clearFilters,
                 )
               else
-                for (var index = 0; index < visible.length; index++) ...[
-                  _PackageTile(
-                    package: visible[index],
-                    onTap: () => context.push('/packages/detail', extra: visible[index]),
+                ...visible.map(
+                  (package) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _PackageTile(
+                      package: package,
+                      onTap: () => context.push('/packages/${Uri.encodeComponent(package.id)}'),
+                    ),
                   ),
-                  if (index != visible.length - 1) const SizedBox(height: 12),
-                ],
+                ),
             ],
           ),
         ),
@@ -234,179 +251,21 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.trailing});
-  final String title;
-  final String trailing;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
-          Text(trailing, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
-        ],
-      );
-}
-
-class _CatalogFilterPanel extends StatelessWidget {
-  const _CatalogFilterPanel({
-    required this.operators,
-    required this.validityOptions,
-    required this.dataOptions,
-    required this.operator,
-    required this.type,
-    required this.validity,
-    required this.data,
-    required this.searchController,
-    required this.onOperatorChanged,
-    required this.onTypeChanged,
-    required this.onValidityChanged,
-    required this.onDataChanged,
-    required this.onSearchChanged,
-  });
-
-  final List<(String, String)> operators;
-  final List<int> validityOptions;
-  final List<num> dataOptions;
-  final String operator;
-  final String type;
-  final int? validity;
-  final num? data;
-  final TextEditingController searchController;
-  final ValueChanged<String> onOperatorChanged;
-  final ValueChanged<String> onTypeChanged;
-  final ValueChanged<int?> onValidityChanged;
-  final ValueChanged<num?> onDataChanged;
-  final ValueChanged<String> onSearchChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(top: 8),
-          title: Text('Catalog filters', style: theme.textTheme.titleMedium),
-          subtitle: Text('Operator, type, validity, data and search', style: theme.textTheme.bodySmall),
-          children: [
-            _FilterField(
-              label: 'Operator',
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(operator),
-                initialValue: operator,
-                isExpanded: true,
-                items: operators.map((item) => DropdownMenuItem(value: item.$2, child: Text(item.$1))).toList(),
-                onChanged: (value) => onOperatorChanged(value ?? ''),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _FilterField(
-              label: 'Type',
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(type),
-                initialValue: type,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: '', child: Text('All Types')),
-                  DropdownMenuItem(value: 'esim', child: Text('eSIM')),
-                  DropdownMenuItem(value: 'simcard', child: Text('SIM Card')),
-                ],
-                onChanged: (value) => onTypeChanged(value ?? ''),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _FilterField(
-                    label: 'Validity',
-                    child: DropdownButtonFormField<String>(
-                      key: ValueKey('validity-$validity'),
-                      initialValue: validity?.toString() ?? '',
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem(value: '', child: Text('All')),
-                        ...validityOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('$item Days'))),
-                      ],
-                      onChanged: (value) => onValidityChanged(int.tryParse(value ?? '')),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _FilterField(
-                    label: 'Data',
-                    child: DropdownButtonFormField<String>(
-                      key: ValueKey('data-$data'),
-                      initialValue: data?.toString() ?? '',
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem(value: '', child: Text('All')),
-                        ...dataOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('${item}GB'))),
-                      ],
-                      onChanged: (value) => onDataChanged(num.tryParse(value ?? '')),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _FilterField(
-              label: 'Search',
-              child: TextField(
-                controller: searchController,
-                onChanged: onSearchChanged,
-                decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search_rounded)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FilterField extends StatelessWidget {
-  const _FilterField({required this.label, required this.child});
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: .7)),
-          const SizedBox(height: 6),
-          child,
-        ],
-      );
-}
-
 class _StaleDataBanner extends StatelessWidget {
   const _StaleDataBanner();
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(14),
         ),
         child: const Row(
           children: [
-            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(child: Text('Could not refresh. Showing the last available packages.', style: TextStyle(fontWeight: FontWeight.w700))),
+            Icon(Icons.cloud_off_rounded, size: 18),
+            SizedBox(width: 8),
+            Expanded(child: Text('Showing cached catalog data. Pull to refresh.')),
           ],
         ),
       );
@@ -441,8 +300,14 @@ class _PackageTile extends StatelessWidget {
                     height: 54,
                     width: 54,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(17)),
-                    child: _CountryVisual(code: package.countryCode, destinationKey: package.destinationKey),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                    child: _CountryVisual(
+                      code: package.countryCode,
+                      destinationKey: package.destinationKey,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -450,25 +315,25 @@ class _PackageTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(package.destination, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16.5)),
-                        const SizedBox(height: 2),
-                        Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
                         const SizedBox(height: 3),
                         Text(package.displayProvider, style: theme.textTheme.bodySmall),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(package.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: AppColors.primary, fontSize: 17)),
+                  Text(
+                    package.formattedPrice,
+                    style: theme.textTheme.titleMedium?.copyWith(color: AppColors.primary, fontSize: 17),
+                  ),
                 ],
               ),
-              if (package.supportedCountries.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Align(alignment: Alignment.centerLeft, child: _CoveragePreview(countries: package.supportedCountries)),
-              ],
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(16)),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Row(
                   children: [
                     Expanded(child: _InlineMetric(icon: Icons.data_usage_rounded, value: package.dataLabel)),
@@ -484,54 +349,20 @@ class _PackageTile extends StatelessWidget {
                 children: [
                   Text('Reseller-ready plan', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  FilledButton(onPressed: onTap, style: FilledButton.styleFrom(minimumSize: const Size(92, 40), padding: const EdgeInsets.symmetric(horizontal: 16)), child: const Text('View plan')),
+                  FilledButton(
+                    onPressed: onTap,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(92, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text('View plan'),
+                  ),
                 ],
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CoveragePreview extends StatelessWidget {
-  const _CoveragePreview({required this.countries});
-  final List<PackageCountry> countries;
-
-  @override
-  Widget build(BuildContext context) {
-    const previewLimit = 4;
-    final visible = countries.take(previewLimit).toList(growable: false);
-    final remaining = countries.length - visible.length;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (final country in visible)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: AppColors.primaryLight),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _CountryVisual(code: country.code, destinationKey: '' , compact: true),
-                const SizedBox(width: 5),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 74),
-                  child: Text(country.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10.5, fontWeight: FontWeight.w800)),
-                ),
-              ],
-            ),
-          ),
-        if (remaining > 0)
-          Text('+$remaining countries', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
-      ],
     );
   }
 }
@@ -547,34 +378,56 @@ class _InlineMetric extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: AppColors.textSecondary),
           const SizedBox(width: 5),
-          Flexible(child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5))),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
+            ),
+          ),
         ],
       );
 }
 
 class _CountryVisual extends StatelessWidget {
-  const _CountryVisual({required this.code, required this.destinationKey, this.compact = false});
+  const _CountryVisual({required this.code, required this.destinationKey});
   final String code;
   final String destinationKey;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final isEurope = destinationKey.toLowerCase() == 'europe';
-    final url = isEurope
-        ? 'https://flagcdn.com/w160/eu.png'
-        : code.length == 2
-            ? 'https://flagcdn.com/w40/${code.toLowerCase()}.png'
-            : null;
-    if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 15 : 27);
+    if (destinationKey.toLowerCase() == 'europe') {
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Image.asset(
+          'assets/catalog/europe.png',
+          width: 42,
+          height: 42,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => const Icon(
+            Icons.public_rounded,
+            color: AppColors.primary,
+            size: 27,
+          ),
+        ),
+      );
+    }
+    if (code.length != 2) {
+      return const Icon(Icons.public_rounded, color: AppColors.primary, size: 27);
+    }
     return ClipRRect(
-      borderRadius: BorderRadius.circular(compact ? 4 : 6),
+      borderRadius: BorderRadius.circular(6),
       child: Image.network(
-        url,
-        width: isEurope ? (compact ? 20 : 34) : (compact ? 20 : 34),
-        height: isEurope ? (compact ? 14 : 24) : (compact ? 14 : 24),
+        'https://flagsapi.com/${code.toUpperCase()}/flat/64.png',
+        width: 34,
+        height: 24,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 15 : 27),
+        errorBuilder: (context, error, stackTrace) => const Icon(
+          Icons.public_rounded,
+          color: AppColors.primary,
+          size: 27,
+        ),
       ),
     );
   }
