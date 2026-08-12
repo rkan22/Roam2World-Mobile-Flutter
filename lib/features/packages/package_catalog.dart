@@ -182,7 +182,9 @@ class MobilePackage {
     final code = identity.toUpperCase();
     if (j['is_esim'] == false || value == 'sim' || value == 'simcard' || value == 'physical_sim' ||
         (provider.toLowerCase() == 'worldmove' && code.startsWith('WM-EU-B-')) ||
-        (provider.toLowerCase() == 'tgt' && code.contains('E-185-SC-'))) return 'simcard';
+        (provider.toLowerCase() == 'tgt' && code.contains('E-185-SC-'))) {
+      return 'simcard';
+    }
     return 'esim';
   }
 
