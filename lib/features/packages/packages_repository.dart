@@ -1,5 +1,4 @@
 import '../../core/api/api_client.dart';
-import '../../core/api/api_endpoints.dart';
 import '../../core/cache/timed_cache.dart';
 import 'package_catalog.dart';
 
