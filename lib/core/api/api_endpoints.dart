@@ -149,7 +149,7 @@ class ApiEndpoints {
   static const String resellerDealerWalletHistory =
       '/api/v1/resellers/dealers/wallet-history/';
   static const String resellerPendingDealerRequests =
-      '/api/v1/resellers/dealer-requests/pending/';
+     '/api/v1/resellers/dealer-requests/';
 
   static const String failedOrders = '/api/v1/orders/failed/';
   static const String providerOperationLogs =
