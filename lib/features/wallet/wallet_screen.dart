@@ -64,7 +64,7 @@ class _WalletScreenState extends State<WalletScreen> {
   Future<List<WalletRequest>> _loadRequests(String role) async {
     try {
       if (role.toLowerCase() == 'admin') {
-        return _repository.fetchReviewRequests(
+        return await _repository.fetchReviewRequests(
           reviewerRole: role,
           status: 'all',
         );
@@ -76,7 +76,7 @@ class _WalletScreenState extends State<WalletScreen> {
         ]);
         return [...groups[0], ...groups[1]];
       }
-      return _repository.fetchTopUpRequests();
+      return await _repository.fetchTopUpRequests();
     } catch (_) {
       return const [];
     }
