@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
+import '../nekoko/nekoko_lpa_screen.dart';
 import 'sim_converter_data.dart';
 import 'sim_converter_repository.dart';
 
@@ -24,6 +25,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
   ActivationParseResult? _parseResult;
   bool _loading = true;
   bool _parsing = false;
+  bool _openingNekoko = false;
   String? _error;
   String? _parseError;
 
@@ -80,11 +82,28 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (!mounted || data?.text == null) return;
     _activationCode.text = data!.text!.trim();
+    setState(() {});
+  }
+
+  Future<void> _openNekoko() async {
+    final activationCode = _activationCode.text.trim();
+    if (activationCode.isEmpty || _openingNekoko) return;
+    setState(() => _openingNekoko = true);
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => NekokoLpaScreen(activationCode: activationCode),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _openingNekoko = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final conversions = _workspace?.conversions ?? const <SimConversionSummary>[];
+    final canProgram = _parseResult?.valid == true && _activationCode.text.trim().isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
@@ -114,6 +133,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
                     controller: _activationCode,
                     minLines: 2,
                     maxLines: 4,
+                    onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: 'LPA:1\$... or provider activation code',
                       suffixIcon: IconButton(onPressed: _paste, tooltip: 'Paste', icon: const Icon(Icons.content_paste_rounded)),
@@ -133,7 +153,12 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
                   ],
                   if (_parseResult != null) ...[
                     const SizedBox(height: B2BSpacing.lg),
-                    _ParseResultCard(result: _parseResult!),
+                    _ParseResultCard(
+                      result: _parseResult!,
+                      canProgram: canProgram,
+                      openingNekoko: _openingNekoko,
+                      onProgram: _openNekoko,
+                    ),
                   ],
                 ],
               ),
@@ -212,9 +237,17 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
 }
 
 class _ParseResultCard extends StatelessWidget {
-  const _ParseResultCard({required this.result});
+  const _ParseResultCard({
+    required this.result,
+    required this.canProgram,
+    required this.openingNekoko,
+    required this.onProgram,
+  });
 
   final ActivationParseResult result;
+  final bool canProgram;
+  final bool openingNekoko;
+  final VoidCallback onProgram;
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +269,7 @@ class _ParseResultCard extends StatelessWidget {
           Row(children: [
             Icon(result.valid ? Icons.verified_rounded : Icons.warning_amber_rounded, color: result.valid ? AppColors.success : AppColors.warning),
             const SizedBox(width: B2BSpacing.sm),
-            Text(result.valid ? 'Valid activation data' : 'Activation data needs review', style: const TextStyle(fontWeight: FontWeight.w900)),
+            Expanded(child: Text(result.valid ? 'Valid activation data' : 'Activation data needs review', style: const TextStyle(fontWeight: FontWeight.w900))),
           ]),
           if (result.message.isNotEmpty) ...[
             const SizedBox(height: B2BSpacing.sm),
@@ -246,6 +279,19 @@ class _ParseResultCard extends StatelessWidget {
             const SizedBox(height: B2BSpacing.sm),
             Text(row.$1, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
             SelectableText(row.$2, style: const TextStyle(fontWeight: FontWeight.w800)),
+          ],
+          if (canProgram) ...[
+            const SizedBox(height: B2BSpacing.lg),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: openingNekoko ? null : onProgram,
+                icon: openingNekoko
+                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.sim_card_download_rounded),
+                label: Text(openingNekoko ? 'Opening NekokoLPA2...' : 'Program with NekokoLPA2'),
+              ),
+            ),
           ],
         ],
       ),
