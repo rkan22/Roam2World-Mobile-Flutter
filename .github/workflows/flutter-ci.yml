@@ -53,4 +53,9 @@ jobs:
         run: flutter test --dart-define=API_BASE_URL="$PRODUCTION_API_BASE_URL"
 
       - name: Build Android debug APK with production config
-        run: flutter build apk --debug --dart-define=API_BASE_URL="$PRODUCTION_API_BASE_URL"
+        run: |
+          for i in 1 2 3; do
+            flutter build apk --debug --dart-define=API_BASE_URL="$PRODUCTION_API_BASE_URL" && break
+            echo "APK build failed, retrying..."
+            sleep 15
+          done
