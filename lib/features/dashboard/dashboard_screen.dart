@@ -314,6 +314,7 @@ class _QuickActions extends StatelessWidget {
       (Icons.public_rounded, 'Buy eSIM', '/packages'),
       (Icons.account_balance_wallet_outlined, 'Wallet', '/wallet'),
       (Icons.groups_2_outlined, 'Customers', '/customers'),
+      (Icons.sim_card_rounded, 'SIM Tools', '/sim-tools'),
     ];
 
     return DashboardQuickActionsLayout(
