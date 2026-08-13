@@ -1,0 +1,28 @@
+PODS:
+  - ble (0.0.1):
+    - Flutter
+  - ccid (0.1.1):
+    - Flutter
+  - Flutter (1.0.0)
+
+DEPENDENCIES:
+  - ble (from `.symlinks/plugins/ble/ios`)
+  - ccid (from `.symlinks/plugins/ccid/ios`)
+  - Flutter (from `Flutter`)
+
+EXTERNAL SOURCES:
+  ble:
+    :path: ".symlinks/plugins/ble/ios"
+  ccid:
+    :path: ".symlinks/plugins/ccid/ios"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  ble: 12cdc4b77f389bc9adc8c2293c257b267e31a68a
+  ccid: bb5018a9d8894873e19fe72d9afd0eabc1143676
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.17.0
