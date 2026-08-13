@@ -75,6 +75,48 @@ class SimConverterWorkspace {
   }
 }
 
+class SimConverterStatistics {
+  const SimConverterStatistics({
+    required this.totalConversions,
+    required this.successfulConversions,
+    required this.failedConversions,
+    required this.todayConversions,
+  });
+
+  final int totalConversions;
+  final int successfulConversions;
+  final int failedConversions;
+  final int todayConversions;
+
+  int get successRate => totalConversions > 0
+      ? ((successfulConversions / totalConversions) * 100).round()
+      : 0;
+
+  factory SimConverterStatistics.fromResponse(dynamic response) {
+    final root = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
+    int value(String key, [String? alternate]) => int.tryParse(
+          (data[key] ??
+                  (alternate == null ? null : data[alternate]) ??
+                  root[key] ??
+                  0)
+              .toString(),
+        ) ??
+        0;
+    return SimConverterStatistics(
+      totalConversions: value('total_conversions', 'totalConversions'),
+      successfulConversions:
+          value('successful_conversions', 'successfulConversions'),
+      failedConversions: value('failed_conversions', 'failedConversions'),
+      todayConversions: value('today_conversions', 'todayConversions'),
+    );
+  }
+}
+
 class ActivationParseResult {
   const ActivationParseResult({
     required this.valid,
