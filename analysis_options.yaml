@@ -12,3 +12,4 @@ linter:
     # Legacy/vendor async flows intentionally return Futures from try blocks.
     # Keep CI focused on project errors without changing vendor behavior.
     unawaited_futures: false
+
