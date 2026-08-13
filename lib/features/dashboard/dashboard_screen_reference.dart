@@ -724,6 +724,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: AppColors.orange,
         onTap: () => context.go('/orders'),
       ),
+      _ActionData(
+        label: 'SIM Tools',
+        icon: Icons.sim_card_rounded,
+        color: AppColors.navy,
+        onTap: () => context.push('/sim-tools'),
+      ),
       if (!kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android ||
               defaultTargetPlatform == TargetPlatform.iOS))
