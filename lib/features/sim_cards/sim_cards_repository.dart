@@ -44,8 +44,20 @@ class SimCardsRepository {
     return _apiClient.get<List<SimCardOrder>>(
       ApiEndpoints.mobileSimOrderHistory,
       parser: (response) {
-        final root = Map<String, dynamic>.from(response as Map);
-        final raw = root['orders'] ?? root['data'] ?? const [];
+        dynamic raw;
+
+        if (response is List) {
+          raw = response;
+        } else if (response is Map) {
+          final root = Map<String, dynamic>.from(response);
+          raw = root['orders'] ??
+              root['results'] ??
+              root['data'] ??
+              const [];
+        } else {
+          raw = const [];
+        }
+
         return raw is List
             ? raw
                 .whereType<Map>()
