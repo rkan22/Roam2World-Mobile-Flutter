@@ -21,6 +21,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
   final _repository = SimConverterRepository();
   final _activationCode = TextEditingController();
   SimConverterWorkspace? _workspace;
+  SimConverterStatistics? _statistics;
   ActivationParseResult? _parseResult;
   bool _loading = true;
   bool _parsing = false;
@@ -45,12 +46,19 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
       _error = null;
     });
     try {
-      final workspace = await _repository.fetchConversions();
-      if (mounted) setState(() => _workspace = workspace);
+      final results = await Future.wait([
+        _repository.fetchConversions(),
+        _repository.fetchStatistics(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _workspace = results[0] as SimConverterWorkspace;
+        _statistics = results[1] as SimConverterStatistics;
+      });
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'SIM converter history could not be loaded.');
+      if (mounted) setState(() => _error = 'SIM converter data could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -85,6 +93,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
   @override
   Widget build(BuildContext context) {
     final conversions = _workspace?.conversions ?? const <SimConversionSummary>[];
+    final stats = _statistics;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
@@ -97,13 +106,51 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.xs, B2BSpacing.lg, B2BSpacing.xxl),
           children: [
-            Text('Profile inspection', style: Theme.of(context).textTheme.headlineMedium),
+            Text('SIM Converter', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
-              'Validate an eSIM activation code and review server-recorded conversion history.',
+              'Validate activation data and monitor conversion activity.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: B2BSpacing.lg),
+            if (stats != null) ...[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth >= 700 ? 4 : 2;
+                  return GridView.count(
+                    crossAxisCount: columns,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: B2BSpacing.sm,
+                    mainAxisSpacing: B2BSpacing.sm,
+                    childAspectRatio: constraints.maxWidth >= 700 ? 1.8 : 1.55,
+                    children: [
+                      _StatCard(
+                        label: 'Total conversions',
+                        value: '${stats.totalConversions}',
+                        icon: Icons.swap_horiz_rounded,
+                      ),
+                      _StatCard(
+                        label: 'Success rate',
+                        value: '${stats.successRate}%',
+                        icon: Icons.check_circle_outline_rounded,
+                      ),
+                      _StatCard(
+                        label: 'Failed',
+                        value: '${stats.failedConversions}',
+                        icon: Icons.error_outline_rounded,
+                      ),
+                      _StatCard(
+                        label: 'Today',
+                        value: '${stats.todayConversions}',
+                        icon: Icons.today_rounded,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: B2BSpacing.xl),
+            ],
             B2BSurface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,6 +253,29 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.value, required this.icon});
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return B2BSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: AppColors.primary),
+          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+        ],
       ),
     );
   }
