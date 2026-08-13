@@ -1,19 +1,27 @@
-import '../models/notification_model.dart';
+import '../notification_data.dart';
+import '../notifications_repository.dart';
 
-/// Repository contract for notification parity.
-///
-/// API mapping will be connected once the backend notification endpoints are
-/// exposed/confirmed.
 class NotificationRepository {
-  Future<List<NotificationModel>> fetchNotifications() async {
-    return const [];
+  NotificationRepository({
+    NotificationsRepository? repository,
+  }) : _repository = repository ?? NotificationsRepository();
+
+  final NotificationsRepository _repository;
+
+  Future<List<MobileNotificationItem>> fetchNotifications() {
+    return _repository.fetchNotifications();
   }
 
   Future<int> fetchUnreadCount() async {
-    return 0;
+    final items = await _repository.fetchNotifications();
+    return items.where((item) => !item.isRead).length;
   }
 
-  Future<void> markAsRead(String id) async {}
+  Future<void> markAsRead(String id) {
+    return _repository.markRead(int.parse(id));
+  }
 
-  Future<void> markAllAsRead() async {}
+  Future<void> markAllAsRead() {
+    return _repository.markAllRead();
+  }
 }
