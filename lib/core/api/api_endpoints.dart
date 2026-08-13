@@ -93,14 +93,12 @@ class ApiEndpoints {
   static String mobileSmartOrderDetail(Object orderId) =>
       '/api/v1/mobile/smart/orders/$orderId/';
   static const String mobileSmartUsageCheck = '/api/v1/mobile/smart/usage-check/';
-  static const String mobileSmartSimPackages =
-      '/api/v1/mobile/b2b/sim-cards/packages/';
-  static const String mobileSmartSimOrders =
-      '/api/v1/mobile/b2b/sim-cards/orders/';
-  static const String mobileSmartSimCheckout =
-      '/api/v1/mobile/b2b/sim-cards/orders/';
-  static const String mobileSmartSimOrderHistory =
-      '/api/v1/mobile/b2b/sim-cards/orders/';
+  static const String mobileSimPackages =
+      '/api/v1/mobile/packages/';
+  static const String mobileSimOrders =
+      '/api/v1/mobile/orders/';
+  static const String mobileSimOrderHistory =
+      '/api/v1/mobile/orders/';
   static const String mobileSmartWalletStatus =
       '/api/v1/mobile/smart/wallet/status/';
   static const String mobileSmartWalletChargeOrder =

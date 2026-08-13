@@ -12,7 +12,7 @@ class SimCardsRepository {
     String? region,
   }) {
     return _apiClient.get<SimCardCatalog>(
-      ApiEndpoints.mobileSmartSimPackages,
+      ApiEndpoints.mobileSimPackages,
       queryParameters: {
         if (productId != null && productId.trim().isNotEmpty)
           'productId': productId.trim(),
@@ -31,10 +31,9 @@ class SimCardsRepository {
       throw ArgumentError.value(quantity, 'quantity', 'must be at least 1');
     }
     return _apiClient.post<SimCardOrderResult>(
-      ApiEndpoints.mobileSmartSimOrders,
+      ApiEndpoints.mobileSimOrders,
       data: {
-        'productId': productId.trim(),
-        'qty': quantity,
+        'package_id': productId.trim(),
         if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
       },
       parser: SimCardOrderResult.fromResponse,
@@ -43,10 +42,22 @@ class SimCardsRepository {
 
   Future<List<SimCardOrder>> fetchOrders() {
     return _apiClient.get<List<SimCardOrder>>(
-      ApiEndpoints.mobileSmartSimOrderHistory,
+      ApiEndpoints.mobileSimOrderHistory,
       parser: (response) {
-        final root = Map<String, dynamic>.from(response as Map);
-        final raw = root['orders'] ?? root['data'] ?? const [];
+        dynamic raw;
+
+        if (response is List) {
+          raw = response;
+        } else if (response is Map) {
+          final root = Map<String, dynamic>.from(response);
+          raw = root['orders'] ??
+              root['results'] ??
+              root['data'] ??
+              const [];
+        } else {
+          raw = const [];
+        }
+
         return raw is List
             ? raw
                 .whereType<Map>()
