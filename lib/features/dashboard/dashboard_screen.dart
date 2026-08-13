@@ -11,6 +11,7 @@ import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 import 'widgets/dashboard_adaptive_sections.dart';
+import '../../shared/widgets/notification_icon_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, this.repository});
@@ -174,10 +175,8 @@ class _PremiumHeader extends StatelessWidget {
             ],
           ),
         ),
-        IconButton.filledTonal(
-          onPressed: onNotificationsTap,
-          tooltip: 'Notifications',
-          icon: const Icon(Icons.notifications_none_rounded),
+        NotificationIconButton(
+          onTap: onNotificationsTap,
         ),
       ],
     );
