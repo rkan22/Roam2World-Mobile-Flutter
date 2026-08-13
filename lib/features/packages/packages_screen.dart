@@ -96,7 +96,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
         item.id,
         item.dataLabel,
         item.validityLabel,
-      ].any((value) => value.toLowerCase().contains(term))) return false;
+      ].any((value) => value.toLowerCase().contains(term))) {
+        return false;
+      }
       return true;
     }).toList(growable: false);
   }
