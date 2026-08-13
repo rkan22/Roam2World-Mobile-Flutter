@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/routing/app_role.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
@@ -145,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 14),
           _recentOrders(data),
           const SizedBox(height: 14),
-          _quickActions(),
+          _quickActions(parseAppRole(data.role)),
         ],
       ),
     );
@@ -698,7 +699,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _quickActions() {
+ Widget _quickActions(AppRole role) {
     final actions = <_ActionData>[
       _ActionData(
         label: 'Buy eSIM',
@@ -723,6 +724,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         icon: Icons.swap_horiz_rounded,
         color: AppColors.orange,
         onTap: () => context.go('/orders'),
+      ),
+      _ActionData(
+        label: 'SIM Tools',
+        icon: Icons.sim_card_rounded,
+        color: AppColors.navy,
+        onTap: () => context.push('/sim-tools'),
       ),
       if (!kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android ||
