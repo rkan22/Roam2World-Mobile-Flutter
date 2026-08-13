@@ -16,6 +16,13 @@ class SimConverterRepository {
     );
   }
 
+  Future<SimConverterStatistics> fetchStatistics() {
+    return _apiClient.get<SimConverterStatistics>(
+      ApiEndpoints.simConverterStatistics,
+      parser: SimConverterStatistics.fromResponse,
+    );
+  }
+
   Future<ActivationParseResult> parseActivationCode(String activationCode) {
     return _apiClient.post<ActivationParseResult>(
       ApiEndpoints.simConverterParseActivationCode,
