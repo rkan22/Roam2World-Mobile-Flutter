@@ -70,6 +70,27 @@ class WalletRepository {
     );
   }
 
+  Future<ProviderAllocationData> fetchProviderAllocations() {
+    return _apiClient.get<ProviderAllocationData>(
+      ApiEndpoints.providerAllocations,
+      parser: ProviderAllocationData.fromResponse,
+    );
+  }
+
+  Future<ProviderAllocationData> saveProviderAllocations(
+    Map<String, double> allocations,
+  ) {
+    return _apiClient.put<ProviderAllocationData>(
+      ApiEndpoints.providerAllocations,
+      data: {
+        'allocations': allocations.map(
+          (key, value) => MapEntry(key, value.toStringAsFixed(2)),
+        ),
+      },
+      parser: ProviderAllocationData.fromResponse,
+    );
+  }
+
   Future<List<WalletRequest>> fetchTopUpRequests() {
     return _apiClient.get<List<WalletRequest>>(
       ApiEndpoints.mobileWalletRequests,
@@ -162,4 +183,38 @@ class WalletRepository {
   }
 
   void invalidateCache() => _cache.clear();
+}
+
+class ProviderAllocationData {
+  const ProviderAllocationData({
+    required this.walletBalance,
+    required this.allocations,
+  });
+
+  final double walletBalance;
+  final Map<String, double> allocations;
+
+  double get allocated =>
+      allocations.values.fold<double>(0, (sum, value) => sum + value);
+
+  double get available => (walletBalance - allocated).clamp(0, double.infinity);
+
+  factory ProviderAllocationData.fromResponse(dynamic response) {
+    final root = Map<String, dynamic>.from(response as Map);
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'] as Map)
+        : root;
+    final raw = data['allocations'] is Map
+        ? Map<String, dynamic>.from(data['allocations'] as Map)
+        : const <String, dynamic>{};
+    return ProviderAllocationData(
+      walletBalance: double.tryParse('${data['wallet_balance'] ?? 0}') ?? 0,
+      allocations: raw.map(
+        (key, value) => MapEntry(
+          key,
+          double.tryParse('$value') ?? 0,
+        ),
+      ),
+    );
+  }
 }
