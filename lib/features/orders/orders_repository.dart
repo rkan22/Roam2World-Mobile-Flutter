@@ -4,6 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/routing/app_role.dart';
 import '../../core/storage/token_storage.dart';
+import '../esims/esim_history_repository.dart';
 import '../packages/package_catalog.dart';
 import 'order_history.dart';
 import 'order_result.dart';
@@ -32,11 +33,12 @@ class OrdersRepository {
       parser: OrderHistory.fromResponse,
     );
 
-    if (!isAdmin) return history;
+    final enrichedHistory = await _enrichCustomerNames(history);
+    if (!isAdmin) return enrichedHistory;
 
     final normalizedStatus = status?.trim().toLowerCase() ?? '';
     final normalizedSearch = search?.trim().toLowerCase() ?? '';
-    final filtered = history.orders.where((order) {
+    final filtered = enrichedHistory.orders.where((order) {
       final statusMatches = normalizedStatus.isEmpty || order.status.toLowerCase() == normalizedStatus;
       final searchMatches = normalizedSearch.isEmpty ||
           order.orderNumber.toLowerCase().contains(normalizedSearch) ||
@@ -46,6 +48,53 @@ class OrdersRepository {
     }).toList(growable: false);
 
     return OrderHistory(orders: filtered, count: filtered.length);
+  }
+
+  Future<OrderHistory> _enrichCustomerNames(OrderHistory history) async {
+    if (history.orders.every((order) => order.customerName.trim().isNotEmpty)) {
+      return history;
+    }
+
+    try {
+      final page = await _apiClient.get<EsimHistoryPage>(
+        ApiEndpoints.mobileEsimHistory,
+        queryParameters: const {'limit': 200, 'offset': 0},
+        parser: (response) {
+          final root = Map<String, dynamic>.from(response as Map);
+          final raw = root['data'] is List ? root['data'] as List : const [];
+          return EsimHistoryPage(
+            items: raw
+                .whereType<Map>()
+                .map((item) => EsimHistoryItem.fromJson(Map<String, dynamic>.from(item)))
+                .toList(),
+            totalCount: int.tryParse('${root['total_count'] ?? root['count'] ?? raw.length}') ?? raw.length,
+            hasMore: root['has_more'] == true,
+          );
+        },
+      );
+
+      final byEsimId = <int, String>{};
+      final byOrderNumber = <String, String>{};
+      for (final item in page.items) {
+        final name = item.customerName.trim();
+        if (name.isEmpty) continue;
+        if (item.id > 0) byEsimId[item.id] = name;
+        final orderNumber = item.orderNumber.trim().toLowerCase();
+        if (orderNumber.isNotEmpty) byOrderNumber[orderNumber] = name;
+      }
+
+      final orders = history.orders.map((order) {
+        if (order.customerName.trim().isNotEmpty) return order;
+        final byId = order.esimId == null ? null : byEsimId[order.esimId!];
+        final byNumber = byOrderNumber[order.orderNumber.trim().toLowerCase()];
+        final name = (byId ?? byNumber ?? '').trim();
+        return name.isEmpty ? order : order.withCustomerName(name);
+      }).toList(growable: false);
+
+      return OrderHistory(orders: orders, count: history.count);
+    } catch (_) {
+      return history;
+    }
   }
 
   Future<MobileOrderResult> createOrder({
