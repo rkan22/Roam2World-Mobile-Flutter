@@ -34,7 +34,7 @@ class DealerNetworkRepository {
     );
 
     final requestsFuture = _apiClient.get<List<DealerFundingRequest>>(
-      ApiEndpoints.resellerPendingDealerRequests,
+      '/api/v1/resellers/dealer-requests/pending_requests/',
       parser: (response) {
         final root = response is Map
             ? Map<String, dynamic>.from(response)
