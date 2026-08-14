@@ -145,6 +145,12 @@ class MobilePackage {
 
   static String _name(Map<String, dynamic> j, String identity, String wmCode, dynamic data, dynamic validity) {
     final p = _text(j, ['provider']).toLowerCase();
+    final rawName = _text(j, ['name', 'package_name', 'productName', 'product_name', 'planName', 'title']);
+    final fallbackName = _simplifyRawName(rawName.isEmpty ? 'Package' : rawName);
+    final dataText = _displayData(data);
+    final validityText = _displayValidity(validity);
+    final suffix = [dataText, validityText].where((value) => value.isNotEmpty).join(' ');
+
     if (p == 'worldmove') {
       final code = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
       final operator = code.startsWith('WM-EU-B-')
@@ -158,19 +164,18 @@ class MobilePackage {
                       : code.startsWith('WM-E-J1-O-')
                           ? 'Orange Europe'
                           : 'Worldmove';
-      final parts = <String>[operator];
-      if (data != null) parts.add('${_clean(data)}GB');
-      if (validity != null) parts.add('${_clean(validity)} Days');
-      return parts.join(' ');
+      return suffix.isEmpty ? fallbackName : '$operator $suffix';
     }
     if (p == 'tgt') {
-      final parts = <String>['Orange Balkans', identity.toUpperCase().contains('E-185-SC-') ? 'SIM Card' : 'eSIM'];
-      if (data != null) parts.add('${_clean(data)}GB');
-      if (validity != null) parts.add('${_clean(validity)} Days');
-      return parts.join(' ');
+      return suffix.isEmpty ? 'Orange Balkans' : 'Orange Balkans $suffix';
     }
-    final value = _text(j, ['name', 'package_name', 'productName', 'product_name', 'planName', 'title']);
-    return value.isEmpty ? 'eSIM package' : value;
+    if (p == 'flexnet') {
+      return suffix.isEmpty ? 'Orange Big Data' : 'Orange Big Data $suffix';
+    }
+    if (p.contains('airhub')) {
+      return suffix.isEmpty ? fallbackName : 'Vodafone $suffix';
+    }
+    return fallbackName.isEmpty ? 'Package' : fallbackName;
   }
 
   static String _display(Map<String, dynamic> j, String identity, String wmCode) {
@@ -263,6 +268,35 @@ class MobilePackage {
 class PackageCountry {
   const PackageCountry({required this.name, required this.code});
   final String name, code;
+}
+
+String _displayData(dynamic value) {
+  if (value == null) return '';
+  final text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) return '';
+  final numeric = num.tryParse(text);
+  return numeric == null ? text : '${_clean(numeric)}GB';
+}
+
+String _displayValidity(dynamic value) {
+  if (value == null) return '';
+  var text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) return '';
+  final numeric = num.tryParse(text);
+  if (numeric != null) return '${_clean(numeric)} Days';
+  text = text.replaceAll(RegExp(r'\bD\b', caseSensitive: false), 'Days');
+  return text;
+}
+
+String _simplifyRawName(String value) {
+  var text = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+  text = text.replaceFirst(RegExp(r'^\s*[\[【]?(?:eSIM|Sim|SIM)[\]】]?\s*', caseSensitive: false), '');
+  text = text.replaceAll(RegExp(r'\([^)]*countries?[^)]*\)', caseSensitive: false), '');
+  text = text.replaceAll(RegExp(r'\(e0?1\)', caseSensitive: false), '');
+  text = text.replaceAll(RegExp(r'\busage\s+package\b', caseSensitive: false), '');
+  text = text.replaceAll(RegExp(r'\s*\/\s*'), ' ');
+  text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return text;
 }
 
 Iterable<dynamic> _flattenCoverage(dynamic value) sync* {
