@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
@@ -256,6 +257,14 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
         symbol: '$currency ',
       ).format(value);
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/dashboard');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final role = _role;
@@ -265,6 +274,11 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: _goBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Back',
+        ),
         title: const Text('Finance Ledger'),
         actions: [
           IconButton(
