@@ -99,12 +99,17 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                   const SizedBox(height: B2BSpacing.lg),
                   DropdownButtonFormField<String>(
                     initialValue: provider,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Provider'),
                     items: providers
                         .map(
                           (item) => DropdownMenuItem(
                             value: item,
-                            child: Text(_providerLabel(item)),
+                            child: Text(
+                              _providerLabel(item),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -118,17 +123,23 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                   const SizedBox(height: B2BSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: packageId,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Package scope'),
                     items: [
                       const DropdownMenuItem(
                         value: '',
-                        child: Text('All packages for this provider'),
+                        child: Text(
+                          'All packages for this provider',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       ...packages.map(
                         (item) => DropdownMenuItem(
                           value: item.id,
                           child: Text(
                             '${item.name} · ${item.dataLabel} · ${item.validityLabel}',
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
