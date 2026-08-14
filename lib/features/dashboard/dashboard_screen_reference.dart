@@ -123,6 +123,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final data = _data!;
+    if (parseAppRole(data.role) == AppRole.admin) {
+      return _adminDashboard(data);
+    }
+
     return RefreshIndicator(
       onRefresh: () => _load(forceRefresh: true),
       child: ListView(
@@ -143,6 +147,500 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 14),
           _quickActions(parseAppRole(data.role)),
         ],
+      ),
+    );
+  }
+
+  Widget _adminDashboard(DashboardData data) {
+    return RefreshIndicator(
+      onRefresh: () => _load(forceRefresh: true),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+        children: [
+          if (_showingStaleData) ...[
+            _staleBanner(),
+            const SizedBox(height: 12),
+          ],
+          _adminHeader(),
+          const SizedBox(height: 18),
+          _adminControlCenter(data),
+          const SizedBox(height: 14),
+          _adminKpis(data),
+          const SizedBox(height: 14),
+          _adminEsimStatus(data),
+          const SizedBox(height: 14),
+          _adminTools(),
+          const SizedBox(height: 14),
+          _recentOrders(data, adminStyle: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _adminHeader() {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SquareIconButton(
+          icon: Icons.menu_rounded,
+          onTap: () => showR2WWorkspaceMenu(context, AppRole.admin),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Admin Dashboard',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Sales, eSIM inventory, orders and operational tools.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        _SquareIconButton(
+          icon: Icons.refresh_rounded,
+          onTap: () => _load(forceRefresh: true),
+        ),
+        const SizedBox(width: 8),
+        _SquareIconButton(
+          icon: Icons.notifications_none_rounded,
+          badge: true,
+          onTap: () => context.push('/notifications'),
+        ),
+      ],
+    );
+  }
+
+  Widget _adminControlCenter(DashboardData data) {
+    final theme = Theme.of(context);
+    final recentCount = data.recentOrders.length;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22020817),
+            blurRadius: 26,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .09),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.monitor_heart_outlined,
+                  color: AppColors.accent,
+                  size: 23,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Control Center',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Live dashboard data',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: .35),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.circle, size: 7, color: AppColors.success),
+                    SizedBox(width: 6),
+                    Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: .8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Text(
+            _money(data.todaySales, data.currency),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.8,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Today revenue',
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _AdminDarkMetric(
+                  label: 'Active eSIMs',
+                  value: '${data.activeEsimCount}',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _AdminDarkMetric(
+                  label: 'Recent orders',
+                  value: '$recentCount',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _adminKpis(DashboardData data) {
+    final items = [
+      _MetricData(
+        'Today Revenue',
+        _money(data.todaySales, data.currency),
+        Icons.today_outlined,
+        AppColors.primary,
+        AppColors.primarySoft,
+      ),
+      _MetricData(
+        'Total Revenue',
+        _money(data.monthlySales, data.currency),
+        Icons.trending_up_rounded,
+        AppColors.success,
+        AppColors.successSoft,
+      ),
+      _MetricData(
+        'Active eSIMs',
+        '${data.activeEsimCount}',
+        Icons.sim_card_outlined,
+        AppColors.violet,
+        const Color(0xFFF3EEFF),
+      ),
+      _MetricData(
+        'Total eSIMs',
+        '${data.totalEsimCount}',
+        Icons.inventory_2_outlined,
+        AppColors.orange,
+        const Color(0xFFFFF2E8),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - 10) / 2;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final item in items)
+              SizedBox(width: width, child: _adminKpiCard(item)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _adminKpiCard(_MetricData metric) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: metric.soft,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(metric.icon, size: 18, color: metric.color),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            metric.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.4,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            metric.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _adminEsimStatus(DashboardData data) {
+    final theme = Theme.of(context);
+    final total = data.totalEsimCount;
+    final active = data.activeEsimCount;
+    final ratio = total <= 0 ? 0.0 : (active / total).clamp(0.0, 1.0).toDouble();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'eSIM Status',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                '$active / $total active',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 8,
+              backgroundColor: AppColors.primarySoft,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _AdminStatusValue(
+                  label: 'Active',
+                  value: '${data.activeEsimCount}',
+                  color: AppColors.success,
+                ),
+              ),
+              Container(width: 1, height: 36, color: AppColors.border),
+              Expanded(
+                child: _AdminStatusValue(
+                  label: 'Expired',
+                  value: '${data.expiredEsimCount}',
+                  color: AppColors.warning,
+                ),
+              ),
+              Container(width: 1, height: 36, color: AppColors.border),
+              Expanded(
+                child: _AdminStatusValue(
+                  label: 'Total',
+                  value: '${data.totalEsimCount}',
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _adminTools() {
+    final tools = <_AdminToolData>[
+      _AdminToolData(
+        'Operations',
+        'Provider & order ops',
+        Icons.monitor_heart_outlined,
+        AppColors.primary,
+        () => context.push('/operations'),
+      ),
+      _AdminToolData(
+        'Reports',
+        'Sales & analytics',
+        Icons.analytics_outlined,
+        AppColors.violet,
+        () => context.push('/reports'),
+      ),
+      _AdminToolData(
+        'Finance',
+        'Transactions & credit',
+        Icons.account_balance_wallet_outlined,
+        AppColors.success,
+        () => context.push('/finance'),
+      ),
+      _AdminToolData(
+        'Resellers',
+        'Partner management',
+        Icons.groups_2_outlined,
+        AppColors.orange,
+        () => context.push('/admin/resellers'),
+      ),
+    ];
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Admin Tools',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Open the main operational areas from one place.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (var index = 0; index < tools.length; index++) ...[
+            _adminToolRow(tools[index]),
+            if (index != tools.length - 1) const Divider(height: 1),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _adminToolRow(_AdminToolData tool) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: tool.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: tool.color.withValues(alpha: .09),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(tool.icon, size: 20, color: tool.color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tool.title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tool.subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,9 +896,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _recentOrders(DashboardData data) {
+  Widget _recentOrders(DashboardData data, {bool adminStyle = false}) {
     final theme = Theme.of(context);
-    final orders = data.recentOrders.take(4).toList(growable: false);
+    final orders = data.recentOrders.take(adminStyle ? 5 : 4).toList(growable: false);
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -415,19 +913,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'Recent Orders',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent Orders',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      if (adminStyle) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'Latest order activity across the platform',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                TextButton(onPressed: () => context.go('/orders'), child: const Text('View all')),
+                TextButton(onPressed: () => context.push('/orders'), child: const Text('View all')),
               ],
             ),
           ),
           if (orders.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-              child: Text('Your latest eSIM orders will appear here.', style: theme.textTheme.bodyMedium),
+              child: Text('Latest eSIM orders will appear here.', style: theme.textTheme.bodyMedium),
             )
           else
             for (var i = 0; i < orders.length; i++) ...[
@@ -456,13 +968,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(Icons.public_rounded, size: 15, color: AppColors.primary),
+            child: const Icon(Icons.public_rounded, size: 16, color: AppColors.primary),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -475,11 +987,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(date, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                Text(
+                  date,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
+                ),
               ],
             ),
           ),
@@ -491,12 +1008,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _money(order.totalAmount, currency),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 completed ? '● Completed' : '● ${order.status}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 9.5,
                   color: completed ? AppColors.success : AppColors.warning,
@@ -634,6 +1153,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+class _AdminDarkMetric extends StatelessWidget {
+  const _AdminDarkMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: .08)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _AdminStatusValue extends StatelessWidget {
+  const _AdminStatusValue({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
+      );
+}
+
 class _SquareIconButton extends StatelessWidget {
   const _SquareIconButton({required this.icon, required this.onTap, this.badge = false});
   final IconData icon;
@@ -683,6 +1275,22 @@ class _MetricData {
 class _ActionData {
   const _ActionData(this.label, this.icon, this.color, this.onTap);
   final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+}
+
+class _AdminToolData {
+  const _AdminToolData(
+    this.title,
+    this.subtitle,
+    this.icon,
+    this.color,
+    this.onTap,
+  );
+
+  final String title;
+  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
