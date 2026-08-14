@@ -126,15 +126,23 @@ class MobilePackage {
       if (code.startsWith('WM-E-J1-O-')) return 'worldmove';
       return 'worldmove';
     }
+
+    // Provider identity wins over display labels. TGT plans can contain Turkey
+    // in their coverage/labels but they belong to Orange Balkans, never the
+    // T.T Turkey operator tab. The Turkey tab is reserved for WM-TR-* plans.
+    if (p == 'tgt') return 'orange-balkans';
+    if (p == 'flexnet') return 'flexnet';
+    if (p.contains('airhub')) return 'vodafone';
+    if (p == 'manual') return 'manual';
+
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
     if (label.contains('orange') && label.contains('europe')) return 'worldmove';
     if (label.contains('orange') && label.contains('world')) return 'orange-world';
     if (label.contains('orange') && label.contains('balkan')) return 'orange-balkans';
-    if (label.contains('t.t') || label.contains('turkey') || label.contains('turkiye')) return 'turkey';
-    if (label.contains('vodafone') || p.contains('airhub')) return 'vodafone';
-    if (label.contains('big data') || p == 'flexnet') return 'flexnet';
-    if (label.contains('balkan') || p == 'tgt') return 'orange-balkans';
+    if (label.contains('vodafone')) return 'vodafone';
+    if (label.contains('big data')) return 'flexnet';
+    if (label.contains('balkan')) return 'orange-balkans';
     return p;
   }
 
