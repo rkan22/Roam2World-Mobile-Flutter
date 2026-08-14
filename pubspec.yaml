@@ -26,6 +26,25 @@ dependencies:
   url_launcher: ^6.3.2
   zxing_lib: ^1.1.4
   flutter_staggered_grid_view: ^0.7.0
+  permission_handler: ^12.0.3
+  file_picker: ^10.3.10
+  desktop_drop: ^0.7.1
+  mobile_scanner: ^7.4.0
+  webview_flutter: ^4.14.1
+  device_info_plus: ^12.4.0
+  sqflite_common_ffi: ^2.4.2
+  sqflite_common_ffi_web: ^1.1.2
+  app_links: ^7.2.1
+  shared_preferences: ^2.5.5
+  flutter_local_notifications: ^20.1.0
+  package_info_plus: ^9.0.1
+  google_fonts: ^8.2.1
+  pointycastle: ^4.0.0
+  dlibphonenumber: ^1.1.69
+  ble:
+    path: vendor/NekokoLPA2/local_packages/ble
+  ccid:
+    path: vendor/NekokoLPA2/local_packages/ccid
   roam_lpa_core:
     path: packages/roam_lpa_core
 
