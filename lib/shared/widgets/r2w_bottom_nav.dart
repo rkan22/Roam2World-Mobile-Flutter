@@ -162,7 +162,9 @@ Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
 }
 
 bool _keepsBackHistory(String route) =>
-    route == '/reports' || route == '/operations';
+    route == '/reports' ||
+    route == '/operations' ||
+    route == '/pricing/rules';
 
 List<_NavItem> _itemsFor(AppRole role) {
   if (role == AppRole.client || role == AppRole.publicUser) {
@@ -195,9 +197,6 @@ List<_NavItem> _itemsFor(AppRole role) {
 List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
   if (role == AppRole.reseller) {
     return const [
-      _WorkspaceItem('Dashboard', '/dashboard', Icons.dashboard_outlined, 'Reseller dashboard'),
-      _WorkspaceItem('Catalog', '/packages', Icons.layers_outlined, 'SIM & eSIM catalog'),
-      _WorkspaceItem('Catalog Controls', '/packages', Icons.tune_rounded, 'Catalog visibility controls'),
       _WorkspaceItem('Clients', '/customers', Icons.groups_outlined, 'Client management'),
       _WorkspaceItem('Dealers', '/dealers', Icons.people_alt_outlined, 'Dealer management'),
       _WorkspaceItem('My SIMs & eSIMs', '/esims', Icons.sim_card_outlined, 'SIM & eSIM inventory'),
@@ -206,14 +205,8 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
       _WorkspaceItem('Dealer Wallet', '/wallet', Icons.wallet_outlined, 'Dealer wallet funding'),
       _WorkspaceItem('Dealer Pricing', '/dealers/pricing', Icons.percent_rounded, 'Dealer pricing'),
       _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Central pricing and markup rules'),
-      _WorkspaceItem('Coverage', '/packages', Icons.map_outlined, 'Coverage and availability'),
-      _WorkspaceItem('Dealer Performance', '/reports', Icons.trending_up_rounded, 'Dealer performance'),
-      _WorkspaceItem('Profitability', '/finance', Icons.attach_money_rounded, 'Provider profitability'),
       _WorkspaceItem('Operations', '/operations', Icons.dns_outlined, 'Operations center'),
-      _WorkspaceItem('Failed Orders', '/orders', Icons.warning_amber_rounded, 'Failed orders queue'),
-      _WorkspaceItem('API Logs', '/operations', Icons.description_outlined, 'API and webhook logs'),
-      _WorkspaceItem('Audit Log', '/profile', Icons.shield_outlined, 'Reseller audit log'),
-      _WorkspaceItem('Notifications', '/notifications', Icons.notifications_none_rounded, 'Notification rules'),
+      _WorkspaceItem('Notifications', '/notifications', Icons.notifications_none_rounded, 'Notification center'),
       _WorkspaceItem('Reports', '/reports', Icons.analytics_outlined, 'Reports & analytics'),
       _WorkspaceItem('Profile', '/profile', Icons.person_outline_rounded, 'Profile and workspace preferences'),
     ];
