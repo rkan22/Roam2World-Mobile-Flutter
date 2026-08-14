@@ -23,6 +23,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   MobileOrderSummary get order => widget.order;
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/orders');
+    }
+  }
+
   Future<void> _openLinkedSim() async {
     final esimId = order.esimId;
     if (esimId == null || _openingLinkedSim) return;
@@ -46,6 +54,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final statusColor = _statusColor(order.status);
     final customer = order.customerName.trim().isEmpty
         ? 'Direct customer'
@@ -68,7 +77,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Row(
               children: [
                 IconButton.filledTonal(
-                  onPressed: () => context.pop(),
+                  onPressed: _goBack,
                   icon: const Icon(Icons.arrow_back_rounded),
                 ),
                 const SizedBox(width: B2BSpacing.sm),
@@ -76,9 +85,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Order detail', style: Theme.of(context).textTheme.headlineMedium),
+                      Text('Order detail', style: theme.textTheme.headlineMedium),
                       const SizedBox(height: B2BSpacing.xxs),
-                      Text(orderNumber, style: Theme.of(context).textTheme.bodyMedium),
+                      Text(orderNumber, style: theme.textTheme.bodyMedium),
                     ],
                   ),
                 ),
@@ -88,76 +97,88 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Container(
               padding: const EdgeInsets.all(B2BSpacing.xl),
               decoration: BoxDecoration(
-                gradient: B2BGradients.primary,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(B2BRadius.xl),
-                boxShadow: B2BShadows.hero,
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+                boxShadow: theme.brightness == Brightness.light
+                    ? B2BShadows.card
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .14),
+                          color: AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(B2BRadius.md),
                         ),
-                        child: const Icon(Icons.receipt_long_rounded, color: Colors.white),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .14),
-                          borderRadius: BorderRadius.circular(B2BRadius.pill),
+                        child: const Icon(
+                          Icons.receipt_long_rounded,
+                          color: AppColors.primary,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      ),
+                      const SizedBox(width: B2BSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 7),
                             Text(
-                              _titleCase(order.status),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                              order.packageName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: B2BSpacing.xxs),
+                            Text(
+                              customer,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: B2BSpacing.sm),
+                      _StatusPill(
+                        label: _titleCase(order.status),
+                        color: statusColor,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: B2BSpacing.xl),
-                  Text(
-                    order.packageName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      height: 1.15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: B2BSpacing.xs),
-                  Text(customer, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: B2BSpacing.xl),
+                  const SizedBox(height: B2BSpacing.lg),
                   Row(
                     children: [
-                      Expanded(child: _HeroMetric(label: 'Amount', value: order.formattedAmount)),
-                      Container(width: 1, height: 38, color: Colors.white24),
-                      Expanded(child: _HeroMetric(label: 'Created', value: _compactDate(order.createdAt))),
+                      Expanded(
+                        child: _MetricTile(
+                          label: 'Amount',
+                          value: order.formattedAmount,
+                          icon: Icons.payments_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: B2BSpacing.sm),
+                      Expanded(
+                        child: _MetricTile(
+                          label: 'Created',
+                          value: _compactDate(order.createdAt),
+                          icon: Icons.schedule_rounded,
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: B2BSpacing.lg),
-            Text('Order information', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: B2BSpacing.xl),
+            Text('Order information', style: theme.textTheme.titleLarge),
             const SizedBox(height: B2BSpacing.sm),
             B2BSurface(
               padding: EdgeInsets.zero,
@@ -172,61 +193,111 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     value: _titleCase(order.status),
                     valueColor: statusColor,
                   ),
-                  _DetailRow(label: 'Created', value: _fullDate(order.createdAt), last: true),
+                  _DetailRow(
+                    label: 'Created',
+                    value: _fullDate(order.createdAt),
+                    last: true,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: B2BSpacing.lg),
-            Text('Provisioning', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: B2BSpacing.xl),
+            Text('Provisioning', style: theme.textTheme.titleLarge),
             const SizedBox(height: B2BSpacing.sm),
             B2BSurface(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: hasLinkedSim ? AppColors.successSoft : AppColors.warningSoft,
-                      borderRadius: BorderRadius.circular(B2BRadius.md),
-                    ),
-                    child: Icon(
-                      hasLinkedSim ? Icons.sim_card_rounded : Icons.hourglass_top_rounded,
-                      color: hasLinkedSim ? AppColors.success : AppColors.warning,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: hasLinkedSim
+                              ? AppColors.successSoft
+                              : AppColors.warningSoft,
+                          borderRadius: BorderRadius.circular(B2BRadius.md),
+                        ),
+                        child: Icon(
+                          hasLinkedSim
+                              ? Icons.sim_card_rounded
+                              : Icons.hourglass_top_rounded,
+                          color: hasLinkedSim
+                              ? AppColors.success
+                              : AppColors.warning,
+                        ),
+                      ),
+                      const SizedBox(width: B2BSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hasLinkedSim
+                                  ? 'Purchased line is ready'
+                                  : 'Provisioning pending',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: B2BSpacing.xxs),
+                            Text(
+                              hasLinkedSim
+                                  ? 'Open the exact SIM / eSIM linked to this order.'
+                                  : 'The purchased line will appear when provisioning completes.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: B2BSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  if (hasLinkedSim) ...[
+                    const SizedBox(height: B2BSpacing.md),
+                    Divider(color: theme.colorScheme.outlineVariant),
+                    const SizedBox(height: B2BSpacing.sm),
+                    Row(
                       children: [
                         Text(
-                          hasLinkedSim ? 'SIM / eSIM linked to this order' : 'Provisioning pending',
-                          style: const TextStyle(fontWeight: FontWeight.w900),
+                          'SIM / eSIM ID',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        const SizedBox(height: B2BSpacing.xxs),
+                        const Spacer(),
                         Text(
-                          hasLinkedSim
-                              ? 'SIM / eSIM ID ${order.esimId}. Open the exact purchased line to manage it.'
-                              : 'The purchased line will be available once provisioning is complete.',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          '${order.esimId}',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
             const SizedBox(height: B2BSpacing.lg),
-            FilledButton.icon(
-              onPressed: hasLinkedSim && !_openingLinkedSim ? _openLinkedSim : null,
-              icon: _openingLinkedSim
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.sim_card_outlined),
-              label: Text(_openingLinkedSim ? 'Opening...' : 'Open purchased SIM / eSIM'),
+            SizedBox(
+              height: 54,
+              child: FilledButton.icon(
+                onPressed: hasLinkedSim && !_openingLinkedSim
+                    ? _openLinkedSim
+                    : null,
+                icon: _openingLinkedSim
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.sim_card_outlined),
+                label: Text(
+                  _openingLinkedSim
+                      ? 'Opening...'
+                      : 'Open purchased SIM / eSIM',
+                ),
+              ),
             ),
           ],
         ),
@@ -235,33 +306,87 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 }
 
-class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({required this.label, required this.value});
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
+  final IconData icon;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: B2BSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(B2BSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .45),
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .1),
+          borderRadius: BorderRadius.circular(B2BRadius.pill),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+          ),
         ),
       );
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value, this.valueColor, this.last = false});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.last = false,
+  });
 
   final String label;
   final String value;
@@ -270,9 +395,18 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: B2BSpacing.md, vertical: 15),
+        padding: const EdgeInsets.symmetric(
+          horizontal: B2BSpacing.md,
+          vertical: 15,
+        ),
         decoration: BoxDecoration(
-          border: last ? null : Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+          border: last
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +420,10 @@ class _DetailRow extends StatelessWidget {
               child: Text(
                 value,
                 textAlign: TextAlign.right,
-                style: TextStyle(fontWeight: FontWeight.w800, color: valueColor),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: valueColor,
+                ),
               ),
             ),
           ],
