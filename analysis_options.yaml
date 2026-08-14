@@ -7,6 +7,10 @@
 
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    - vendor/NekokoLPA2/**
+
 linter:
   rules:
     # Legacy/vendor async flows intentionally return Futures from try blocks.

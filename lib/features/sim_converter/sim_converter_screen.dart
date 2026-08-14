@@ -7,7 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
-import '../nekoko/nekoko_lpa_screen.dart';
+import '../esim_manager/roam_lpa_screen.dart';
 import 'sim_converter_data.dart';
 import 'sim_converter_repository.dart';
 
@@ -25,7 +25,7 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
   ActivationParseResult? _parseResult;
   bool _loading = true;
   bool _parsing = false;
-  bool _openingNekoko = false;
+  bool _openingLpaManager = false;
   String? _error;
   String? _parseError;
 
@@ -85,18 +85,18 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     setState(() {});
   }
 
-  Future<void> _openNekoko() async {
+  Future<void> _openLpaManager() async {
     final activationCode = _activationCode.text.trim();
-    if (activationCode.isEmpty || _openingNekoko) return;
-    setState(() => _openingNekoko = true);
+    if (activationCode.isEmpty || _openingLpaManager) return;
+    setState(() => _openingLpaManager = true);
     try {
       await Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
-          builder: (_) => NekokoLpaScreen(activationCode: activationCode),
+          builder: (_) => RoamLpaScreen(activationCode: activationCode),
         ),
       );
     } finally {
-      if (mounted) setState(() => _openingNekoko = false);
+      if (mounted) setState(() => _openingLpaManager = false);
     }
   }
 
@@ -156,8 +156,8 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
                     _ParseResultCard(
                       result: _parseResult!,
                       canProgram: canProgram,
-                      openingNekoko: _openingNekoko,
-                      onProgram: _openNekoko,
+                      openingLpaManager: _openingLpaManager,
+                      onProgram: _openLpaManager,
                     ),
                   ],
                 ],
@@ -240,13 +240,13 @@ class _ParseResultCard extends StatelessWidget {
   const _ParseResultCard({
     required this.result,
     required this.canProgram,
-    required this.openingNekoko,
+    required this.openingLpaManager,
     required this.onProgram,
   });
 
   final ActivationParseResult result;
   final bool canProgram;
-  final bool openingNekoko;
+  final bool openingLpaManager;
   final VoidCallback onProgram;
 
   @override
@@ -285,11 +285,11 @@ class _ParseResultCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: openingNekoko ? null : onProgram,
-                icon: openingNekoko
+                onPressed: openingLpaManager ? null : onProgram,
+                icon: openingLpaManager
                     ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.sim_card_download_rounded),
-                label: Text(openingNekoko ? 'Opening NekokoLPA2...' : 'Program with NekokoLPA2'),
+                label: Text(openingLpaManager ? 'Opening Roam2World eSIM Manager...' : 'Program with Roam2World eSIM Manager'),
               ),
             ),
           ],
