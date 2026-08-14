@@ -35,50 +35,69 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final shimmer = Color.lerp(
-            scheme.surfaceContainerHighest,
-            scheme.primaryContainer.withValues(alpha: .45),
-            _controller.value,
-          )!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SkeletonBlock(height: 28, widthFactor: .46, color: shimmer),
-              const SizedBox(height: 10),
-              _SkeletonBlock(height: 14, widthFactor: .68, color: shimmer),
-              const SizedBox(height: 22),
-              _SkeletonBlock(height: 156, color: shimmer, radius: B2BRadius.xl),
-              const SizedBox(height: 16),
-              Row(
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final shimmer = Color.lerp(
+          scheme.surfaceContainerHighest,
+          scheme.primaryContainer.withValues(alpha: .45),
+          _controller.value,
+        )!;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.hasBoundedHeight && constraints.maxHeight < 620;
+            final heroHeight = compact ? 112.0 : 156.0;
+            final tileHeight = compact ? 82.0 : 108.0;
+            final rowHeight = compact ? 64.0 : 86.0;
+
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(child: _SkeletonBlock(height: 108, color: shimmer)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _SkeletonBlock(height: 108, color: shimmer)),
+                  _SkeletonBlock(height: 28, widthFactor: .46, color: shimmer),
+                  const SizedBox(height: 10),
+                  _SkeletonBlock(height: 14, widthFactor: .68, color: shimmer),
+                  SizedBox(height: compact ? 16 : 22),
+                  _SkeletonBlock(
+                    height: heroHeight,
+                    color: shimmer,
+                    radius: B2BRadius.xl,
+                  ),
+                  SizedBox(height: compact ? 12 : 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SkeletonBlock(height: tileHeight, color: shimmer),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _SkeletonBlock(height: tileHeight, color: shimmer),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: compact ? 12 : 16),
+                  _SkeletonBlock(height: rowHeight, color: shimmer),
+                  const SizedBox(height: 12),
+                  _SkeletonBlock(height: rowHeight, color: shimmer),
+                  SizedBox(height: compact ? 14 : 18),
+                  Center(
+                    child: Text(
+                      widget.label,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _SkeletonBlock(height: 86, color: shimmer),
-              const SizedBox(height: 12),
-              _SkeletonBlock(height: 86, color: shimmer),
-              const SizedBox(height: 18),
-              Center(
-                child: Text(
-                  widget.label,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
