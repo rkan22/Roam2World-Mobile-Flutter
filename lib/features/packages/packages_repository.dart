@@ -54,6 +54,7 @@ class PackagesRepository {
 
         var added = 0;
         for (final package in page.packages) {
+          if (_isHiddenProvider(package)) continue;
           final dedupeKey = package.id.isEmpty
               ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
               : '${package.provider}|${package.id}';
@@ -77,6 +78,7 @@ class PackagesRepository {
           parser: PackageCatalog.fromWorldmoveResponse,
         );
         for (final package in worldmove.packages) {
+          if (_isHiddenProvider(package)) continue;
           final key = '${package.provider}|${package.id}';
           if (seenIds.add(key)) externalPackages.add(package);
         }
@@ -88,6 +90,7 @@ class PackagesRepository {
           parser: PackageCatalog.fromManualResponse,
         );
         for (final package in manual.packages) {
+          if (_isHiddenProvider(package)) continue;
           final key = '${package.provider}|${package.id}';
           if (seenIds.add(key)) externalPackages.add(package);
         }
@@ -104,7 +107,7 @@ class PackagesRepository {
           displayProvider: source.$3,
         );
         for (final package in catalog.packages) {
-          if (!_providerPackageAllowed(package)) continue;
+          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) continue;
           final key = '${package.provider}|${package.id}';
           if (seenIds.add(key)) externalPackages.add(package);
         }
@@ -114,6 +117,7 @@ class PackagesRepository {
 
       final term = normalizedSearch.toLowerCase();
       final filtered = packages.where((package) {
+        if (_isHiddenProvider(package)) return false;
         if (normalizedDestination.isNotEmpty &&
             package.destinationKey.toLowerCase() != normalizedDestination.toLowerCase()) {
           return false;
@@ -200,9 +204,7 @@ class PackagesRepository {
           final pricedById = <String, MobilePackage>{
             for (final item in pricedBatch) item.id: item,
           };
-          pricedPackages.addAll(
-            batch.map((item) => pricedById[item.id] ?? item),
-          );
+          pricedPackages.addAll(batch.map((item) => pricedById[item.id] ?? item));
         }
       } catch (_) {
         pricedPackages.addAll(batch);
@@ -230,6 +232,12 @@ class PackagesRepository {
       } catch (_) {}
     }
     return const PackageCatalog(packages: [], hasMore: false);
+  }
+
+  bool _isHiddenProvider(MobilePackage package) {
+    final provider = package.provider.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final display = package.displayProvider.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    return provider == 'esimcard' || display == 'esimcard';
   }
 
   bool _providerPackageAllowed(MobilePackage package) {

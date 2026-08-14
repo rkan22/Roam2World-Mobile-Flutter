@@ -15,9 +15,6 @@ class OrdersRepository {
 
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
-
-  // Kept in-memory for the lifetime of the repository so a retry after a
-  // timeout uses the same idempotency key instead of creating a second order.
   final Map<String, String> _checkoutClientOrderIds = <String, String>{};
 
   Future<OrderHistory> fetchOrders({String? status, String? search}) async {
@@ -27,9 +24,7 @@ class OrdersRepository {
 
     final query = <String, dynamic>{};
     if (status != null && status.isNotEmpty) query['status'] = status;
-    if (search != null && search.trim().isNotEmpty) {
-      query['search'] = search.trim();
-    }
+    if (search != null && search.trim().isNotEmpty) query['search'] = search.trim();
 
     final history = await _apiClient.get<OrderHistory>(
       isAdmin ? ApiEndpoints.mobileAdminOrders : ApiEndpoints.mobileOrders,
@@ -41,19 +36,14 @@ class OrdersRepository {
 
     final normalizedStatus = status?.trim().toLowerCase() ?? '';
     final normalizedSearch = search?.trim().toLowerCase() ?? '';
-    final filtered = history.orders
-        .where((order) {
-          final statusMatches =
-              normalizedStatus.isEmpty ||
-              order.status.toLowerCase() == normalizedStatus;
-          final searchMatches =
-              normalizedSearch.isEmpty ||
-              order.orderNumber.toLowerCase().contains(normalizedSearch) ||
-              order.packageName.toLowerCase().contains(normalizedSearch) ||
-              order.customerName.toLowerCase().contains(normalizedSearch);
-          return statusMatches && searchMatches;
-        })
-        .toList(growable: false);
+    final filtered = history.orders.where((order) {
+      final statusMatches = normalizedStatus.isEmpty || order.status.toLowerCase() == normalizedStatus;
+      final searchMatches = normalizedSearch.isEmpty ||
+          order.orderNumber.toLowerCase().contains(normalizedSearch) ||
+          order.packageName.toLowerCase().contains(normalizedSearch) ||
+          order.customerName.toLowerCase().contains(normalizedSearch);
+      return statusMatches && searchMatches;
+    }).toList(growable: false);
 
     return OrderHistory(orders: filtered, count: filtered.length);
   }
@@ -79,6 +69,7 @@ class OrdersRepository {
       );
     }
 
+    final normalizedSim = _normalizedSimIdentifier(package, simNumber ?? '');
     final key = _checkoutKey(
       package: package,
       firstName: firstName,
@@ -86,38 +77,29 @@ class OrdersRepository {
       phone: phone,
       email: email,
       imei: imei,
-      simNumber: simNumber,
+      simNumber: normalizedSim,
     );
-    final clientOrderId = _checkoutClientOrderIds.putIfAbsent(
-      key,
-      _newClientOrderId,
-    );
+    final clientOrderId = _checkoutClientOrderIds.putIfAbsent(key, _newClientOrderId);
 
     try {
       final result = await _apiClient.post<MobileOrderResult>(
         '/api/v1/mobile/b2b/checkout/',
         data: {
-          'category': package.packageType.isNotEmpty
-              ? package.packageType
-              : package.destinationKey,
+          'category': package.packageType.isNotEmpty ? package.packageType : package.destinationKey,
           'package_id': package.id,
           'quantity': 1,
           'customer_first_name': firstName.trim(),
           'customer_last_name': lastName.trim(),
           'customer_phone': phone.trim(),
-          if (email != null && email.trim().isNotEmpty)
-            'customer_email': email.trim(),
+          if (email != null && email.trim().isNotEmpty) 'customer_email': email.trim(),
           'client_order_id': clientOrderId,
-          if (simNumber != null && simNumber.trim().isNotEmpty)
-            'sim_iccid': simNumber.replaceAll(RegExp(r'\D'), ''),
+          if (normalizedSim.isNotEmpty) 'sim_iccid': normalizedSim,
         },
         parser: (response) => MobileOrderResult.fromResponse(response),
       );
       _checkoutClientOrderIds.remove(key);
       return result;
     } catch (_) {
-      // Keep the key: a caller retrying after a timeout must hit the same
-      // backend idempotency record. It is cleared only after success.
       rethrow;
     }
   }
@@ -139,7 +121,7 @@ class OrdersRepository {
       phone.trim(),
       email?.trim().toLowerCase() ?? '',
       imei?.trim() ?? '',
-      simNumber?.replaceAll(RegExp(r'\D'), '') ?? '',
+      simNumber ?? '',
     ].join('|');
   }
 
@@ -175,12 +157,20 @@ class OrdersRepository {
     );
   }
 
+  String _normalizedSimIdentifier(MobilePackage package, String raw) {
+    if (raw.trim().isEmpty) return '';
+    if (package.provider.toLowerCase() == 'tgt' && package.packageType.toLowerCase() == 'simcard') {
+      return raw
+          .replaceAll(RegExp(r'[\s-]'), '')
+          .toUpperCase()
+          .replaceAll(RegExp(r'[^0-9A-Z]'), '');
+    }
+    return raw.replaceAll(RegExp(r'\D'), '');
+  }
+
   String _newClientOrderId() {
     final random = Random.secure();
-    final suffix = List.generate(
-      12,
-      (_) => random.nextInt(16).toRadixString(16),
-    ).join();
+    final suffix = List.generate(12, (_) => random.nextInt(16).toRadixString(16)).join();
     return 'mobile-${DateTime.now().microsecondsSinceEpoch}-$suffix';
   }
 }

@@ -162,7 +162,7 @@ void main() {
 
     final package = catalog.packages.single;
     expect(package.id, 'AIR-EU-200');
-    expect(package.name, 'Europe 200GB');
+    expect(package.name, 'Vodafone 200GB 30 Days');
     expect(package.displayProvider, 'Vodafone');
     expect(package.dataLabel, '200 GB');
     expect(package.validityLabel, '30 Days');
@@ -191,7 +191,7 @@ void main() {
     );
 
     final package = catalog.packages.single;
-    expect(package.name, 'Orange Balkans eSIM 10GB 30 Days');
+    expect(package.name, 'Orange Balkans 10GB 30 Days');
     expect(package.supportedCountries, hasLength(2));
     expect(package.supportedCountries.first.code, 'DE');
   });
