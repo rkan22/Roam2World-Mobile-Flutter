@@ -126,15 +126,20 @@ class MobilePackage {
       if (code.startsWith('WM-E-J1-O-')) return 'worldmove';
       return 'worldmove';
     }
+
+    if (p == 'tgt') return 'orange-balkans';
+    if (p == 'flexnet') return 'flexnet';
+    if (p.contains('airhub')) return 'vodafone';
+    if (p == 'manual') return 'manual';
+
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
     if (label.contains('orange') && label.contains('europe')) return 'worldmove';
     if (label.contains('orange') && label.contains('world')) return 'orange-world';
     if (label.contains('orange') && label.contains('balkan')) return 'orange-balkans';
-    if (label.contains('t.t') || label.contains('turkey') || label.contains('turkiye')) return 'turkey';
-    if (label.contains('vodafone') || p.contains('airhub')) return 'vodafone';
-    if (label.contains('big data') || p == 'flexnet') return 'flexnet';
-    if (label.contains('balkan') || p == 'tgt') return 'orange-balkans';
+    if (label.contains('vodafone')) return 'vodafone';
+    if (label.contains('big data')) return 'flexnet';
+    if (label.contains('balkan')) return 'orange-balkans';
     return p;
   }
 
@@ -202,18 +207,48 @@ class MobilePackage {
   }
 
   static List<PackageCountry> _countries(Map<String, dynamic> j) {
-    final raw = j['supported_countries'] ?? j['supportedCountries'] ?? j['coverage_countries'] ?? j['coverageCountries'] ?? j['country_list'] ?? j['countryList'] ?? j['country_codes'] ?? j['countryCodes'] ?? j['countries'] ?? const [];
-    if (raw is! List) return const [];
-    return raw.map((item) {
-      if (item is Map) {
-        final m = Map<String, dynamic>.from(item);
-        final code = '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'.toUpperCase();
-        final name = '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? code}';
-        return PackageCountry(name: name.length == 2 ? _countryName(code) : name, code: code);
+    final values = <dynamic>[
+      j['supported_countries'],
+      j['supportedCountries'],
+      j['coverage_countries'],
+      j['coverageCountries'],
+      j['country_list'],
+      j['countryList'],
+      j['country_codes'],
+      j['countryCodes'],
+      j['countries'],
+      j['coverage'],
+      j['country'],
+    ];
+
+    final result = <PackageCountry>[];
+    final seen = <String>{};
+    for (final value in values) {
+      for (final item in _flattenCoverage(value)) {
+        final country = _countryFromCoverage(item);
+        if (country == null) continue;
+        final key = country.code.isNotEmpty ? country.code : country.name.toLowerCase();
+        if (seen.add(key)) result.add(country);
       }
-      final text = '$item'.trim(), code = text.length == 2 ? text.toUpperCase() : '';
-      return PackageCountry(name: code.isEmpty ? text : _countryName(code), code: code);
-    }).where((c) => c.name.isNotEmpty).toList(growable: false);
+    }
+
+    final identity = _identity(j).toUpperCase();
+    if (identity.startsWith('WM-TR-') && seen.add('TR')) {
+      result.add(const PackageCountry(name: 'Turkey', code: 'TR'));
+    }
+
+    if (identity.startsWith('WM-E-J1-VDFES-')) {
+      for (final country in const [
+        PackageCountry(name: 'Europe', code: 'EU'),
+        PackageCountry(name: 'United States', code: 'US'),
+        PackageCountry(name: 'United Kingdom', code: 'GB'),
+        PackageCountry(name: 'Turkey', code: 'TR'),
+      ]) {
+        if (seen.add(country.code)) result.add(country);
+      }
+    }
+
+    return result;
   }
 
   static String _description(Map<String, dynamic> j) {
@@ -228,6 +263,99 @@ class MobilePackage {
 class PackageCountry {
   const PackageCountry({required this.name, required this.code});
   final String name, code;
+}
+
+Iterable<dynamic> _flattenCoverage(dynamic value) sync* {
+  if (value == null) return;
+  if (value is List) {
+    for (final item in value) {
+      yield* _flattenCoverage(item);
+    }
+    return;
+  }
+  if (value is Map) {
+    yield value;
+    return;
+  }
+  final text = '$value'.trim();
+  if (text.isEmpty) return;
+  for (final token in text.split(RegExp(r'[,;/|]'))) {
+    final trimmed = token.trim();
+    if (trimmed.isNotEmpty) yield trimmed;
+  }
+}
+
+PackageCountry? _countryFromCoverage(dynamic item) {
+  if (item is Map) {
+    final m = Map<String, dynamic>.from(item);
+    final rawCode = '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'.trim().toUpperCase();
+    final rawName = '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? rawCode}'.trim();
+    final code = rawCode.isNotEmpty ? rawCode : _countryCode(rawName);
+    if (code.isEmpty && rawName.isEmpty) return null;
+    return PackageCountry(name: rawName.isEmpty || rawName.length == 2 ? _countryName(code) : rawName, code: code);
+  }
+
+  final text = '$item'.trim();
+  if (text.isEmpty) return null;
+  final code = text.length == 2 ? text.toUpperCase() : _countryCode(text);
+  if (code.isEmpty) return null;
+  return PackageCountry(name: _countryName(code), code: code);
+}
+
+String _countryCode(String name) {
+  final normalized = name.trim().toLowerCase();
+  return const {
+        'austria': 'AT',
+        'belgium': 'BE',
+        'bulgaria': 'BG',
+        'switzerland': 'CH',
+        'cyprus': 'CY',
+        'czechia': 'CZ',
+        'czech republic': 'CZ',
+        'germany': 'DE',
+        'denmark': 'DK',
+        'estonia': 'EE',
+        'spain': 'ES',
+        'finland': 'FI',
+        'france': 'FR',
+        'united kingdom': 'GB',
+        'uk': 'GB',
+        'greece': 'GR',
+        'croatia': 'HR',
+        'hungary': 'HU',
+        'ireland': 'IE',
+        'iceland': 'IS',
+        'italy': 'IT',
+        'lithuania': 'LT',
+        'luxembourg': 'LU',
+        'latvia': 'LV',
+        'malta': 'MT',
+        'netherlands': 'NL',
+        'norway': 'NO',
+        'poland': 'PL',
+        'portugal': 'PT',
+        'romania': 'RO',
+        'serbia': 'RS',
+        'sweden': 'SE',
+        'slovenia': 'SI',
+        'slovakia': 'SK',
+        'turkey': 'TR',
+        'turkiye': 'TR',
+        'türkiye': 'TR',
+        'ukraine': 'UA',
+        'united states': 'US',
+        'usa': 'US',
+        'canada': 'CA',
+        'mexico': 'MX',
+        'brazil': 'BR',
+        'australia': 'AU',
+        'new zealand': 'NZ',
+        'japan': 'JP',
+        'united arab emirates': 'AE',
+        'saudi arabia': 'SA',
+        'europe': 'EU',
+      }[normalized] ??
+      '';
 }
 
 String _worldmoveCode(Map<String, dynamic> j) => _text(j, ['wmproductId', 'wmproduct_id', 'wmProductId', 'productCode', 'product_code', 'code', 'sku', 'id']).toUpperCase();
@@ -319,4 +447,14 @@ String _countryName(String code) =>
       'SK': 'Slovakia',
       'TR': 'Turkey',
       'UA': 'Ukraine',
+      'US': 'United States',
+      'CA': 'Canada',
+      'MX': 'Mexico',
+      'BR': 'Brazil',
+      'AU': 'Australia',
+      'NZ': 'New Zealand',
+      'JP': 'Japan',
+      'AE': 'United Arab Emirates',
+      'SA': 'Saudi Arabia',
+      'EU': 'Europe',
     }[code] ?? code;
