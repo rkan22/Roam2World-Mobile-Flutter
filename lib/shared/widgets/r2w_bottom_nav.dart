@@ -17,7 +17,10 @@ class _R2WBottomNavState extends State<R2WBottomNav> {
   AppRole _role = AppRole.unknown;
 
   @override
-  void initState() { super.initState(); _loadRole(); }
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
 
   Future<void> _loadRole() async {
     final profile = await _authRepository.readStoredProfile();
@@ -38,71 +41,128 @@ class _R2WBottomNavState extends State<R2WBottomNav> {
       top: false,
       minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
       child: Container(
-        decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(B2BRadius.xl), border: Border.all(color: theme.colorScheme.outlineVariant), boxShadow: isDark ? null : B2BShadows.elevated),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(B2BRadius.xl),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          boxShadow: isDark ? null : B2BShadows.elevated,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(B2BRadius.xl),
           child: NavigationBar(
             selectedIndex: selected,
             backgroundColor: Colors.transparent,
             onDestinationSelected: (index) {
-              if (index == items.length - 1) { _showWorkspaceMenu(context); return; }
+              final item = items[index];
+              if (item.opensWorkspace) {
+                showR2WWorkspaceMenu(context, _role);
+                return;
+              }
               if (index == selected) return;
-              final route = items[index].route;
-              if (_keepsBackHistory(route)) { context.push(route); } else { context.go(route); }
+              if (_keepsBackHistory(item.route)) {
+                context.push(item.route);
+              } else {
+                context.go(item.route);
+              }
             },
-            destinations: [for (final item in items) NavigationDestination(icon: Icon(item.icon), selectedIcon: Icon(item.selectedIcon), label: item.label)],
+            destinations: [
+              for (final item in items)
+                NavigationDestination(
+                  icon: Icon(item.icon),
+                  selectedIcon: Icon(item.selectedIcon),
+                  label: item.label,
+                ),
+            ],
           ),
         ),
       ),
     );
   }
-
-  Future<void> _showWorkspaceMenu(BuildContext context) async {
-    final items = _workspaceItemsFor(_role);
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final theme = Theme.of(sheetContext);
-        return SafeArea(
-          child: DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: .78,
-            minChildSize: .45,
-            maxChildSize: .94,
-            builder: (_, controller) => ListView(
-              controller: controller,
-              padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-              children: [
-                Text(_role == AppRole.dealer ? 'Dealer Workspace' : _role == AppRole.reseller ? 'Reseller Workspace' : 'Workspace', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-                const SizedBox(height: 6),
-                Text('Web panel navigation is available here so mobile does not hide partner features.', style: theme.textTheme.bodySmall),
-                const SizedBox(height: 16),
-                for (final group in _groupWorkspaceItems(items)) ...[
-                  Padding(padding: const EdgeInsets.fromLTRB(4, 12, 4, 8), child: Text(group.$1.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1))),
-                  for (final item in group.$2)
-                    ListTile(
-                      leading: CircleAvatar(backgroundColor: theme.colorScheme.primaryContainer, child: Icon(item.icon, color: theme.colorScheme.primary, size: 20)),
-                      title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: item.description.isEmpty ? null : Text(item.description),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () {
-                        Navigator.of(sheetContext).pop();
-                        if (_keepsBackHistory(item.route)) { context.push(item.route); } else { context.go(item.route); }
-                      },
-                    ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
-bool _keepsBackHistory(String route) => route == '/reports' || route == '/operations';
+Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
+  final items = _workspaceItemsFor(role);
+  await showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
+      return SafeArea(
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: .78,
+          minChildSize: .45,
+          maxChildSize: .94,
+          builder: (_, controller) => ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+            children: [
+              Text(
+                role == AppRole.dealer
+                    ? 'Dealer Workspace'
+                    : role == AppRole.reseller
+                        ? 'Reseller Workspace'
+                        : 'Workspace',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Web panel navigation is available here so mobile does not hide partner features.',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 16),
+              for (final group in _groupWorkspaceItems(items)) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+                  child: Text(
+                    group.$1.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+                for (final item in group.$2)
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Icon(
+                        item.icon,
+                        color: theme.colorScheme.primary,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      item.label,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: item.description.isEmpty
+                        ? null
+                        : Text(item.description),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      if (_keepsBackHistory(item.route)) {
+                        context.push(item.route);
+                      } else {
+                        context.go(item.route);
+                      }
+                    },
+                  ),
+              ],
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+bool _keepsBackHistory(String route) =>
+    route == '/reports' || route == '/operations';
 
 List<_NavItem> _itemsFor(AppRole role) {
   if (role == AppRole.client || role == AppRole.publicUser) {
@@ -111,7 +171,7 @@ List<_NavItem> _itemsFor(AppRole role) {
       _NavItem('/esims', 'eSIMs', Icons.sim_card_outlined, Icons.sim_card_rounded),
       _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
       _NavItem('/reports', 'Reports', Icons.analytics_outlined, Icons.analytics_rounded),
-      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded),
+      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded, opensWorkspace: true),
     ];
   }
   if (role == AppRole.admin) {
@@ -120,7 +180,7 @@ List<_NavItem> _itemsFor(AppRole role) {
       _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
       _NavItem('/operations', 'Ops', Icons.monitor_heart_outlined, Icons.monitor_heart_rounded),
       _NavItem('/reports', 'Reports', Icons.analytics_outlined, Icons.analytics_rounded),
-      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded),
+      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded, opensWorkspace: true),
     ];
   }
   return const [
@@ -128,7 +188,7 @@ List<_NavItem> _itemsFor(AppRole role) {
     _NavItem('/packages', 'Catalog', Icons.inventory_2_outlined, Icons.inventory_2_rounded),
     _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
     _NavItem('/customers', 'Clients', Icons.groups_outlined, Icons.groups_rounded),
-    _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded),
+    _NavItem('/finance', 'Finance', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded),
   ];
 }
 
@@ -207,23 +267,49 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
   ];
 }
 
-List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(List<_WorkspaceItem> items) {
+List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(
+  List<_WorkspaceItem> items,
+) {
   final groups = <String, List<_WorkspaceItem>>{};
   for (final item in items) {
     final group = switch (item.label) {
       'Dashboard' => 'Overview',
-      'Catalog' || 'Catalog Controls' || 'Unified Catalog' || 'Catalog Gov' || 'Coverage' => 'Catalog',
-      'Clients' || 'Dealers' || 'Resellers' || 'Customers & Orders' || 'Dealer Performance' => 'Partners',
-      'Finance Ledger' || 'Dealer Wallet' || 'Dealer Pricing' || 'Customer Pricing' || 'Transactions' || 'Balance Top-ups' || 'Statements' || 'Credit Management' || 'Profitability' => 'Finance',
+      'Catalog' ||
+      'Catalog Controls' ||
+      'Unified Catalog' ||
+      'Catalog Gov' ||
+      'Coverage' => 'Catalog',
+      'Clients' ||
+      'Dealers' ||
+      'Resellers' ||
+      'Customers & Orders' ||
+      'Dealer Performance' => 'Partners',
+      'Finance Ledger' ||
+      'Dealer Wallet' ||
+      'Dealer Pricing' ||
+      'Customer Pricing' ||
+      'Transactions' ||
+      'Balance Top-ups' ||
+      'Statements' ||
+      'Credit Management' ||
+      'Profitability' => 'Finance',
       'My SIMs & eSIMs' || 'SIM Converter' => 'eSIM & SIM',
-      'Operations' || 'Provider Ops' || 'Failed Orders' || 'API Logs' || 'Manual Fulfilment' || 'Audit Log' || 'Audit & Access' => 'Operations',
+      'Operations' ||
+      'Provider Ops' ||
+      'Failed Orders' ||
+      'API Logs' ||
+      'Manual Fulfilment' ||
+      'Audit Log' ||
+      'Audit & Access' => 'Operations',
       'Notifications' || 'Alert Rules' || 'WhatsApp' => 'Communication',
       'Reports' || 'Analytics' => 'Reports',
       _ => 'Account',
     };
     groups.putIfAbsent(group, () => []).add(item);
   }
-  return groups.entries.map((entry) => (entry.key, entry.value)).toList(growable: false);
+  return groups.entries
+      .map((entry) => (entry.key, entry.value))
+      .toList(growable: false);
 }
 
 int? _indexForPath(String path, List<_NavItem> items) {
@@ -235,11 +321,18 @@ int? _indexForPath(String path, List<_NavItem> items) {
 }
 
 class _NavItem {
-  const _NavItem(this.route, this.label, this.icon, this.selectedIcon);
+  const _NavItem(
+    this.route,
+    this.label,
+    this.icon,
+    this.selectedIcon, {
+    this.opensWorkspace = false,
+  });
   final String route;
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+  final bool opensWorkspace;
 }
 
 class _WorkspaceItem {
