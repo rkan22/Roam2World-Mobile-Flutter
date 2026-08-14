@@ -8,6 +8,7 @@ import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
+import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 import 'dashboard_topup_sheet.dart';
@@ -148,11 +149,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _header(DashboardData data) {
     final role = _friendlyRole(data.role);
+    final appRole = parseAppRole(data.role);
     return Row(
       children: [
         _SquareIconButton(
           icon: Icons.menu_rounded,
-          onTap: () => context.push('/profile'),
+          onTap: () => showR2WWorkspaceMenu(context, appRole),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -320,7 +322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: FilledButton.icon(
                       onPressed: () => _openTopUp(currency),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: AppColors.accent,
                         foregroundColor: const Color(0xFF090B10),
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         shape: RoundedRectangleBorder(
@@ -529,7 +531,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final actions = <_ActionData>[
       _ActionData('Buy eSIM', Icons.shopping_bag_outlined, AppColors.primary, () => context.go('/packages')),
       _ActionData('My eSIMs', Icons.sim_card_outlined, AppColors.sky, () => context.go('/esims')),
-      _ActionData('Add Funds', Icons.account_balance_wallet_outlined, AppColors.success, () => _openTopUp(currency)),
+      _ActionData('Add Funds', Icons.account_balance_wallet_outlined, AppColors.accent, () => _openTopUp(currency)),
       _ActionData('Orders', Icons.swap_horiz_rounded, AppColors.orange, () => context.go('/orders')),
       _ActionData('SIM Tools', Icons.sim_card_rounded, AppColors.navy, () => context.push('/sim-tools')),
       if (!kIsWeb &&
