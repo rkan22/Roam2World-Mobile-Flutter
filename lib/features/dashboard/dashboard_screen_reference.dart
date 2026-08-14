@@ -10,6 +10,7 @@ import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
+import 'dashboard_topup_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
@@ -67,6 +68,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _openTopUp(String currency) async {
+    final submitted = await showDashboardTopUpSheet(
+      context,
+      currency: currency.trim().isEmpty ? 'USD' : currency,
+    );
+    if (submitted == true && mounted) {
+      await _load(forceRefresh: true);
     }
   }
 
@@ -129,7 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 14),
           _recentOrders(data),
           const SizedBox(height: 14),
-          _quickActions(parseAppRole(data.role)),
+          _quickActions(parseAppRole(data.role), data.currency),
         ],
       ),
     );
@@ -199,165 +210,133 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _walletHero(DashboardData data) {
-    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
+    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency.trim().toUpperCase();
     final balance = _balanceVisible ? _money(data.balance, currency) : '••••••••';
+
     return Container(
       height: 190,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.heroStart, AppColors.heroMiddle, AppColors.heroEnd],
-        ),
+        color: const Color(0xFF090B10),
         borderRadius: BorderRadius.circular(22),
-        boxShadow: B2BShadows.hero,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Wallet Balance',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    balance,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 27,
-                      height: 1,
-                      letterSpacing: -0.8,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Available Balance',
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  balance,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const Spacer(),
-                SizedBox(
-                  height: 38,
-                  child: FilledButton.icon(
-                    onPressed: () => context.push('/wallet'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_rounded, size: 17),
-                    label: const Text('Add Funds'),
-                  ),
-                ),
-              ],
+          Positioned(
+            right: -35,
+            bottom: -45,
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 145,
+              color: Colors.white.withValues(alpha: .045),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 4,
-            child: Container(
-              height: 102,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF181A24),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x33000000),
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.public_rounded, color: Colors.white, size: 14),
-                      const SizedBox(width: 6),
-                      const Expanded(
-                        child: Text(
-                          'Roam2World',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                  const Expanded(
+                    child: Text(
+                      'Wallet Balance',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                        onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
-                        icon: Icon(
-                          _balanceVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 15,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  const Text(
-                    'B2B WALLET',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 9,
-                      letterSpacing: .9,
-                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Secure partner balance',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
+                    icon: Icon(
+                      _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: Colors.white70,
+                      size: 20,
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 4),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        balance,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 33,
+                          height: 1,
+                          letterSpacing: -1,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Text(
+                      currency,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Available partner balance',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    height: 42,
+                    child: FilledButton.icon(
+                      onPressed: () => _openTopUp(currency),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF090B10),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text(
+                        'Add Funds',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -546,11 +525,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _quickActions(AppRole role) {
+  Widget _quickActions(AppRole role, String currency) {
     final actions = <_ActionData>[
       _ActionData('Buy eSIM', Icons.shopping_bag_outlined, AppColors.primary, () => context.go('/packages')),
       _ActionData('My eSIMs', Icons.sim_card_outlined, AppColors.sky, () => context.go('/esims')),
-      _ActionData('Add Funds', Icons.account_balance_wallet_outlined, AppColors.success, () => context.push('/wallet')),
+      _ActionData('Add Funds', Icons.account_balance_wallet_outlined, AppColors.success, () => _openTopUp(currency)),
       _ActionData('Orders', Icons.swap_horiz_rounded, AppColors.orange, () => context.go('/orders')),
       _ActionData('SIM Tools', Icons.sim_card_rounded, AppColors.navy, () => context.push('/sim-tools')),
       if (!kIsWeb &&
