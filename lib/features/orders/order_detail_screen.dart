@@ -5,12 +5,44 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../esims/esims_repository.dart';
 import 'order_history.dart';
 
-class OrderDetailScreen extends StatelessWidget {
+class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.order});
 
   final MobileOrderSummary order;
+
+  @override
+  State<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  final EsimsRepository _esimsRepository = EsimsRepository();
+  bool _openingLinkedSim = false;
+
+  MobileOrderSummary get order => widget.order;
+
+  Future<void> _openLinkedSim() async {
+    final esimId = order.esimId;
+    if (esimId == null || _openingLinkedSim) return;
+
+    setState(() => _openingLinkedSim = true);
+    try {
+      final linked = await _esimsRepository.fetchEsimDetail(esimId);
+      if (!mounted) return;
+      context.push('/esims/detail', extra: linked);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Linked SIM / eSIM details could not be loaded.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _openingLinkedSim = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +53,7 @@ class OrderDetailScreen extends StatelessWidget {
     final orderNumber = order.orderNumber.trim().isEmpty
         ? 'Order #${order.id}'
         : order.orderNumber.trim();
+    final hasLinkedSim = order.esimId != null;
 
     return Scaffold(
       body: SafeArea(
@@ -153,12 +186,12 @@ class OrderDetailScreen extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: order.esimId == null ? AppColors.warningSoft : AppColors.successSoft,
+                      color: hasLinkedSim ? AppColors.successSoft : AppColors.warningSoft,
                       borderRadius: BorderRadius.circular(B2BRadius.md),
                     ),
                     child: Icon(
-                      order.esimId == null ? Icons.hourglass_top_rounded : Icons.sim_card_rounded,
-                      color: order.esimId == null ? AppColors.warning : AppColors.success,
+                      hasLinkedSim ? Icons.sim_card_rounded : Icons.hourglass_top_rounded,
+                      color: hasLinkedSim ? AppColors.success : AppColors.warning,
                     ),
                   ),
                   const SizedBox(width: B2BSpacing.sm),
@@ -167,14 +200,14 @@ class OrderDetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          order.esimId == null ? 'eSIM provisioning pending' : 'eSIM linked to this order',
+                          hasLinkedSim ? 'SIM / eSIM linked to this order' : 'Provisioning pending',
                           style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                         const SizedBox(height: B2BSpacing.xxs),
                         Text(
-                          order.esimId == null
-                              ? 'Installation data will be available once provisioning is complete.'
-                              : 'eSIM ID ${order.esimId}. Open My eSIMs to manage installation and activation.',
+                          hasLinkedSim
+                              ? 'SIM / eSIM ID ${order.esimId}. Open the exact purchased line to manage it.'
+                              : 'The purchased line will be available once provisioning is complete.',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
@@ -185,9 +218,15 @@ class OrderDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: B2BSpacing.lg),
             FilledButton.icon(
-              onPressed: () => context.go('/esims'),
-              icon: const Icon(Icons.sim_card_outlined),
-              label: const Text('Open My eSIMs'),
+              onPressed: hasLinkedSim && !_openingLinkedSim ? _openLinkedSim : null,
+              icon: _openingLinkedSim
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sim_card_outlined),
+              label: Text(_openingLinkedSim ? 'Opening...' : 'Open purchased SIM / eSIM'),
             ),
           ],
         ),
