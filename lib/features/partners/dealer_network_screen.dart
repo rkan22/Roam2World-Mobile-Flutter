@@ -193,6 +193,14 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     note.dispose();
   }
 
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/dashboard');
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = _data;
@@ -208,7 +216,7 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: _handleBack,
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: const Text('Dealers'),
