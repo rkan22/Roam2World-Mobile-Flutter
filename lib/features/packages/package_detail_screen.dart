@@ -126,29 +126,6 @@ class PackageDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (package.supportedCountries.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Supported countries', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(B2BRadius.xl),
-                  border: Border.all(color: theme.colorScheme.outlineVariant),
-                  boxShadow: theme.brightness == Brightness.light
-                      ? B2BShadows.card
-                      : null,
-                ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: package.supportedCountries
-                      .map((country) => _CountryChip(country: country))
-                      .toList(growable: false),
-                ),
-              ),
-            ],
             if (package.description.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text('About this plan', style: theme.textTheme.titleLarge),
@@ -235,6 +212,10 @@ class PackageDetailScreen extends StatelessWidget {
                     title: 'Coverage',
                     body: package.destination,
                   ),
+                  if (package.supportedCountries.isNotEmpty) ...[
+                    const Divider(height: 28),
+                    _SupportedCountriesRow(countries: package.supportedCountries),
+                  ],
                   const Divider(height: 28),
                   const _InfoRow(
                     icon: Icons.bolt_rounded,
@@ -391,6 +372,118 @@ class _InfoRow extends StatelessWidget {
   );
 }
 
+class _SupportedCountriesRow extends StatelessWidget {
+  const _SupportedCountriesRow({required this.countries});
+
+  final List<PackageCountry> countries;
+
+  @override
+  Widget build(BuildContext context) {
+    const visibleCount = 5;
+    final visible = countries.take(visibleCount).toList(growable: false);
+    final remaining = countries.length - visible.length;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          height: 42,
+          width: 42,
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.language_rounded, color: AppColors.primary, size: 21),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Supported countries', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final country in visible)
+                    _CircularCountryFlag(code: country.code),
+                  if (remaining > 0)
+                    Container(
+                      height: 30,
+                      padding: const EdgeInsets.symmetric(horizontal: 9),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '+$remaining',
+                        style: const TextStyle(
+                          color: AppColors.primaryDark,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CircularCountryFlag extends StatelessWidget {
+  const _CircularCountryFlag({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = code.trim().toUpperCase();
+    if (normalized.length != 2) {
+      return Container(
+        width: 30,
+        height: 30,
+        decoration: const BoxDecoration(
+          color: AppColors.primaryLight,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.public_rounded, size: 16, color: AppColors.primary),
+      );
+    }
+
+    return ClipOval(
+      child: Image.network(
+        'https://flagsapi.com/$normalized/flat/64.png',
+        width: 30,
+        height: 30,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: AppColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            normalized,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CountryFlag extends StatelessWidget {
   const _CountryFlag({required this.code, this.width = 38});
   final String code;
@@ -428,27 +521,4 @@ class _CountryFlag extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CountryChip extends StatelessWidget {
-  const _CountryChip({required this.country});
-  final PackageCountry country;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceMuted,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _CountryFlag(code: country.code, width: 24),
-        const SizedBox(width: 7),
-        Text(country.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-      ],
-    ),
-  );
 }
