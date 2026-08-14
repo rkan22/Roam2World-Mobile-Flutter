@@ -61,12 +61,45 @@ class ProviderLifecycleRepository {
 
   final ApiClient _apiClient;
 
+  Future<ProviderOperationResult> checkTgtUsage({
+    String? iccid,
+    String? orderNo,
+    String? channelOrderNo,
+  }) => _post(ApiEndpoints.mobileTgtCheckGb, {
+    if (iccid?.trim().isNotEmpty == true) 'iccid': iccid!.trim(),
+    if (orderNo?.trim().isNotEmpty == true) 'order_no': orderNo!.trim(),
+    if (channelOrderNo?.trim().isNotEmpty == true)
+      'channel_order_no': channelOrderNo!.trim(),
+  });
+
   Future<ProviderOperationResult> topUpWorldmove({
     required String packageId,
     required String simNumber,
   }) => _post(ApiEndpoints.mobileWorldmoveTopup, {
     'wmproductId': packageId.trim(),
     'simNum': simNumber.trim(),
+  });
+
+  Future<ProviderOperationResult> renewTgt({
+    required String iccid,
+    required String packageId,
+    String? data,
+    String? validity,
+  }) => _post(ApiEndpoints.mobileTgtRenew, {
+    'iccid': iccid.trim(),
+    'esim_id': iccid.trim(),
+    'package_id': packageId.trim(),
+    if (data?.trim().isNotEmpty == true) 'data': data!.trim(),
+    if (validity?.trim().isNotEmpty == true) 'validity': validity!.trim(),
+  });
+
+  Future<ProviderOperationResult> renewVodafone({
+    required String esimId,
+    required String dataGb,
+  }) => _post(ApiEndpoints.mobileVodafoneRenew, {
+    'iccid': esimId.trim(),
+    'esim_id': esimId.trim(),
+    'renewal_data_gb': dataGb.trim(),
   });
 
   Future<ProviderOperationResult> checkAirhubUsage({
@@ -118,6 +151,7 @@ class ProviderLifecycleRepository {
     required String iccid,
     String? orderId,
   }) => _post(ApiEndpoints.mobileWorldmoveUsage, {
+    'simNum': iccid.trim(),
     'iccid': iccid.trim(),
     if (orderId?.trim().isNotEmpty == true) 'orderId': orderId!.trim(),
   });
