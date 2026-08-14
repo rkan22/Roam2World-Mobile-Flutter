@@ -25,7 +25,7 @@ void main() {
 
     expect(history.count, 1);
     expect(history.orders.single.orderNumber, 'ORD-42');
-    expect(history.orders.single.packageName, 'Europe 20GB');
+    expect(history.orders.single.packageName, 'Europe · 20GB');
     expect(history.orders.single.amount, 24.5);
     expect(history.orders.single.esimId, 8);
   });
