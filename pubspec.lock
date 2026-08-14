@@ -460,7 +460,7 @@ packages:
     source: hosted
     version: "4.1.0"
   flutter_staggered_grid_view:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_staggered_grid_view
       sha256: "19e7abb550c96fbfeb546b23f3ff356ee7c59a019a651f8f102a4ba9b7349395"
@@ -1274,7 +1274,7 @@ packages:
     source: hosted
     version: "1.1.0"
   url_launcher:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: url_launcher
       sha256: f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8
@@ -1482,7 +1482,7 @@ packages:
     source: hosted
     version: "3.1.3"
   zxing_lib:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: zxing_lib
       sha256: f9170470b6bc947d21a6783486f88ef48aad66fc1380c8acd02b118418ec0ce0
