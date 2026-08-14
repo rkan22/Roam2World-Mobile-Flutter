@@ -51,7 +51,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Log out?'),
-        content: const Text('Your secure business session will be removed from this device.'),
+        content: const Text(
+          'Your secure business session will be removed from this device.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -72,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String get _balanceLabel {
     final wallet = _wallet;
     if (wallet == null) return 'Open wallet';
-    return '${wallet.currency} ${wallet.availableAmount.toStringAsFixed(2)}';
+    return '${_currencySymbol(wallet.currency)}${wallet.availableAmount.toStringAsFixed(2)}';
   }
 
   @override
@@ -93,90 +95,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               _Header(onRefresh: _load),
               const SizedBox(height: B2BSpacing.lg),
-              _AccountHero(session: _session, wallet: _wallet, loading: _loading),
-              const SizedBox(height: B2BSpacing.lg),
-              _QuickLinks(
+              _IdentityCard(
+                session: _session,
+                loading: _loading,
+              ),
+              const SizedBox(height: B2BSpacing.md),
+              _AccountOverview(
+                role: _session?.role,
+                balance: _balanceLabel,
+                onWallet: () => context.push(AppRoutes.wallet),
+              ),
+              const SizedBox(height: B2BSpacing.xl),
+              const _SectionTitle(
+                title: 'Workspace',
+                subtitle: 'Your everyday business tools',
+              ),
+              const SizedBox(height: B2BSpacing.sm),
+              _ActionGrid(
                 onWallet: () => context.push(AppRoutes.wallet),
                 onReports: () => context.push(AppRoutes.reports),
                 onCustomers: () => context.push(AppRoutes.customers),
+                onNotifications: () => context.push(AppRoutes.notifications),
               ),
               const SizedBox(height: B2BSpacing.xl),
-              const _SectionTitle('Business workspace'),
+              const _SectionTitle(
+                title: 'Account',
+                subtitle: 'Preferences, support and app details',
+              ),
               const SizedBox(height: B2BSpacing.sm),
               B2BSurface(
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    _AccountTile(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'Wallet',
-                      subtitle: 'Balance, top-ups and transactions',
-                      trailing: _balanceLabel,
-                      onTap: () => context.push(AppRoutes.wallet),
-                    ),
-                    const Divider(height: 1),
-                    _AccountTile(
-                      icon: Icons.analytics_outlined,
-                      title: 'Business reports',
-                      subtitle: 'Sales, orders and eSIM performance',
-                      trailing: 'Live',
-                      onTap: () => context.push(AppRoutes.reports),
-                    ),
-                    const Divider(height: 1),
-                    _AccountTile(
-                      icon: Icons.people_outline_rounded,
-                      title: 'Customers',
-                      subtitle: 'Customer activity and order history',
-                      onTap: () => context.push(AppRoutes.customers),
-                    ),
-                    const Divider(height: 1),
-                    _AccountTile(
-                      icon: Icons.notifications_none_rounded,
-                      title: 'Notifications',
-                      subtitle: 'Operational and account updates',
-                      onTap: () => context.push(AppRoutes.notifications),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: B2BSpacing.xl),
-              const _SectionTitle('Account & support'),
-              const SizedBox(height: B2BSpacing.sm),
-              B2BSurface(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _AccountTile(
+                    _MenuTile(
                       icon: Icons.tune_rounded,
                       title: 'Settings',
                       subtitle: 'Language, appearance and alerts',
                       onTap: () => context.push(AppRoutes.settings),
                     ),
                     const Divider(height: 1),
-                    _AccountTile(
+                    _MenuTile(
                       icon: Icons.help_outline_rounded,
                       title: 'Help & support',
-                      subtitle: 'Installation, orders, wallet and support',
+                      subtitle: 'Orders, wallet and installation help',
                       onTap: () => context.push(AppRoutes.support),
                     ),
                     const Divider(height: 1),
-                    const _AccountTile(
+                    const _MenuTile(
                       icon: Icons.verified_user_outlined,
                       title: 'Roam2World B2B',
-                      subtitle: 'Secure reseller mobile workspace',
+                      subtitle: 'Partner mobile workspace',
                       trailing: 'v1.0.0',
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: B2BSpacing.xl),
-              OutlinedButton.icon(
-                onPressed: _logout,
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text('Log out securely'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.danger,
-                  side: BorderSide(color: AppColors.danger.withValues(alpha: .35)),
+              B2BSurface(
+                padding: const EdgeInsets.all(B2BSpacing.md),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withValues(alpha: .08),
+                        borderRadius: BorderRadius.circular(B2BRadius.md),
+                      ),
+                      child: const Icon(
+                        Icons.logout_rounded,
+                        color: AppColors.danger,
+                      ),
+                    ),
+                    const SizedBox(width: B2BSpacing.md),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sign out',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'End this session on this device',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _logout,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.danger,
+                      ),
+                      child: const Text('Log out'),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -189,6 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 class _Header extends StatelessWidget {
   const _Header({required this.onRefresh});
+
   final VoidCallback onRefresh;
 
   @override
@@ -198,9 +214,19 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Business account', style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Profile',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
                 const SizedBox(height: B2BSpacing.xxs),
-                Text('Profile', style: Theme.of(context).textTheme.headlineLarge),
+                Text(
+                  'Account, workspace and preferences',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
               ],
             ),
           ),
@@ -213,109 +239,94 @@ class _Header extends StatelessWidget {
       );
 }
 
-class _AccountHero extends StatelessWidget {
-  const _AccountHero({required this.session, required this.wallet, required this.loading});
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({required this.session, required this.loading});
 
   final AuthSession? session;
-  final WalletData? wallet;
   final bool loading;
 
   @override
   Widget build(BuildContext context) {
     final name = session?.displayName?.trim();
     final title = name?.isNotEmpty == true ? name! : 'Roam2World B2B Account';
-    final email = session?.email.isNotEmpty == true ? session!.email : 'Business mobile workspace';
-    final role = session?.role.trim().isNotEmpty == true ? session!.role.trim() : 'Business partner';
+    final email = session?.email.isNotEmpty == true
+        ? session!.email
+        : 'Business mobile workspace';
+    final role = _roleLabel(session?.role);
     final initials = title
         .split(RegExp(r'\s+'))
         .where((part) => part.isNotEmpty)
         .take(2)
         .map((part) => part[0].toUpperCase())
         .join();
-    final balance = wallet == null
-        ? 'Wallet unavailable'
-        : '${wallet!.currency} ${wallet!.availableAmount.toStringAsFixed(2)}';
 
-    return Container(
-      padding: const EdgeInsets.all(B2BSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: B2BGradients.primary,
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
-        boxShadow: B2BShadows.hero,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return B2BSurface(
+      padding: const EdgeInsets.all(B2BSpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: loading
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Text(
-                        initials.isEmpty ? 'R2W' : initials,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-              ),
-              const SizedBox(width: B2BSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
+          Container(
+            width: 68,
+            height: 68,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.primaryLight),
+            ),
+            child: loading
+                ? const SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    initials.isEmpty ? 'R2W' : initials,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: B2BSpacing.xxs),
-                    Text(
-                      email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(B2BRadius.pill),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.verified_rounded, size: 15, color: Colors.white),
-                    SizedBox(width: 5),
-                    Text('Verified', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-              ),
-            ],
+                  ),
           ),
-          const SizedBox(height: B2BSpacing.lg),
-          Row(
-            children: [
-              Expanded(child: _HeroMetric(label: 'Account type', value: role)),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(child: _HeroMetric(label: 'Available funds', value: balance)),
-            ],
+          const SizedBox(width: B2BSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                const SizedBox(height: B2BSpacing.xxs),
+                Text(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+                const SizedBox(height: B2BSpacing.sm),
+                Wrap(
+                  spacing: B2BSpacing.xs,
+                  runSpacing: B2BSpacing.xs,
+                  children: [
+                    _Pill(
+                      icon: Icons.business_center_outlined,
+                      label: role,
+                    ),
+                    const _Pill(
+                      icon: Icons.verified_rounded,
+                      label: 'Verified account',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -323,82 +334,263 @@ class _AccountHero extends StatelessWidget {
   }
 }
 
-class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({required this.label, required this.value});
+class _Pill extends StatelessWidget {
+  const _Pill({required this.icon, required this.label});
+
+  final IconData icon;
   final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(B2BSpacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(B2BRadius.md),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(B2BRadius.pill),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white60)),
-            const SizedBox(height: B2BSpacing.xs),
+            Icon(icon, size: 14, color: AppColors.primary),
+            const SizedBox(width: 5),
             Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),
       );
 }
 
-class _QuickLinks extends StatelessWidget {
-  const _QuickLinks({required this.onWallet, required this.onReports, required this.onCustomers});
+class _AccountOverview extends StatelessWidget {
+  const _AccountOverview({
+    required this.role,
+    required this.balance,
+    required this.onWallet,
+  });
+
+  final String? role;
+  final String balance;
   final VoidCallback onWallet;
-  final VoidCallback onReports;
-  final VoidCallback onCustomers;
 
   @override
   Widget build(BuildContext context) => Row(
         children: [
-          Expanded(child: _QuickLink(icon: Icons.account_balance_wallet_outlined, label: 'Wallet', onTap: onWallet)),
+          Expanded(
+            child: _OverviewCard(
+              icon: Icons.badge_outlined,
+              label: 'Account type',
+              value: _roleLabel(role),
+            ),
+          ),
           const SizedBox(width: B2BSpacing.sm),
-          Expanded(child: _QuickLink(icon: Icons.analytics_outlined, label: 'Reports', onTap: onReports)),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(child: _QuickLink(icon: Icons.people_outline_rounded, label: 'Customers', onTap: onCustomers)),
+          Expanded(
+            child: _OverviewCard(
+              icon: Icons.account_balance_wallet_outlined,
+              label: 'Available balance',
+              value: balance,
+              onTap: onWallet,
+            ),
+          ),
         ],
       );
 }
 
-class _QuickLink extends StatelessWidget {
-  const _QuickLink({required this.icon, required this.label, required this.onTap});
+class _OverviewCard extends StatelessWidget {
+  const _OverviewCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
+
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => B2BSurface(
         onTap: onTap,
-        padding: const EdgeInsets.symmetric(vertical: B2BSpacing.md, horizontal: B2BSpacing.xs),
+        padding: const EdgeInsets.all(B2BSpacing.md),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(B2BRadius.sm),
+              ),
+              child: Icon(icon, size: 19, color: AppColors.primary),
+            ),
+            const SizedBox(height: B2BSpacing.md),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
           ],
         ),
       );
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
+  const _SectionTitle({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
 
   @override
-  Widget build(BuildContext context) => Text(text, style: Theme.of(context).textTheme.titleMedium);
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
+      );
 }
 
-class _AccountTile extends StatelessWidget {
-  const _AccountTile({
+class _ActionGrid extends StatelessWidget {
+  const _ActionGrid({
+    required this.onWallet,
+    required this.onReports,
+    required this.onCustomers,
+    required this.onNotifications,
+  });
+
+  final VoidCallback onWallet;
+  final VoidCallback onReports;
+  final VoidCallback onCustomers;
+  final VoidCallback onNotifications;
+
+  @override
+  Widget build(BuildContext context) => GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: B2BSpacing.sm,
+        crossAxisSpacing: B2BSpacing.sm,
+        childAspectRatio: 1.55,
+        children: [
+          _ActionCard(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'Wallet',
+            subtitle: 'Balance & top-ups',
+            onTap: onWallet,
+          ),
+          _ActionCard(
+            icon: Icons.analytics_outlined,
+            title: 'Reports',
+            subtitle: 'Sales & activity',
+            onTap: onReports,
+          ),
+          _ActionCard(
+            icon: Icons.people_outline_rounded,
+            title: 'Customers',
+            subtitle: 'Accounts & orders',
+            onTap: onCustomers,
+          ),
+          _ActionCard(
+            icon: Icons.notifications_none_rounded,
+            title: 'Notifications',
+            subtitle: 'Account updates',
+            onTap: onNotifications,
+          ),
+        ],
+      );
+}
+
+class _ActionCard extends StatelessWidget {
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => B2BSurface(
+        onTap: onTap,
+        padding: const EdgeInsets.all(B2BSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(B2BRadius.sm),
+                  ),
+                  child: Icon(icon, size: 19, color: AppColors.primary),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_outward_rounded,
+                  size: 18,
+                  color: AppColors.textMuted,
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+}
+
+class _MenuTile extends StatelessWidget {
+  const _MenuTile({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -415,35 +607,63 @@ class _AccountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: B2BSpacing.md, vertical: B2BSpacing.xs),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: B2BSpacing.md,
+          vertical: B2BSpacing.xs,
+        ),
         leading: Container(
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: AppColors.primarySoft,
             borderRadius: BorderRadius.circular(B2BRadius.sm),
           ),
-          child: Icon(icon, size: 21, color: AppColors.primary),
+          child: Icon(icon, size: 20, color: AppColors.primary),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (trailing != null)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 100),
-                child: Text(
-                  trailing!,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: trailing != null
+            ? Text(
+                trailing!,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
                 ),
-              ),
-            if (onTap != null) ...[
-              const SizedBox(width: B2BSpacing.xs),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-            ],
-          ],
-        ),
+              )
+            : onTap != null
+                ? const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textMuted,
+                  )
+                : null,
       );
+}
+
+String _roleLabel(String? role) {
+  final normalized = role?.trim().toLowerCase() ?? '';
+  return switch (normalized) {
+    'admin' => 'Admin',
+    'reseller' => 'Reseller',
+    'dealer' => 'Dealer',
+    'client' => 'Client',
+    'public' || 'public_user' => 'Public',
+    _ => role?.trim().isNotEmpty == true ? role!.trim() : 'Business partner',
+  };
+}
+
+String _currencySymbol(String currency) {
+  return switch (currency.toUpperCase()) {
+    'USD' => r'$',
+    'EUR' => '€',
+    'GBP' => '£',
+    'TRY' => '₺',
+    _ => '${currency.toUpperCase()} ',
+  };
 }
