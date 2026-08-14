@@ -735,10 +735,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           (defaultTargetPlatform == TargetPlatform.android ||
               defaultTargetPlatform == TargetPlatform.iOS))
         _ActionData(
-          label: 'NekokoLPA',
+          label: 'Roam2World eSIM',
           icon: Icons.qr_code_2_rounded,
           color: AppColors.navy,
-          onTap: () => context.push('/nekoko-lpa'),
+          onTap: () => context.push('/roam-lpa'),
         ),
     ];
     return Container(

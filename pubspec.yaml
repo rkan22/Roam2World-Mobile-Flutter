@@ -25,8 +25,6 @@ dependencies:
   flutter_riverpod: ^3.3.1
   roam_lpa_core:
     path: packages/roam_lpa_core
-  nlpa2:
-    path: vendor/NekokoLPA2
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../nekoko/nekoko_lpa_screen.dart';
+import '../esim_manager/roam_lpa_screen.dart';
 import 'esim_catalog.dart';
 import 'lpa_bridge.dart';
 
@@ -49,10 +49,10 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     await _runOperation(() => _bridge.installActivationCode(_activationCode));
   }
 
-  Future<void> _handoffToNekoko() async {
+  Future<void> _openRoamLpa() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => NekokoLpaScreen(activationCode: _activationCode),
+        builder: (_) => RoamLpaScreen(activationCode: _activationCode),
       ),
     );
   }
@@ -131,13 +131,13 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'NekokoLPA2 açıldı',
+                'Roam2World eSIM Manager açıldı',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 10),
               const Text(
-                'Aktivasyon kodu NekokoLPA2 uygulamasına aktarıldı. Kurulumun sonucunu NekokoLPA2 içinde tamamlayın. Roam2World bu aşamada profili yüklenmiş saymaz.',
+                'Aktivasyon kodu Roam2World eSIM Manager alanına aktarıldı. Kurulum sonucu doğrulanmadan Roam2World profili yüklenmiş saymaz.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondary, height: 1.45),
               ),
@@ -162,7 +162,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 capability.directInstallSupported
                     ? 'eSIM kuruluma hazır'
                     : capability.nekokoAvailable
-                    ? 'NekokoLPA2 Roam2World içinde hazır'
+                    ? 'Roam2World eSIM Manager hazır'
                     : 'Doğrudan LPA kullanılamıyor',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
@@ -228,9 +228,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 if (capability.directInstallSupported)
                   const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed: _installing ? null : _handoffToNekoko,
+                  onPressed: _installing ? null : _openRoamLpa,
                   icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('NekokoLPA2 Kurulumunu Aç'),
+                  label: const Text('Roam2World eSIM Manager’ı Aç'),
                 ),
               ],
               if (!capability.directInstallSupported &&
