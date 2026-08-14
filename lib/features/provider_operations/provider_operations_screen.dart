@@ -137,11 +137,12 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       const SizedBox(height: 18),
       DropdownButtonFormField<String>(
         value: _usageProvider,
+        isExpanded: true,
         decoration: const InputDecoration(labelText: 'Provider'),
         items: const [
-          DropdownMenuItem(value: 'tgt', child: Text('Orange Balkans')),
-          DropdownMenuItem(value: 'airhub', child: Text('Vodafone')),
-          DropdownMenuItem(value: 'worldmove', child: Text('Orange Europe')),
+          DropdownMenuItem(value: 'tgt', child: Text('Orange Balkans', maxLines: 1, overflow: TextOverflow.ellipsis)),
+          DropdownMenuItem(value: 'airhub', child: Text('Vodafone', maxLines: 1, overflow: TextOverflow.ellipsis)),
+          DropdownMenuItem(value: 'worldmove', child: Text('Orange Europe', maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
         onChanged: _loading ? null : (value) => setState(() { _usageProvider = value ?? 'tgt'; _usageResult = null; }),
       ),
@@ -174,11 +175,12 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       const SizedBox(height: 18),
       DropdownButtonFormField<String>(
         value: _renewProvider,
+        isExpanded: true,
         decoration: const InputDecoration(labelText: 'Provider'),
         items: const [
-          DropdownMenuItem(value: 'tgt', child: Text('Orange Balkans')),
-          DropdownMenuItem(value: 'airhub', child: Text('Vodafone')),
-          DropdownMenuItem(value: 'worldmove', child: Text('Orange Europe')),
+          DropdownMenuItem(value: 'tgt', child: Text('Orange Balkans', maxLines: 1, overflow: TextOverflow.ellipsis)),
+          DropdownMenuItem(value: 'airhub', child: Text('Vodafone', maxLines: 1, overflow: TextOverflow.ellipsis)),
+          DropdownMenuItem(value: 'worldmove', child: Text('Orange Europe', maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
         onChanged: _loading ? null : (value) => setState(() { _renewProvider = value ?? 'tgt'; _renewalOptions = const []; _selectedOption = null; _operationResult = null; }),
       ),
@@ -195,8 +197,16 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
           const SizedBox(height: 10),
           DropdownButtonFormField<Map<String, dynamic>>(
             value: _selectedOption,
+            isExpanded: true,
             decoration: const InputDecoration(labelText: 'Renewal option'),
-            items: _renewalOptions.map((option) => DropdownMenuItem(value: option, child: Text(_optionLabel(option)))).toList(growable: false),
+            items: _renewalOptions.map((option) => DropdownMenuItem(
+              value: option,
+              child: Text(
+                _optionLabel(option),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )).toList(growable: false),
             onChanged: _loading ? null : (value) => setState(() => _selectedOption = value),
           ),
         ],
