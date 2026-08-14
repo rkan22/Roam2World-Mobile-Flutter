@@ -141,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 14),
           _recentOrders(data),
           const SizedBox(height: 14),
-          _quickActions(parseAppRole(data.role), data.currency),
+          _quickActions(parseAppRole(data.role)),
         ],
       ),
     );
@@ -527,12 +527,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _quickActions(AppRole role, String currency) {
+  Widget _quickActions(AppRole role) {
     final actions = <_ActionData>[
-      _ActionData('Buy eSIM', Icons.shopping_bag_outlined, AppColors.primary, () => context.go('/packages')),
       _ActionData('My eSIMs', Icons.sim_card_outlined, AppColors.sky, () => context.go('/esims')),
-      _ActionData('Add Funds', Icons.account_balance_wallet_outlined, AppColors.accent, () => _openTopUp(currency)),
-      _ActionData('Orders', Icons.swap_horiz_rounded, AppColors.orange, () => context.go('/orders')),
       _ActionData('SIM Tools', Icons.sim_card_rounded, AppColors.navy, () => context.push('/sim-tools')),
       if (!kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS))
