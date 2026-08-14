@@ -478,7 +478,7 @@ class _OperatorPlanCard extends StatelessWidget {
     final manual = package.provider.toLowerCase() == 'manual';
     final accent = _accent;
     return Material(
-      color: theme.colorScheme.surface,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -486,9 +486,9 @@ class _OperatorPlanCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: accent.withValues(alpha: .28)),
-            boxShadow: [BoxShadow(color: accent.withValues(alpha: .08), blurRadius: 18, offset: const Offset(0, 8))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,13 +497,9 @@ class _OperatorPlanCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(package.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 4),
-                        Text(package.destination, style: theme.textTheme.bodySmall),
-                      ],
+                    child: Text(
+                      package.name,
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -511,8 +507,14 @@ class _OperatorPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: accent.withValues(alpha: .12), shape: BoxShape.circle),
-                    child: _CountryVisual(code: package.countryCode, destinationKey: package.destinationKey),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: .08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: _CountryVisual(
+                      code: package.countryCode,
+                      destinationKey: package.destinationKey,
+                    ),
                   ),
                 ],
               ),
@@ -597,43 +599,44 @@ class _CoveragePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const previewLimit = 6;
+    const previewLimit = 8;
     final visible = countries.take(previewLimit).toList(growable: false);
     final remaining = countries.length - visible.length;
     return Wrap(
-      spacing: 7,
-      runSpacing: 7,
+      spacing: 8,
+      runSpacing: 8,
       children: [
         for (final country in visible)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: .08),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: accent.withValues(alpha: .2)),
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withValues(alpha: .20)),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _CountryVisual(code: country.code, destinationKey: country.code == 'EU' ? 'europe' : '', compact: true),
-                const SizedBox(width: 5),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 88),
-                  child: Text(
-                    country.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: accent, fontSize: 10.5, fontWeight: FontWeight.w900),
-                  ),
-                ),
-              ],
+            child: _CountryVisual(
+              code: country.code,
+              destinationKey: country.code == 'EU' ? 'europe' : '',
+              compact: true,
             ),
           ),
         if (remaining > 0)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-            decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(999)),
-            child: Text('+$remaining more', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w800)),
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceMuted,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '+$remaining',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
           ),
       ],
     );
@@ -656,11 +659,12 @@ class _CountryVisual extends StatelessWidget {
             ? 'https://flagcdn.com/w40/${normalizedCode.toLowerCase()}.png'
             : null;
     if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27);
+    final size = compact ? 26.0 : 36.0;
     return ClipOval(
       child: Image.network(
         url,
-        width: compact ? 22 : 34,
-        height: compact ? 22 : 34,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27),
       ),
