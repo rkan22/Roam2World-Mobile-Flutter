@@ -45,7 +45,11 @@ class ApiEndpoints {
   static const String manualCatalogProducts =
       '/api/v1/mobile/b2b/manual/products/';
   static const String manualRequest = '/api/v1/mobile/b2b/manual/request/';
+  static const String pricingRules = '/api/v1/pricing-rules/';
+  static const String pricingPreview = '/api/v1/pricing/preview/';
   static const String pricingBatchPreview = '/api/v1/pricing/batch-preview/';
+  static String pricingRuleDetail(Object ruleId) =>
+      '/api/v1/pricing-rules/$ruleId/';
   static const List<String> airhubCatalogSources = [
     '/api/v1/airhub/packages/filtered/',
     '/api/v1/airhub/packages/',
