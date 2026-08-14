@@ -119,6 +119,7 @@ class ApiEndpoints {
   static const String mobileWallet = '/api/v1/mobile/wallet/';
   static const String mobileWalletRequests = '/api/v1/mobile/wallet/requests/';
   static const String mobileTransactions = '/api/v1/mobile/transactions/';
+  static const String providerAllocations = '/api/v1/credits/my-allocations/';
   static const String mobileDealerWalletRequests =
       '/api/v1/mobile/dealer-wallet-requests/';
   static const String mobileResellerWalletRequests =
