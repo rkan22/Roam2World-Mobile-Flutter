@@ -485,12 +485,12 @@ class _CircularCountryFlag extends StatelessWidget {
 }
 
 class _CountryFlag extends StatelessWidget {
-  const _CountryFlag({required this.code, this.width = 38});
+  const _CountryFlag({required this.code});
   final String code;
-  final double width;
 
   @override
   Widget build(BuildContext context) {
+    const width = 38.0;
     if (code.length != 2) {
       return const Icon(Icons.public_rounded, color: Colors.white, size: 30);
     }
