@@ -122,7 +122,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final visible = _visiblePackages;
     return Scaffold(
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 1),
@@ -137,58 +136,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 const _StaleDataBanner(),
                 const SizedBox(height: 14),
               ],
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('eSIM Marketplace', style: theme.textTheme.headlineLarge),
-                        const SizedBox(height: 5),
-                        Text('Choose the right plan for your customer in seconds.', style: theme.textTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                  IconButton.filledTonal(
-                    onPressed: () => context.push('/notifications'),
-                    icon: const Icon(Icons.notifications_none_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: B2BGradients.primary,
-                  borderRadius: BorderRadius.circular(B2BRadius.xl),
-                  boxShadow: B2BShadows.card,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .14),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.public_rounded, color: Colors.white),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Global coverage', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('Search local, regional and global reseller plans.', style: TextStyle(color: Colors.white70, height: 1.35)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const _CatalogHero(),
               const SizedBox(height: 18),
               _CatalogFilterPanel(
                 operators: _operators,
@@ -205,49 +153,127 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 onDataChanged: (value) => setState(() => _selectedData = value),
                 onSearchChanged: _onSearchChanged,
               ),
-              const SizedBox(height: 16),
-              _SectionTitle(title: 'Plans', trailing: '${visible.length} plans'),
               const SizedBox(height: 18),
-              if (_loading)
-                const ContentLoadingState(label: 'Loading packages...')
-              else if (_error != null && _packages.isEmpty)
-                ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true))
-              else if (visible.isEmpty)
-                ContentEmptyState(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'No packages found',
-                  message: 'Try changing or clearing the catalog filters.',
-                  actionLabel: 'Clear filters',
-                  onAction: _clearFilters,
-                )
-              else
-                for (var index = 0; index < visible.length; index++) ...[
-                  _PackageTile(
-                    package: visible[index],
-                    onTap: () => context.push('/packages/detail', extra: visible[index]),
-                  ),
-                  if (index != visible.length - 1) const SizedBox(height: 12),
-                ],
+              _CatalogSection(
+                title: 'Available Plans',
+                trailing: '${visible.length} plans',
+                child: _buildCatalogContent(visible),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildCatalogContent(List<MobilePackage> visible) {
+    if (_loading) return const ContentLoadingState(label: 'Loading packages...');
+    if (_error != null && _packages.isEmpty) {
+      return ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true));
+    }
+    if (visible.isEmpty) {
+      return ContentEmptyState(
+        icon: Icons.inventory_2_outlined,
+        title: 'No packages found',
+        message: 'Try changing or clearing the catalog filters.',
+        actionLabel: 'Clear filters',
+        onAction: _clearFilters,
+      );
+    }
+    return Column(
+      children: [
+        for (var index = 0; index < visible.length; index++) ...[
+          _OperatorPlanCard(
+            package: visible[index],
+            onTap: () => context.push('/packages/detail', extra: visible[index]),
+          ),
+          if (index != visible.length - 1) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.trailing});
-  final String title;
-  final String trailing;
+class _CatalogHero extends StatelessWidget {
+  const _CatalogHero();
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+      ),
+      child: Row(
         children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
-          Text(trailing, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Icon(Icons.public_rounded, color: AppColors.primary, size: 28),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Unified Operator Catalog', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text('Multi-provider eSIM inventory with smart routing', style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          IconButton.filledTonal(
+            tooltip: 'Notifications',
+            onPressed: () => context.push('/notifications'),
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
         ],
-      );
+      ),
+    );
+  }
+}
+
+class _CatalogSection extends StatelessWidget {
+  const _CatalogSection({required this.title, required this.trailing, required this.child});
+
+  final String title;
+  final String trailing;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+              Text(trailing, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 class _CatalogFilterPanel extends StatelessWidget {
@@ -292,86 +318,84 @@ class _CatalogFilterPanel extends StatelessWidget {
         border: Border.all(color: theme.colorScheme.outlineVariant),
         boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
       ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(top: 8),
-          title: Text('Catalog filters', style: theme.textTheme.titleMedium),
-          subtitle: Text('Operator, type, validity, data and search', style: theme.textTheme.bodySmall),
-          children: [
-            _FilterField(
-              label: 'Operator',
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(operator),
-                initialValue: operator,
-                isExpanded: true,
-                items: operators.map((item) => DropdownMenuItem(value: item.$2, child: Text(item.$1))).toList(),
-                onChanged: (value) => onOperatorChanged(value ?? ''),
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Catalog filters', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text('Filter by operator, product type, validity, data and plan name.', style: theme.textTheme.bodySmall),
+          const SizedBox(height: 16),
+          _FilterField(
+            label: 'Operator',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(operator),
+              initialValue: operator,
+              isExpanded: true,
+              items: operators.map((item) => DropdownMenuItem(value: item.$2, child: Text(item.$1))).toList(),
+              onChanged: (value) => onOperatorChanged(value ?? ''),
             ),
-            const SizedBox(height: 12),
-            _FilterField(
-              label: 'Type',
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(type),
-                initialValue: type,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: '', child: Text('All Types')),
-                  DropdownMenuItem(value: 'esim', child: Text('eSIM')),
-                  DropdownMenuItem(value: 'simcard', child: Text('SIM Card')),
-                ],
-                onChanged: (value) => onTypeChanged(value ?? ''),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _FilterField(
-                    label: 'Validity',
-                    child: DropdownButtonFormField<String>(
-                      key: ValueKey('validity-$validity'),
-                      initialValue: validity?.toString() ?? '',
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem(value: '', child: Text('All')),
-                        ...validityOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('$item Days'))),
-                      ],
-                      onChanged: (value) => onValidityChanged(int.tryParse(value ?? '')),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _FilterField(
-                    label: 'Data',
-                    child: DropdownButtonFormField<String>(
-                      key: ValueKey('data-$data'),
-                      initialValue: data?.toString() ?? '',
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem(value: '', child: Text('All')),
-                        ...dataOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('${item}GB'))),
-                      ],
-                      onChanged: (value) => onDataChanged(num.tryParse(value ?? '')),
-                    ),
-                  ),
-                ),
+          ),
+          const SizedBox(height: 12),
+          _FilterField(
+            label: 'Type',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey(type),
+              initialValue: type,
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: '', child: Text('All Types')),
+                DropdownMenuItem(value: 'esim', child: Text('eSIM')),
+                DropdownMenuItem(value: 'simcard', child: Text('SIM Card')),
               ],
+              onChanged: (value) => onTypeChanged(value ?? ''),
             ),
-            const SizedBox(height: 12),
-            _FilterField(
-              label: 'Search',
-              child: TextField(
-                controller: searchController,
-                onChanged: onSearchChanged,
-                decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search_rounded)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _FilterField(
+                  label: 'Validity',
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey('validity-$validity'),
+                    initialValue: validity?.toString() ?? '',
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All')),
+                      ...validityOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('$item Days'))),
+                    ],
+                    onChanged: (value) => onValidityChanged(int.tryParse(value ?? '')),
+                  ),
+                ),
               ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _FilterField(
+                  label: 'Data',
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey('data-$data'),
+                    initialValue: data?.toString() ?? '',
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('All')),
+                      ...dataOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('${item}GB'))),
+                    ],
+                    onChanged: (value) => onDataChanged(num.tryParse(value ?? '')),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _FilterField(
+            label: 'Search',
+            child: TextField(
+              controller: searchController,
+              onChanged: onSearchChanged,
+              decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search_rounded)),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -414,84 +438,117 @@ class _StaleDataBanner extends StatelessWidget {
       );
 }
 
-class _PackageTile extends StatelessWidget {
-  const _PackageTile({required this.package, required this.onTap});
+class _OperatorPlanCard extends StatelessWidget {
+  const _OperatorPlanCard({required this.package, required this.onTap});
+
   final MobilePackage package;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final manual = package.provider.toLowerCase() == 'manual';
     return Material(
       color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(B2BRadius.xl),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(B2BRadius.xl),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: theme.colorScheme.outlineVariant),
-            boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    height: 54,
-                    width: 54,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(17)),
-                    child: _CountryVisual(code: package.countryCode, destinationKey: package.destinationKey),
-                  ),
-                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(package.destination, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16.5)),
-                        const SizedBox(height: 2),
-                        Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 3),
-                        Text(package.displayProvider, style: theme.textTheme.bodySmall),
+                        Text(package.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
+                        Text(package.destination, style: theme.textTheme.bodySmall),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Text(package.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: AppColors.primary, fontSize: 17)),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
+                    child: _CountryVisual(code: package.countryCode, destinationKey: package.destinationKey),
+                  ),
                 ],
               ),
-              if (package.supportedCountries.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Align(alignment: Alignment.centerLeft, child: _CoveragePreview(countries: package.supportedCountries)),
-              ],
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(16)),
-                child: Row(
-                  children: [
-                    Expanded(child: _InlineMetric(icon: Icons.data_usage_rounded, value: package.dataLabel)),
-                    Container(width: 1, height: 26, color: AppColors.border),
-                    Expanded(child: _InlineMetric(icon: Icons.schedule_rounded, value: package.validityLabel)),
-                    Container(width: 1, height: 26, color: AppColors.border),
-                    const Expanded(child: _InlineMetric(icon: Icons.network_cell_rounded, value: '4G / 5G')),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  Text('Reseller-ready plan', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  FilledButton(onPressed: onTap, style: FilledButton.styleFrom(minimumSize: const Size(92, 40), padding: const EdgeInsets.symmetric(horizontal: 16)), child: const Text('View plan')),
+                  Expanded(
+                    child: Text(
+                      manual ? '${package.displayProvider} · manual delivery' : package.displayProvider,
+                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  if (package.supportedCountries.isNotEmpty)
+                    _CoveragePreview(countries: package.supportedCountries),
                 ],
+              ),
+              const SizedBox(height: 14),
+              _PlanDetailRow(label: 'Region', value: package.destination),
+              _PlanDetailRow(label: 'Type', value: package.packageType == 'simcard' ? 'SIM Card' : 'eSIM'),
+              _PlanDetailRow(label: 'Data', value: package.dataLabel),
+              _PlanDetailRow(label: 'Validity', value: package.validityLabel),
+              _PlanDetailRow(label: 'Price', value: package.formattedPrice, emphasize: true),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: onTap,
+                  child: Text(manual ? 'Review request' : 'View plan'),
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PlanDetailRow extends StatelessWidget {
+  const _PlanDetailRow({required this.label, required this.value, this.emphasize = false});
+
+  final String label;
+  final String value;
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(label, style: theme.textTheme.bodySmall)),
+          const SizedBox(width: 14),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: emphasize ? AppColors.primary : null,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -506,52 +563,21 @@ class _CoveragePreview extends StatelessWidget {
     const previewLimit = 4;
     final visible = countries.take(previewLimit).toList(growable: false);
     final remaining = countries.length - visible.length;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (final country in visible)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: AppColors.primaryLight),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _CountryVisual(code: country.code, destinationKey: '' , compact: true),
-                const SizedBox(width: 5),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 74),
-                  child: Text(country.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10.5, fontWeight: FontWeight.w800)),
-                ),
-              ],
-            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 3),
+            child: _CountryVisual(code: country.code, destinationKey: '', compact: true),
           ),
-        if (remaining > 0)
-          Text('+$remaining countries', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
+        if (remaining > 0) ...[
+          const SizedBox(width: 5),
+          Text('+$remaining', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
+        ],
       ],
     );
   }
-}
-
-class _InlineMetric extends StatelessWidget {
-  const _InlineMetric({required this.icon, required this.value});
-  final IconData icon;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 5),
-          Flexible(child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5))),
-        ],
-      );
 }
 
 class _CountryVisual extends StatelessWidget {
@@ -568,15 +594,14 @@ class _CountryVisual extends StatelessWidget {
         : code.length == 2
             ? 'https://flagcdn.com/w40/${code.toLowerCase()}.png'
             : null;
-    if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 15 : 27);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(compact ? 4 : 6),
+    if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27);
+    return ClipOval(
       child: Image.network(
         url,
-        width: isEurope ? (compact ? 20 : 34) : (compact ? 20 : 34),
-        height: isEurope ? (compact ? 14 : 24) : (compact ? 14 : 24),
+        width: compact ? 22 : 34,
+        height: compact ? 22 : 34,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 15 : 27),
+        errorBuilder: (context, error, stackTrace) => Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27),
       ),
     );
   }
