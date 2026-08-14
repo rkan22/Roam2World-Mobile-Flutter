@@ -10,7 +10,7 @@ class ProfilesHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border),
       ),
