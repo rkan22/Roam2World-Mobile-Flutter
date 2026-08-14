@@ -88,7 +88,7 @@ class MobilePackage {
     final price = double.tryParse('${_first([json['final_price'], json['finalPrice'], json['price'], json['sale_price'], json['salePrice'], json['reseller_price'], json['resellerPrice'], 0])}') ?? 0;
     return MobilePackage(
       id: provider.toLowerCase() == 'worldmove' && wmCode.isNotEmpty ? wmCode : _text(json, ['id', 'package_id', 'planCode', 'productCode', 'product_code', 'code', 'sku']),
-      name: _name(json, identity, data, validity),
+      name: _name(json, identity, wmCode, data, validity),
       provider: provider,
       displayProvider: _display(json, identity, wmCode),
       destination: _text(json, ['destination_label', 'coverage_label', 'productRegion', 'destination', 'region']).isNotEmpty ? _text(json, ['destination_label', 'coverage_label', 'productRegion', 'destination', 'region']) : (first.name.isNotEmpty ? first.name : 'Global'),
@@ -122,8 +122,9 @@ class MobilePackage {
       if (code.startsWith('WM-EU-B-')) return 'kpn';
       if (code.startsWith('WM-TR-')) return 'turkey';
       if (code.startsWith('WM-E-J1-WLD-')) return 'orange-world';
-      if (code.contains('VDF') || code.contains('VODAFONE')) return 'vodafone';
+      if (code.startsWith('WM-E-J1-VDFES-')) return 'vodafone';
       if (code.startsWith('WM-E-J1-O-')) return 'worldmove';
+      return 'worldmove';
     }
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
@@ -137,11 +138,22 @@ class MobilePackage {
     return p;
   }
 
-  static String _name(Map<String, dynamic> j, String identity, dynamic data, dynamic validity) {
+  static String _name(Map<String, dynamic> j, String identity, String wmCode, dynamic data, dynamic validity) {
     final p = _text(j, ['provider']).toLowerCase();
     if (p == 'worldmove') {
-      final key = _destination(j, identity);
-      final parts = <String>[key == 'turkey' ? 'Turkey' : key == 'global' ? 'Global' : key == 'europe' ? 'Europe' : 'Worldmove'];
+      final code = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
+      final operator = code.startsWith('WM-EU-B-')
+          ? 'KPN Europe'
+          : code.startsWith('WM-TR-')
+              ? 'Turkey'
+              : code.startsWith('WM-E-J1-WLD-')
+                  ? 'Orange World'
+                  : code.startsWith('WM-E-J1-VDFES-')
+                      ? 'Vodafone'
+                      : code.startsWith('WM-E-J1-O-')
+                          ? 'Orange Europe'
+                          : 'Worldmove';
+      final parts = <String>[operator];
       if (data != null) parts.add('${_clean(data)}GB');
       if (validity != null) parts.add('${_clean(validity)} Days');
       return parts.join(' ');
@@ -162,8 +174,9 @@ class MobilePackage {
       if (c.startsWith('WM-EU-B-')) return 'KPN Europe';
       if (c.startsWith('WM-TR-')) return 'T.T Turkey';
       if (c.startsWith('WM-E-J1-WLD-')) return 'Orange World';
-      if (c.contains('VDF') || c.contains('VODAFONE')) return 'Vodafone';
+      if (c.startsWith('WM-E-J1-VDFES-')) return 'Vodafone';
       if (c.startsWith('WM-E-J1-O-')) return 'Orange Europe';
+      return 'Worldmove';
     }
     final value = _text(j, ['display_provider', 'provider_label', 'operator_name', 'provider']);
     return value.isEmpty ? 'Roam2World' : value;
