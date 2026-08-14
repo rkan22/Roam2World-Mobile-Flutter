@@ -145,11 +145,7 @@ Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {
                       Navigator.of(sheetContext).pop();
-                      if (_keepsBackHistory(item.route)) {
-                        context.push(item.route);
-                      } else {
-                        context.go(item.route);
-                      }
+                      context.push(item.route);
                     },
                   ),
               ],
