@@ -317,11 +317,13 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   ) {
     final values = _currentAllocations() ?? const <String, double>{};
     final allocated = values.values.fold<double>(0, (sum, value) => sum + value);
-    final available = (wallet.availableAmount - allocated).clamp(0, double.infinity);
+    final available = (wallet.availableAmount - allocated)
+        .clamp(0.0, double.infinity)
+        .toDouble();
     final invalid = allocated > wallet.availableAmount + .001;
     final progress = wallet.availableAmount <= 0
         ? 0.0
-        : (allocated / wallet.availableAmount).clamp(0.0, 1.0);
+        : (allocated / wallet.availableAmount).clamp(0.0, 1.0).toDouble();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
