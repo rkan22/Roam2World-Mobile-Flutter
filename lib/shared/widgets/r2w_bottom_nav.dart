@@ -205,6 +205,7 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
       _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
       _WorkspaceItem('Dealer Wallet', '/wallet', Icons.wallet_outlined, 'Dealer wallet funding'),
       _WorkspaceItem('Dealer Pricing', '/dealers/pricing', Icons.percent_rounded, 'Dealer pricing'),
+      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Central pricing and markup rules'),
       _WorkspaceItem('Coverage', '/packages', Icons.map_outlined, 'Coverage and availability'),
       _WorkspaceItem('Dealer Performance', '/reports', Icons.trending_up_rounded, 'Dealer performance'),
       _WorkspaceItem('Profitability', '/finance', Icons.attach_money_rounded, 'Provider profitability'),
@@ -222,6 +223,7 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
       _WorkspaceItem('Dashboard', '/dashboard', Icons.dashboard_outlined, 'Dealer dashboard'),
       _WorkspaceItem('Catalog', '/packages', Icons.layers_outlined, 'SIM & eSIM catalog'),
       _WorkspaceItem('Customer Pricing', '/pricing/customer', Icons.percent_rounded, 'Customer pricing rules'),
+      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Your scoped pricing rules'),
       _WorkspaceItem('SIM Converter', '/sim-converter', Icons.swap_horiz_rounded, 'SIM conversion tools'),
       _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
       _WorkspaceItem('My SIMs & eSIMs', '/esims', Icons.sim_card_outlined, 'SIM & eSIM inventory'),
@@ -246,6 +248,7 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
       _WorkspaceItem('Catalog Gov', '/admin/governance', Icons.map_outlined, 'Catalog governance'),
       _WorkspaceItem('Smart Routing', '/admin/routing', Icons.alt_route_rounded, 'Smart routing'),
       _WorkspaceItem('Provider Markups', '/admin/commercial', Icons.percent_rounded, 'Provider markups'),
+      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Central pricing and markup rules'),
       _WorkspaceItem('Profitability', '/finance', Icons.attach_money_rounded, 'Provider profitability'),
       _WorkspaceItem('Provider Ops', '/operations', Icons.dns_outlined, 'Provider operations'),
       _WorkspaceItem('Manual Fulfilment', '/admin/manual-fulfillment', Icons.assignment_outlined, 'Manual products and delivery queue'),
@@ -288,6 +291,7 @@ List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(
       'Dealer Wallet' ||
       'Dealer Pricing' ||
       'Customer Pricing' ||
+      'Central Pricing Rules' ||
       'Transactions' ||
       'Balance Top-ups' ||
       'Statements' ||
