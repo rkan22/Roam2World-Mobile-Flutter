@@ -485,7 +485,14 @@ class _WalletScreenState extends State<WalletScreen> {
             ),
             children: [
               _Header(
-                onBack: () => context.pop(),
+                onBack: () {
+                  final router = GoRouter.of(context);
+                  if (router.canPop()) {
+                    router.pop();
+                  } else {
+                    router.go('/dashboard');
+                  }
+                },
                 onRefresh: () => _load(forceRefresh: true),
               ),
               if (_showingStaleData) ...[
