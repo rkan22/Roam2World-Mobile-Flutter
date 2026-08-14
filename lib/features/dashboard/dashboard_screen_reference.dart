@@ -232,12 +232,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Stack(
         children: [
           Positioned(
-            right: -35,
-            bottom: -45,
+            right: -30,
+            bottom: -42,
             child: Icon(
               Icons.account_balance_wallet_outlined,
-              size: 145,
-              color: Colors.white.withValues(alpha: .045),
+              size: 160,
+              color: Colors.white.withValues(alpha: .12),
             ),
           ),
           Column(
@@ -302,41 +302,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const Spacer(),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Available partner balance',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
+              SizedBox(
+                height: 42,
+                child: FilledButton.icon(
+                  onPressed: () => _openTopUp(currency),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: const Color(0xFF090B10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: 42,
-                    child: FilledButton.icon(
-                      onPressed: () => _openTopUp(currency),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: const Color(0xFF090B10),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text(
-                        'Add Funds',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                    ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text(
+                    'Add Funds',
+                    style: TextStyle(fontWeight: FontWeight.w800),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -556,17 +539,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: actions.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 12,
-              childAspectRatio: .86,
-            ),
-            itemBuilder: (context, index) => _actionItem(actions[index]),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var index = 0; index < actions.length; index++) ...[
+                Expanded(child: _actionItem(actions[index])),
+                if (index != actions.length - 1) const SizedBox(width: 6),
+              ],
+            ],
           ),
         ],
       ),
@@ -590,12 +570,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 7),
             Text(
               action.label,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 9.5,
+                    fontSize: 9,
+                    height: 1.1,
                     fontWeight: FontWeight.w700,
                   ),
             ),
