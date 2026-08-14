@@ -73,5 +73,17 @@ class MobileOrderSummary {
     );
   }
 
+  MobileOrderSummary withCustomerName(String value) => MobileOrderSummary(
+        id: id,
+        orderNumber: orderNumber,
+        packageName: packageName,
+        customerName: value,
+        status: status,
+        amount: amount,
+        currency: currency,
+        createdAt: createdAt,
+        esimId: esimId,
+      );
+
   String get formattedAmount => '$currency ${amount.toStringAsFixed(2)}';
 }
