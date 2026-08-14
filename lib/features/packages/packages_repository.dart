@@ -137,7 +137,17 @@ class PackagesRepository {
           return false;
         }
         return true;
-      }).toList();
+      }).toList()
+        ..sort((a, b) {
+          final aTurkey = a.operatorKey == 'turkey';
+          final bTurkey = b.operatorKey == 'turkey';
+          if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
+
+          final priceCompare = a.price.compareTo(b.price);
+          if (priceCompare != 0) return priceCompare;
+
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
 
       final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
       cache.set(catalog);
