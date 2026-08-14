@@ -1,3 +1,5 @@
+import '../../shared/formatters/order_package_name_formatter.dart';
+
 class OrderHistory {
   const OrderHistory({required this.orders, required this.count});
 
@@ -72,53 +74,4 @@ class MobileOrderSummary {
   }
 
   String get formattedAmount => '$currency ${amount.toStringAsFixed(2)}';
-}
-
-String simplifyOrderPackageName(String value) {
-  final raw = value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (raw.isEmpty) return 'Package order';
-
-  final dataMatch = RegExp(r'\b(\d+(?:\.\d+)?)\s*(GB|MB)\b', caseSensitive: false).firstMatch(raw);
-  final daysMatch = RegExp(r'\b(\d{1,3})\s*(?:days?|d)\b', caseSensitive: false).firstMatch(raw);
-  final regionMatch = RegExp(
-    r'\b(Turkey|Türkiye|Turkiye|Europe|Balkans|Global|Asia|America|Spain|France|Italy|Germany)\b',
-    caseSensitive: false,
-  ).firstMatch(raw);
-
-  if (dataMatch != null || daysMatch != null) {
-    final parts = <String>[];
-    if (regionMatch != null) {
-      final region = regionMatch.group(1)!;
-      parts.add(_normalizeRegion(region));
-    }
-    if (dataMatch != null) {
-      parts.add('${dataMatch.group(1)}${dataMatch.group(2)!.toUpperCase()}');
-    }
-    if (daysMatch != null) {
-      parts.add('${daysMatch.group(1)} Days');
-    }
-    return parts.join(' · ');
-  }
-
-  final simplified = raw
-      .replaceFirst(RegExp(r'^\s*\[(?:e)?sim\]\s*', caseSensitive: false), '')
-      .replaceAll(RegExp(r'\((?:e0?\d+|[^)]*countries[^)]*)\)', caseSensitive: false), '')
-      .replaceAll(
-        RegExp(
-          r'\b(?:eSIM|SIM Card|data-only|business(?:\s+pro)?(?:\s+plan)?|travel)\b',
-          caseSensitive: false,
-        ),
-        '',
-      )
-      .replaceAll(RegExp(r'[|·_-]+'), ' ')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
-
-  return simplified.isEmpty ? 'Package order' : simplified;
-}
-
-String _normalizeRegion(String value) {
-  final normalized = value.toLowerCase();
-  if (normalized == 'turkiye' || normalized == 'türkiye') return 'Turkey';
-  return '${value[0].toUpperCase()}${value.substring(1).toLowerCase()}';
 }

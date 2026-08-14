@@ -33,6 +33,7 @@ void main() {
     expect(data.totalEsimCount, 15);
     expect(data.activeEsimCount, 12);
     expect(data.recentOrders.single.orderNumber, 'R2W-009');
+    expect(data.recentOrders.single.productName, 'Turkey · 5GB');
   });
 
   test('accepts web dashboard KPI aliases and nested statistics', () {
@@ -68,7 +69,7 @@ void main() {
     expect(data.currency, 'USD');
   });
 
-  test('simplifies provider package names in recent orders', () {
+  test('simplifies provider package names in recent orders like web', () {
     final data = DashboardData.fromResponse({
       'data': {
         'recent_orders': [
@@ -76,14 +77,17 @@ void main() {
             'product_name': 'E-185-SC-AU-eO1-T-60D-20GB',
             'total_amount': '15.00',
           },
+          {
+            'product_name': '[eSIM] Europe (41 countries) / 10 GB / 30 Days',
+          },
         ],
       },
     });
 
-    expect(
-      data.recentOrders.single.productName,
-      'Orange Balkans SIM Card 20GB 60 Days',
-    );
+    expect(data.recentOrders.map((order) => order.productName), [
+      '20GB · 60 Days',
+      'Europe · 10GB · 30 Days',
+    ]);
   });
 
   test('simplifies Worldmove package codes in recent orders', () {
@@ -98,9 +102,9 @@ void main() {
     });
 
     expect(data.recentOrders.map((order) => order.productName), [
-      'Turkey 10GB 30 Days',
-      'Global 3GB 30 Days',
-      'Europe 45GB',
+      '10GB · 30 Days',
+      '30 Days',
+      'WM E J1 VDFES XL',
     ]);
   });
 }

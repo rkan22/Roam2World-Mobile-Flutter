@@ -1,3 +1,5 @@
+import '../../shared/formatters/order_package_name_formatter.dart';
+
 class DashboardOrderSummary {
   const DashboardOrderSummary({
     required this.id,
@@ -19,8 +21,10 @@ class DashboardOrderSummary {
     return DashboardOrderSummary(
       id: int.tryParse(json['id']?.toString() ?? ''),
       orderNumber: json['order_number']?.toString() ?? '',
-      productName: _friendlyProductName(
-        json['product_name']?.toString() ?? 'eSIM package',
+      productName: simplifyOrderPackageName(
+        json['product_name']?.toString() ??
+            json['package_name']?.toString() ??
+            'eSIM package',
       ),
       status: json['status']?.toString() ?? 'pending',
       totalAmount: _toDouble(json['total_amount']),
@@ -191,63 +195,6 @@ double _toDouble(dynamic value) =>
     double.tryParse(value?.toString() ?? '') ?? 0;
 
 int _toInt(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
-
-String _friendlyProductName(String raw) {
-  final value = raw.trim();
-  final upper = value.toUpperCase();
-  var data = RegExp(
-    r'(\d+)\s*GB',
-    caseSensitive: false,
-  ).firstMatch(value)?.group(1);
-  final days = RegExp(
-    r'(\d+)\s*(?:D|DAYS?)',
-    caseSensitive: false,
-  ).firstMatch(value)?.group(1);
-  if (upper.contains('WM-E-J1-VDFES-XXL')) {
-    data = '60';
-  } else if (upper.contains('WM-E-J1-VDFES-XL')) {
-    data = '45';
-  } else if (upper.contains('WM-E-J1-VDFES-M')) {
-    data = '25';
-  } else if (upper.contains('WM-E-J1-WLD-O-MINI-30D')) {
-    data = '3';
-  } else if (upper.contains('WM-E-J1-WLD-O-14D')) {
-    data = '20';
-  }
-  if (upper.contains('WM-')) {
-    final destination = upper.contains('WM-TR-')
-        ? 'Turkey'
-        : upper.contains('WM-E-J1-WLD-')
-        ? 'Global'
-        : 'Europe';
-    return [
-      destination,
-      if (data != null) '${data}GB',
-      if (days != null) '$days Days',
-    ].join(' ');
-  }
-  if (upper.contains('E-185-') || upper.contains('E-184-')) {
-    final type = upper.contains('-SC-') ? 'SIM Card' : 'eSIM';
-    return [
-      'Orange Balkans $type',
-      if (data != null) '${data}GB',
-      if (days != null) '$days Days',
-    ].join(' ');
-  }
-  if (upper.contains('BIG DATA') && data != null) {
-    return 'Orange Big Data ${upper.contains('SIM') ? 'SIM ' : ''}${data}GB';
-  }
-  if (value.toLowerCase().startsWith('[esim]')) {
-    return value
-        .replaceFirst(RegExp(r'^\[esim\]\s*', caseSensitive: false), '')
-        .replaceAll(RegExp(r'[-_]'), ' ')
-        .trim();
-  }
-  if (data != null && days != null && upper.contains('128K')) {
-    return 'Europe ${data}GB $days Days';
-  }
-  return value;
-}
 
 Map<String, dynamic> _map(dynamic value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
