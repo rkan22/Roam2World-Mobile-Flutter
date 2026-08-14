@@ -203,9 +203,13 @@ class _CatalogHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        gradient: const LinearGradient(
+          colors: [AppColors.primarySoft, AppColors.accentSoft],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(B2BRadius.xl),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        border: Border.all(color: AppColors.primaryLight),
         boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
       ),
       child: Row(
@@ -214,7 +218,7 @@ class _CatalogHero extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: Colors.white.withValues(alpha: .9),
               borderRadius: BorderRadius.circular(17),
             ),
             child: const Icon(Icons.public_rounded, color: AppColors.primary, size: 28),
@@ -265,7 +269,11 @@ class _CatalogSection extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
-              Text(trailing, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(999)),
+                child: Text(trailing, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w800)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -444,10 +452,31 @@ class _OperatorPlanCard extends StatelessWidget {
   final MobilePackage package;
   final VoidCallback onTap;
 
+  Color get _accent {
+    switch (package.operatorKey) {
+      case 'vodafone':
+        return AppColors.vodafone;
+      case 'turkey':
+        return AppColors.danger;
+      case 'orange-world':
+      case 'worldmove':
+        return AppColors.orange;
+      case 'kpn':
+        return AppColors.violet;
+      case 'flexnet':
+        return AppColors.primary;
+      case 'orange-balkans':
+        return AppColors.accent;
+      default:
+        return AppColors.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final manual = package.provider.toLowerCase() == 'manual';
+    final accent = _accent;
     return Material(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(18),
@@ -458,7 +487,8 @@ class _OperatorPlanCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
+            border: Border.all(color: accent.withValues(alpha: .28)),
+            boxShadow: [BoxShadow(color: accent.withValues(alpha: .08), blurRadius: 18, offset: const Offset(0, 8))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,24 +511,29 @@ class _OperatorPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: accent.withValues(alpha: .12), shape: BoxShape.circle),
                     child: _CountryVisual(code: package.countryCode, destinationKey: package.destinationKey),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
                       manual ? '${package.displayProvider} · manual delivery' : package.displayProvider,
-                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.bodySmall?.copyWith(color: accent, fontWeight: FontWeight.w800),
                     ),
                   ),
-                  if (package.supportedCountries.isNotEmpty)
-                    _CoveragePreview(countries: package.supportedCountries),
                 ],
               ),
+              if (package.supportedCountries.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text('Supported countries', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w900, letterSpacing: .4)),
+                const SizedBox(height: 7),
+                _CoveragePreview(countries: package.supportedCountries, accent: accent),
+              ],
               const SizedBox(height: 14),
               _PlanDetailRow(label: 'Region', value: package.destination),
               _PlanDetailRow(label: 'Type', value: package.packageType == 'simcard' ? 'SIM Card' : 'eSIM'),
@@ -510,6 +545,7 @@ class _OperatorPlanCard extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: onTap,
+                  style: FilledButton.styleFrom(backgroundColor: accent),
                   child: Text(manual ? 'Review request' : 'View plan'),
                 ),
               ),
@@ -555,26 +591,50 @@ class _PlanDetailRow extends StatelessWidget {
 }
 
 class _CoveragePreview extends StatelessWidget {
-  const _CoveragePreview({required this.countries});
+  const _CoveragePreview({required this.countries, required this.accent});
   final List<PackageCountry> countries;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    const previewLimit = 4;
+    const previewLimit = 6;
     final visible = countries.take(previewLimit).toList(growable: false);
     final remaining = countries.length - visible.length;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
       children: [
         for (final country in visible)
-          Padding(
-            padding: const EdgeInsets.only(left: 3),
-            child: _CountryVisual(code: country.code, destinationKey: '', compact: true),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: accent.withValues(alpha: .2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CountryVisual(code: country.code, destinationKey: country.code == 'EU' ? 'europe' : '', compact: true),
+                const SizedBox(width: 5),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 88),
+                  child: Text(
+                    country.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: accent, fontSize: 10.5, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ],
+            ),
           ),
-        if (remaining > 0) ...[
-          const SizedBox(width: 5),
-          Text('+$remaining', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
-        ],
+        if (remaining > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+            decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(999)),
+            child: Text('+$remaining more', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w800)),
+          ),
       ],
     );
   }
@@ -588,11 +648,12 @@ class _CountryVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEurope = destinationKey.toLowerCase() == 'europe';
+    final normalizedCode = code.toUpperCase();
+    final isEurope = destinationKey.toLowerCase() == 'europe' || normalizedCode == 'EU';
     final url = isEurope
         ? 'https://flagcdn.com/w160/eu.png'
-        : code.length == 2
-            ? 'https://flagcdn.com/w40/${code.toLowerCase()}.png'
+        : normalizedCode.length == 2
+            ? 'https://flagcdn.com/w40/${normalizedCode.toLowerCase()}.png'
             : null;
     if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27);
     return ClipOval(
