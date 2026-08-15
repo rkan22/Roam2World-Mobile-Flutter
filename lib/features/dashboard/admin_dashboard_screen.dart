@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
-import '../../design_system/components/b2b_metric_card.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
@@ -24,14 +24,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   late final DashboardRepository _repository;
   DashboardData? _data;
   bool _loading = true;
+  bool _refreshing = false;
   bool _stale = false;
   String? _error;
-  bool _balanceVisible = true;
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? DashboardRepository();
+    _repository = widget.repository ?? DashboardRepository(role: AppRole.admin);
     _load();
   }
 
@@ -58,36 +58,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    _repository.invalidateCache();
+    try {
+      await _load(forceRefresh: true);
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 0),
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
-          onRefresh: () => _load(forceRefresh: true),
+          onRefresh: _refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              B2BSpacing.lg,
-              B2BSpacing.md,
-              B2BSpacing.lg,
-              B2BSpacing.xxl,
-            ),
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
             children: [
               _header(),
               if (_stale) ...[
-                const SizedBox(height: B2BSpacing.md),
+                const SizedBox(height: 12),
                 const _StaleBanner(),
               ],
-              const SizedBox(height: B2BSpacing.lg),
+              const SizedBox(height: 14),
               if (_loading && _data == null)
-                const ContentLoadingState(label: 'Loading admin workspace...')
+                const ContentLoadingState(label: 'Loading admin control center...')
               else if (_error != null && _data == null)
-                ContentErrorState(
-                  message: _error!,
-                  onRetry: () => _load(forceRefresh: true),
-                )
+                ContentErrorState(message: _error!, onRetry: _refresh)
               else if (_data != null)
                 _content(_data!),
             ],
@@ -97,246 +101,799 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _header() => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Admin Workspace', style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: B2BSpacing.xxs),
-                Text(
-                  'Live platform sales, eSIM and operational activity.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+  Widget _header() {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SquareIconButton(
+          icon: Icons.menu_rounded,
+          onTap: () => showR2WWorkspaceMenu(context, AppRole.admin),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Admin Dashboard',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.45,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Platform revenue, eSIM inventory and operations.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
           ),
-          IconButton.filledTonal(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          const SizedBox(width: B2BSpacing.xs),
-          IconButton.filledTonal(
-            onPressed: () => context.push('/profile'),
-            icon: const Icon(Icons.person_outline_rounded),
-          ),
-        ],
-      );
+        ),
+        const SizedBox(width: 8),
+        _SquareIconButton(
+          icon: Icons.refresh_rounded,
+          onTap: _refresh,
+          loading: _refreshing,
+        ),
+        const SizedBox(width: 8),
+        _SquareIconButton(
+          icon: Icons.notifications_none_rounded,
+          onTap: () => context.push('/notifications'),
+        ),
+      ],
+    );
+  }
 
   Widget _content(DashboardData data) {
-    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
-    final balance = _balanceVisible ? _money(data.balance, currency) : '••••••';
+    final currency = data.currency.trim().isEmpty
+        ? 'USD'
+        : data.currency.trim().toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(B2BSpacing.xl),
+        _controlCenter(data, currency),
+        const SizedBox(height: 14),
+        _kpiGrid(data, currency),
+        const SizedBox(height: 14),
+        _esimStatus(data),
+        const SizedBox(height: 14),
+        _adminTools(),
+        const SizedBox(height: 14),
+        _recentOrders(data, currency),
+      ],
+    );
+  }
+
+  Widget _controlCenter(DashboardData data, String currency) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22020817),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -24,
+            bottom: -34,
+            child: IgnorePointer(
+              child: Icon(
+                Icons.admin_panel_settings_outlined,
+                size: 170,
+                color: Colors.white.withValues(alpha: .055),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .08),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.monitor_heart_outlined,
+                      color: AppColors.accent,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Control Center',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Live platform overview',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: .16),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.circle, size: 7, color: AppColors.success),
+                        SizedBox(width: 6),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: .5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Total revenue',
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                _money(data.monthlySales, currency),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  height: 1,
+                  letterSpacing: -.9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _HeroMetric(
+                    label: 'Today',
+                    value: _money(data.todaySales, currency),
+                  ),
+                  _HeroMetric(
+                    label: 'Orders',
+                    value: '${data.totalOrders}',
+                  ),
+                  _HeroMetric(
+                    label: 'Active eSIMs',
+                    value: '${data.activeEsimCount}',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiGrid(DashboardData data, String currency) {
+    final items = <_MetricData>[
+      _MetricData(
+        'Today Revenue',
+        _money(data.todaySales, currency),
+        Icons.today_rounded,
+        AppColors.primary,
+        AppColors.primarySoft,
+      ),
+      _MetricData(
+        'Total Revenue',
+        _money(data.monthlySales, currency),
+        Icons.trending_up_rounded,
+        AppColors.violet,
+        const Color(0xFFF3EEFF),
+      ),
+      _MetricData(
+        'Active eSIMs',
+        '${data.activeEsimCount}',
+        Icons.sim_card_outlined,
+        AppColors.success,
+        AppColors.successSoft,
+      ),
+      _MetricData(
+        'Total eSIMs',
+        '${data.totalEsimCount}',
+        Icons.inventory_2_outlined,
+        AppColors.orange,
+        const Color(0xFFFFF2E8),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - 10) / 2;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final item in items)
+              SizedBox(width: width, child: _metricCard(item)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _metricCard(_MetricData metric) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: metric.soft,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(metric.icon, size: 18, color: metric.color),
+          ),
+          const SizedBox(height: 13),
+          Text(
+            metric.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.35,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            metric.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _esimStatus(DashboardData data) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'eSIM Status',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Current platform inventory state',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.push('/esims'),
+                child: const Text('Open eSIMs'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _StatusBlock(
+                  label: 'Active',
+                  value: '${data.activeEsimCount}',
+                  icon: Icons.check_circle_outline_rounded,
+                  color: AppColors.success,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatusBlock(
+                  label: 'Expired',
+                  value: '${data.expiredEsimCount}',
+                  icon: Icons.timer_off_outlined,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatusBlock(
+                  label: 'Total',
+                  value: '${data.totalEsimCount}',
+                  icon: Icons.sim_card_outlined,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _adminTools() {
+    final theme = Theme.of(context);
+    final tools = <_ToolData>[
+      _ToolData('Operations', 'Provider & order ops', Icons.dns_outlined, '/operations'),
+      _ToolData('Reports', 'Sales & analytics', Icons.analytics_outlined, '/reports'),
+      _ToolData('Finance', 'Ledger & wallet', Icons.account_balance_wallet_outlined, '/finance'),
+      _ToolData('Resellers', 'Partner management', Icons.hub_outlined, '/admin/resellers'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Admin Tools',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Platform controls and partner operations',
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = (constraints.maxWidth - 8) / 2;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final tool in tools)
+                    SizedBox(width: width, child: _toolCard(tool)),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolCard(_ToolData tool) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push(tool.route),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 104),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: B2BGradients.primary,
-            borderRadius: BorderRadius.circular(B2BRadius.xl),
-            boxShadow: B2BShadows.hero,
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Text(
-                    'PLATFORM OVERVIEW',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: .8,
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: Icon(tool.icon, size: 18, color: AppColors.primary),
                   ),
                   const Spacer(),
-                  IconButton(
-                    onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
-                    icon: Icon(
-                      _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: Colors.white,
-                    ),
-                  ),
+                  const Icon(Icons.arrow_outward_rounded, size: 16, color: AppColors.textMuted),
                 ],
               ),
-              const SizedBox(height: B2BSpacing.sm),
-              const Text(
-                'Available balance',
-                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: B2BSpacing.xs),
+              const SizedBox(height: 10),
               Text(
-                balance,
+                tool.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: B2BSpacing.lg),
-              Wrap(
-                spacing: B2BSpacing.sm,
-                runSpacing: B2BSpacing.sm,
-                children: [
-                  FilledButton.icon(
-                    onPressed: () => context.go('/orders'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                    ),
-                    icon: const Icon(Icons.receipt_long_outlined),
-                    label: const Text('Orders'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: () => context.go('/operations'),
-                    icon: const Icon(Icons.monitor_heart_outlined),
-                    label: const Text('Operations'),
-                  ),
-                ],
+              const SizedBox(height: 3),
+              Text(
+                tool.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10.5,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: B2BSpacing.md),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: B2BSpacing.sm,
-          mainAxisSpacing: B2BSpacing.sm,
-          childAspectRatio: 1.35,
-          children: [
-            B2BMetricCard(
-              label: 'Monthly sales',
-              value: _money(data.monthlySales, currency),
-              icon: Icons.trending_up_rounded,
-            ),
-            B2BMetricCard(
-              label: 'Today sales',
-              value: _money(data.todaySales, currency),
-              icon: Icons.today_rounded,
-            ),
-            B2BMetricCard(
-              label: 'Active eSIMs',
-              value: '${data.activeEsimCount}',
-              icon: Icons.sim_card_outlined,
-            ),
-            B2BMetricCard(
-              label: 'Expired eSIMs',
-              value: '${data.expiredEsimCount}',
-              icon: Icons.timer_off_outlined,
-            ),
-          ],
-        ),
-        const SizedBox(height: B2BSpacing.xl),
-        Text('Admin controls', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: B2BSpacing.md),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: B2BSpacing.sm,
-          mainAxisSpacing: B2BSpacing.sm,
-          childAspectRatio: 2.2,
-          children: [
-            _AdminAction('Orders', Icons.receipt_long_outlined, '/orders'),
-            _AdminAction('Operations', Icons.monitor_heart_outlined, '/operations'),
-            _AdminAction('Reports', Icons.analytics_outlined, '/reports'),
-            _AdminAction('eSIMs', Icons.sim_card_outlined, '/esims'),
-            _AdminAction('Catalog', Icons.inventory_2_outlined, '/packages'),
-            _AdminAction('Wallet', Icons.account_balance_wallet_outlined, '/wallet'),
-          ],
-        ),
-        const SizedBox(height: B2BSpacing.xl),
-        Text('Recent orders', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: B2BSpacing.sm),
-        if (data.recentOrders.isEmpty)
-          const ContentEmptyState(
-            icon: Icons.receipt_long_outlined,
-            title: 'No recent orders',
-            message: 'Recent platform orders will appear here.',
-          )
-        else
-          for (final order in data.recentOrders.take(5)) ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(child: Icon(Icons.shopping_bag_outlined)),
-              title: Text(order.productName, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text(order.orderNumber),
-              trailing: Text(
-                _money(order.totalAmount, currency),
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              onTap: () => context.go('/orders'),
-            ),
-            const Divider(),
-          ],
-      ],
+      ),
     );
   }
 
-  String _money(double value, String currency) {
-    return NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
-  }
-}
+  Widget _recentOrders(DashboardData data, String currency) {
+    final theme = Theme.of(context);
+    final orders = data.recentOrders.take(5).toList(growable: false);
 
-class _AdminAction extends StatelessWidget {
-  const _AdminAction(this.label, this.icon, this.route);
-
-  final String label;
-  final IconData icon;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(B2BRadius.lg),
-      onTap: () => context.go(route),
-      child: Container(
-        padding: const EdgeInsets.all(B2BSpacing.md),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(B2BRadius.lg),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary),
-            const SizedBox(width: B2BSpacing.sm),
-            Expanded(
-              child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 7),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent Orders',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${data.totalOrders} platform orders',
+                        style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/orders'),
+                  child: const Text('View all'),
+                ),
+              ],
             ),
-          ],
+          ),
+          if (orders.isEmpty)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 20),
+              child: Text('Latest platform orders will appear here.'),
+            )
+          else
+            for (var i = 0; i < orders.length; i++) ...[
+              _orderRow(orders[i], currency),
+              if (i != orders.length - 1)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(height: 1),
+                ),
+            ],
+          const SizedBox(height: 6),
+        ],
+      ),
+    );
+  }
+
+  Widget _orderRow(DashboardOrderSummary order, String currency) {
+    final theme = Theme.of(context);
+    final status = order.status.trim().isEmpty ? 'processing' : order.status;
+    final date = order.createdAt == null
+        ? order.orderNumber
+        : DateFormat('MMM d, HH:mm').format(order.createdAt!.toLocal());
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/orders'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: const Icon(Icons.shopping_bag_outlined, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.productName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$date · ${status.replaceAll('_', ' ')}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _money(order.totalAmount, currency),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  String _money(double value, String currency) {
+    final normalized = currency.trim().toUpperCase();
+    final symbol = switch (normalized) {
+      'USD' => r'$',
+      'EUR' => '€',
+      'GBP' => '£',
+      'TRY' => '₺',
+      _ => '$normalized ',
+    };
+    return '$symbol${NumberFormat('#,##0.00', 'en_US').format(value)}';
+  }
+}
+
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({
+    required this.icon,
+    required this.onTap,
+    this.loading = false,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: loading ? null : onTap,
+          borderRadius: BorderRadius.circular(13),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: loading
+                ? const Center(
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : Icon(icon, size: 20, color: AppColors.textPrimary),
+          ),
+        ),
+      );
+}
+
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minWidth: 92),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .07),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: Colors.white.withValues(alpha: .08)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _StatusBlock extends StatelessWidget {
+  const _StatusBlock({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 7),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
 }
 
 class _StaleBanner extends StatelessWidget {
   const _StaleBanner();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(B2BSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(B2BRadius.md),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.cloud_off_outlined, size: 18, color: AppColors.warning),
-          SizedBox(width: B2BSpacing.xs),
-          Expanded(child: Text('Showing the latest cached dashboard data. Pull to refresh.')),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.warningSoft,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 18, color: AppColors.warning),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Showing cached admin data. Pull down or tap refresh to retry.',
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _MetricData {
+  const _MetricData(this.label, this.value, this.icon, this.color, this.soft);
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final Color soft;
+}
+
+class _ToolData {
+  const _ToolData(this.title, this.subtitle, this.icon, this.route);
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String route;
 }
