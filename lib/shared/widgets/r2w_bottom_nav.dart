@@ -186,7 +186,7 @@ List<_NavItem> _itemsFor(AppRole role) {
     _NavItem('/packages', 'Catalog', Icons.inventory_2_outlined, Icons.inventory_2_rounded),
     _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
     _NavItem('/customers', 'Clients', Icons.groups_outlined, Icons.groups_rounded),
-    _NavItem('/finance', 'Finance', Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded),
+    _NavItem('/profile', 'Profile', Icons.person_outline_rounded, Icons.person_rounded),
   ];
 }
 
