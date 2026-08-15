@@ -126,7 +126,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Platform revenue, eSIM inventory and operations.',
+                'Platform revenue, partners, orders and wallet operations.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -164,7 +164,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(height: 14),
         _kpiGrid(data, currency),
         const SizedBox(height: 14),
-        _esimStatus(data),
+        _operationsStatus(data),
         const SizedBox(height: 14),
         _adminTools(),
         const SizedBox(height: 14),
@@ -295,18 +295,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _HeroMetric(
-                    label: 'Today',
-                    value: _money(data.todaySales, currency),
-                  ),
-                  _HeroMetric(
-                    label: 'Orders',
-                    value: '${data.totalOrders}',
-                  ),
-                  _HeroMetric(
-                    label: 'Active eSIMs',
-                    value: '${data.activeEsimCount}',
-                  ),
+                  _HeroMetric(label: 'Orders', value: '${data.totalOrders}'),
+                  _HeroMetric(label: 'Resellers', value: '${data.resellerCount}'),
+                  _HeroMetric(label: 'Dealers', value: '${data.dealerCount}'),
                 ],
               ),
             ],
@@ -319,30 +310,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _kpiGrid(DashboardData data, String currency) {
     final items = <_MetricData>[
       _MetricData(
-        'Today Revenue',
-        _money(data.todaySales, currency),
-        Icons.today_rounded,
+        'Total Revenue',
+        _money(data.monthlySales, currency),
+        Icons.trending_up_rounded,
         AppColors.primary,
         AppColors.primarySoft,
       ),
       _MetricData(
-        'Total Revenue',
-        _money(data.monthlySales, currency),
-        Icons.trending_up_rounded,
+        'Total Orders',
+        '${data.totalOrders}',
+        Icons.receipt_long_outlined,
         AppColors.violet,
         const Color(0xFFF3EEFF),
       ),
       _MetricData(
-        'Active eSIMs',
-        '${data.activeEsimCount}',
-        Icons.sim_card_outlined,
+        'Resellers',
+        '${data.resellerCount}',
+        Icons.hub_outlined,
         AppColors.success,
         AppColors.successSoft,
       ),
       _MetricData(
-        'Total eSIMs',
-        '${data.totalEsimCount}',
-        Icons.inventory_2_outlined,
+        'Dealers',
+        '${data.dealerCount}',
+        Icons.groups_outlined,
         AppColors.orange,
         const Color(0xFFFFF2E8),
       ),
@@ -411,7 +402,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _esimStatus(DashboardData data) {
+  Widget _operationsStatus(DashboardData data) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -424,41 +415,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'eSIM Status',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Current platform inventory state',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.push('/esims'),
-                child: const Text('Open eSIMs'),
-              ),
-            ],
+          Text(
+            'Operations Status',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Live order and wallet request counts',
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: _StatusBlock(
-                  label: 'Active',
-                  value: '${data.activeEsimCount}',
+                  label: 'Pending',
+                  value: '${data.pendingOrders}',
+                  icon: Icons.schedule_rounded,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatusBlock(
+                  label: 'Completed',
+                  value: '${data.completedOrders}',
                   icon: Icons.check_circle_outline_rounded,
                   color: AppColors.success,
                 ),
@@ -466,19 +447,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: _StatusBlock(
-                  label: 'Expired',
-                  value: '${data.expiredEsimCount}',
-                  icon: Icons.timer_off_outlined,
-                  color: AppColors.warning,
+                  label: 'Failed',
+                  value: '${data.failedOrders}',
+                  icon: Icons.error_outline_rounded,
+                  color: AppColors.danger,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _StatusBlock(
+                  label: 'Reseller Requests',
+                  value: '${data.pendingResellerWalletRequests}',
+                  icon: Icons.account_balance_wallet_outlined,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _StatusBlock(
-                  label: 'Total',
-                  value: '${data.totalEsimCount}',
-                  icon: Icons.sim_card_outlined,
-                  color: AppColors.primary,
+                  label: 'Dealer Requests',
+                  value: '${data.pendingDealerWalletRequests}',
+                  icon: Icons.payments_outlined,
+                  color: AppColors.violet,
                 ),
               ),
             ],
@@ -840,11 +834,12 @@ class _StatusBlock extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: FontWeight.w700,
               ),
             ),
