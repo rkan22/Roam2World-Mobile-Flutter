@@ -32,6 +32,15 @@ class _PartnerBusinessDashboardScreenState
   Object? _error;
   bool _loading = true;
   bool _balanceVisible = true;
+  String _period = '30d';
+
+  static const _periods = <(String, String)>[
+    ('today', 'Today'),
+    ('7d', '7 days'),
+    ('30d', '30 days'),
+    ('month', 'This month'),
+    ('all', 'All time'),
+  ];
 
   bool get _isDealer => widget.role == AppRole.dealer;
 
@@ -51,15 +60,28 @@ class _PartnerBusinessDashboardScreenState
     try {
       final data = await widget.repository.fetchDashboard(
         forceRefresh: forceRefresh,
+        period: _period,
       );
       if (!mounted) return;
-      setState(() => _data = data);
+      setState(() {
+        _data = data;
+        _error = null;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _selectPeriod(String value) async {
+    if (_period == value) return;
+    setState(() {
+      _period = value;
+      _loading = true;
+    });
+    await _load(forceRefresh: true);
   }
 
   @override
@@ -84,7 +106,17 @@ class _PartnerBusinessDashboardScreenState
         padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
         children: [
           _header(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+          _periodSelector(),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            _inlineError(),
+          ],
+          if (_isLowBalance(data)) ...[
+            const SizedBox(height: 12),
+            _lowBalanceBanner(data),
+          ],
+          const SizedBox(height: 14),
           _operationsCard(data),
           const SizedBox(height: 14),
           _kpiGrid(data),
@@ -125,8 +157,8 @@ class _PartnerBusinessDashboardScreenState
               const SizedBox(height: 4),
               Text(
                 _isDealer
-                    ? 'Sales, wallet, customers and active eSIM activity.'
-                    : 'Sales, dealer network, wallet and eSIM operations.',
+                    ? 'Sales, wallet, customers and eSIM activity.'
+                    : 'Sales, dealer network, margin and eSIM operations.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                   height: 1.35,
@@ -148,6 +180,105 @@ class _PartnerBusinessDashboardScreenState
       ],
     );
   }
+
+  Widget _periodSelector() {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _periods.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = _periods[index];
+          final selected = _period == item.$1;
+          return ChoiceChip(
+            label: Text(item.$2),
+            selected: selected,
+            onSelected: (_) => _selectPeriod(item.$1),
+            visualDensity: VisualDensity.compact,
+            labelStyle: theme.textTheme.labelMedium?.copyWith(
+              color: selected ? Colors.white : AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+            ),
+            selectedColor: AppColors.primary,
+            backgroundColor: theme.colorScheme.surface,
+            side: BorderSide(
+              color: selected ? AppColors.primary : AppColors.border,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _inlineError() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.warningSoft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline_rounded, size: 17, color: AppColors.warning),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Could not refresh this period. Showing the last loaded data.',
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  bool _isLowBalance(DashboardData data) =>
+      data.balance <= (_isDealer ? 5 : 20);
+
+  Widget _lowBalanceBanner(DashboardData data) => Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: AppColors.warningSoft,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: AppColors.warning.withValues(alpha: .3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: AppColors.warning,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Low balance',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _isDealer
+                        ? 'Request balance before the next customer order.'
+                        : 'Add funds to keep dealer and customer orders moving.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/finance'),
+              child: Text(_isDealer ? 'Request' : 'Open'),
+            ),
+          ],
+        ),
+      );
 
   Widget _operationsCard(DashboardData data) {
     final currency = data.currency.trim().isEmpty
@@ -206,8 +337,10 @@ class _PartnerBusinessDashboardScreenState
                     const SizedBox(height: 2),
                     Text(
                       _isDealer
-                          ? 'Wallet ready for customer sales'
-                          : 'Manage sales and your dealer network',
+                          ? '${data.successfulOrders} successful orders'
+                          : '${data.customerCount} customers · ${data.successfulOrders} successful orders',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 11.5,
@@ -258,15 +391,15 @@ class _PartnerBusinessDashboardScreenState
             children: [
               Expanded(
                 child: _DarkMetric(
-                  label: 'Today sales',
-                  value: _money(data.todaySales, currency),
+                  label: 'Revenue',
+                  value: _money(data.monthlySales, currency),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _DarkMetric(
-                  label: 'Active eSIMs',
-                  value: '${data.activeEsimCount}',
+                  label: 'Margin',
+                  value: '${data.grossMarginPercent.toStringAsFixed(2)}%',
                 ),
               ),
             ],
@@ -277,34 +410,38 @@ class _PartnerBusinessDashboardScreenState
   }
 
   Widget _kpiGrid(DashboardData data) {
-    final items = [
+    final items = <_MetricData>[
       _MetricData(
-        'Total Sales',
+        'Revenue',
         _money(data.monthlySales, data.currency),
+        '${data.successfulOrders} successful orders',
         Icons.trending_up_rounded,
         AppColors.primary,
         AppColors.primarySoft,
       ),
       _MetricData(
-        'Active eSIMs',
-        '${data.activeEsimCount}',
-        Icons.sim_card_outlined,
-        AppColors.success,
-        AppColors.successSoft,
-      ),
-      _MetricData(
-        'Total eSIMs',
-        '${data.totalEsimCount}',
-        Icons.inventory_2_outlined,
+        'Gross Profit',
+        _money(data.grossProfit, data.currency),
+        '${data.grossMarginPercent.toStringAsFixed(2)}% margin',
+        Icons.account_balance_outlined,
         AppColors.violet,
         const Color(0xFFF3EEFF),
       ),
       _MetricData(
-        'Expired',
-        '${data.expiredEsimCount}',
-        Icons.schedule_outlined,
-        AppColors.warning,
-        AppColors.warningSoft,
+        'Customers',
+        '${data.customerCount}',
+        '${data.totalOrders} orders in period',
+        Icons.groups_outlined,
+        AppColors.orange,
+        const Color(0xFFFFF2E8),
+      ),
+      _MetricData(
+        'Active eSIMs',
+        '${data.activeEsimCount}',
+        '${data.totalEsimCount} total inventory',
+        Icons.sim_card_outlined,
+        AppColors.success,
+        AppColors.successSoft,
       ),
     ];
 
@@ -362,8 +499,18 @@ class _PartnerBusinessDashboardScreenState
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            metric.detail,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10,
               color: AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -374,34 +521,80 @@ class _PartnerBusinessDashboardScreenState
   Widget _actionCenter() {
     final actions = _isDealer
         ? <_ActionData>[
-            _ActionData('Buy package', 'Open catalog', Icons.public_rounded,
-                () => context.go('/packages')),
-            _ActionData('Query GB', 'Check live usage', Icons.data_usage_rounded,
-                () => context.push('/provider-tools/usage')),
-            _ActionData('Renew / Top-up', 'Continue active plans',
-                Icons.autorenew_rounded,
-                () => context.push('/provider-tools/renew')),
-            _ActionData('Clients', 'Manage customers', Icons.groups_outlined,
-                () => context.go('/customers')),
-            _ActionData('Request balance', 'Open finance ledger',
-                Icons.add_card_rounded, () => context.push('/finance')),
-            _ActionData('Orders', 'Track provisioning',
-                Icons.receipt_long_outlined, () => context.go('/orders')),
+            _ActionData(
+              'Buy package',
+              'Open catalog',
+              Icons.public_rounded,
+              () => context.go('/packages'),
+            ),
+            _ActionData(
+              'Query GB',
+              'Check live usage',
+              Icons.data_usage_rounded,
+              () => context.push('/provider-tools/usage'),
+            ),
+            _ActionData(
+              'Renew / Top-up',
+              'Continue active plans',
+              Icons.autorenew_rounded,
+              () => context.push('/provider-tools/renew'),
+            ),
+            _ActionData(
+              'Clients',
+              'Manage customers',
+              Icons.groups_outlined,
+              () => context.go('/customers'),
+            ),
+            _ActionData(
+              'Request balance',
+              'Open finance ledger',
+              Icons.add_card_rounded,
+              () => context.push('/finance'),
+            ),
+            _ActionData(
+              'Orders',
+              'Track provisioning',
+              Icons.receipt_long_outlined,
+              () => context.go('/orders'),
+            ),
           ]
         : <_ActionData>[
-            _ActionData('Dealers', 'Manage dealer network',
-                Icons.people_alt_outlined, () => context.push('/dealers')),
-            _ActionData('Dealer Wallet', 'Funding requests',
-                Icons.wallet_outlined, () => context.push('/wallet')),
-            _ActionData('Dealer Pricing', 'Pricing controls',
-                Icons.percent_rounded, () => context.push('/dealers/pricing')),
-            _ActionData('Clients', 'Manage customers', Icons.groups_outlined,
-                () => context.go('/customers')),
-            _ActionData('Query GB', 'Check live usage', Icons.data_usage_rounded,
-                () => context.push('/provider-tools/usage')),
-            _ActionData('Renew / Top-up', 'Continue active plans',
-                Icons.autorenew_rounded,
-                () => context.push('/provider-tools/renew')),
+            _ActionData(
+              'Dealers',
+              'Manage dealer network',
+              Icons.people_alt_outlined,
+              () => context.push('/dealers'),
+            ),
+            _ActionData(
+              'Dealer Wallet',
+              'Funding requests',
+              Icons.wallet_outlined,
+              () => context.push('/wallet'),
+            ),
+            _ActionData(
+              'Dealer Pricing',
+              'Pricing controls',
+              Icons.percent_rounded,
+              () => context.push('/dealers/pricing'),
+            ),
+            _ActionData(
+              'Clients',
+              'Manage customers',
+              Icons.groups_outlined,
+              () => context.go('/customers'),
+            ),
+            _ActionData(
+              'Query GB',
+              'Check live usage',
+              Icons.data_usage_rounded,
+              () => context.push('/provider-tools/usage'),
+            ),
+            _ActionData(
+              'Renew / Top-up',
+              'Continue active plans',
+              Icons.autorenew_rounded,
+              () => context.push('/provider-tools/renew'),
+            ),
           ];
 
     final theme = Theme.of(context);
@@ -432,57 +625,78 @@ class _PartnerBusinessDashboardScreenState
             ),
           ),
           const SizedBox(height: 12),
-          for (var i = 0; i < actions.length; i++) ...[
-            _actionRow(actions[i]),
-            if (i != actions.length - 1) const Divider(height: 1),
-          ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = (constraints.maxWidth - 8) / 2;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final action in actions)
+                    SizedBox(width: width, child: _actionTile(action)),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _actionRow(_ActionData action) {
+  Widget _actionTile(_ActionData action) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: action.onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 108),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(action.icon, size: 20, color: AppColors.primary),
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(action.icon, size: 18, color: AppColors.primary),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 16,
+                  color: AppColors.textMuted,
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    action.title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    action.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 11),
+            Text(
+              action.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w900,
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+            const SizedBox(height: 3),
+            Text(
+              action.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
@@ -517,7 +731,7 @@ class _PartnerBusinessDashboardScreenState
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Latest tenant-scoped order activity',
+                        '${data.totalOrders} orders in ${_periodLabel(data.period)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -526,7 +740,7 @@ class _PartnerBusinessDashboardScreenState
                   ),
                 ),
                 TextButton(
-                  onPressed: () => context.go('/orders'),
+                  onPressed: () => context.push('/orders'),
                   child: const Text('View all'),
                 ),
               ],
@@ -536,7 +750,7 @@ class _PartnerBusinessDashboardScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
               child: Text(
-                'Latest eSIM orders will appear here.',
+                'Latest orders will appear here.',
                 style: theme.textTheme.bodyMedium,
               ),
             )
@@ -557,17 +771,19 @@ class _PartnerBusinessDashboardScreenState
 
   Widget _orderRow(DashboardOrderSummary order, String currency) {
     final theme = Theme.of(context);
-    final status = order.status.toLowerCase();
-    final success = status.contains('complete') ||
-        status.contains('success') ||
-        status.contains('active');
-    final failed = status.contains('fail') ||
-        status.contains('cancel') ||
-        status.contains('refund');
-    final tone = success
-        ? AppColors.success
-        : failed
-            ? AppColors.danger
+    final status = order.status.trim().isEmpty ? 'processing' : order.status;
+    final lower = status.toLowerCase();
+    final success = lower.contains('complete') ||
+        lower.contains('success') ||
+        lower.contains('active') ||
+        lower.contains('deliver');
+    final failure = lower.contains('fail') ||
+        lower.contains('cancel') ||
+        lower.contains('refund');
+    final statusColor = failure
+        ? AppColors.danger
+        : success
+            ? AppColors.success
             : AppColors.warning;
     final date = order.createdAt == null
         ? order.orderNumber
@@ -578,15 +794,15 @@ class _PartnerBusinessDashboardScreenState
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(11),
             ),
             child: const Icon(
               Icons.shopping_bag_outlined,
-              size: 17,
+              size: 18,
               color: AppColors.primary,
             ),
           ),
@@ -603,12 +819,12 @@ class _PartnerBusinessDashboardScreenState
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
-                  date,
+                  '${order.orderNumber} · $date',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5),
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
                 ),
               ],
             ),
@@ -620,17 +836,18 @@ class _PartnerBusinessDashboardScreenState
               Text(
                 _money(order.totalAmount, currency),
                 style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                order.status.replaceAll('_', ' '),
+                status.replaceAll('_', ' '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: tone,
                   fontSize: 9.5,
+                  color: statusColor,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -644,14 +861,30 @@ class _PartnerBusinessDashboardScreenState
   Widget _resellerManagement() {
     final theme = Theme.of(context);
     final items = <_ActionData>[
-      _ActionData('Central Pricing', 'Markup and pricing rules',
-          Icons.rule_folder_outlined, () => context.push('/pricing/rules')),
-      _ActionData('Operations', 'Provider and order operations',
-          Icons.monitor_heart_outlined, () => context.push('/operations')),
-      _ActionData('Reports', 'Sales and analytics', Icons.analytics_outlined,
-          () => context.push('/reports')),
-      _ActionData('Finance Ledger', 'Balance and wallet movements',
-          Icons.account_balance_wallet_outlined, () => context.push('/finance')),
+      _ActionData(
+        'Central Pricing',
+        'Markup and pricing rules',
+        Icons.rule_folder_outlined,
+        () => context.push('/pricing/rules'),
+      ),
+      _ActionData(
+        'Operations',
+        'Provider and order operations',
+        Icons.dns_outlined,
+        () => context.push('/operations'),
+      ),
+      _ActionData(
+        'Reports',
+        'Sales and analytics',
+        Icons.analytics_outlined,
+        () => context.push('/reports'),
+      ),
+      _ActionData(
+        'Finance',
+        'Ledger and wallet movements',
+        Icons.account_balance_wallet_outlined,
+        () => context.push('/finance'),
+      ),
     ];
 
     return Container(
@@ -671,14 +904,51 @@ class _PartnerBusinessDashboardScreenState
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
+          Text(
+            'Pricing, finance and operational controls',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
           for (var i = 0; i < items.length; i++) ...[
-            _actionRow(items[i]),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              minVerticalPadding: 6,
+              leading: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(items[i].icon, size: 19, color: AppColors.primary),
+              ),
+              title: Text(
+                items[i].title,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(
+                items[i].subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: items[i].onTap,
+            ),
             if (i != items.length - 1) const Divider(height: 1),
           ],
         ],
       ),
     );
+  }
+
+  String _periodLabel(String value) {
+    for (final item in _periods) {
+      if (item.$1 == value) return item.$2.toLowerCase();
+    }
+    return value;
   }
 
   String _money(double value, String currency) {
@@ -692,6 +962,29 @@ class _PartnerBusinessDashboardScreenState
     };
     return '$symbol${NumberFormat('#,##0.00', 'en_US').format(value)}';
   }
+}
+
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          ),
+          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+        ),
+      );
 }
 
 class _DarkMetric extends StatelessWidget {
@@ -717,7 +1010,7 @@ class _DarkMetric extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 17,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -737,41 +1030,31 @@ class _DarkMetric extends StatelessWidget {
       );
 }
 
-class _SquareIconButton extends StatelessWidget {
-  const _SquareIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(13),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
-        ),
-      );
-}
-
 class _MetricData {
-  const _MetricData(this.label, this.value, this.icon, this.color, this.soft);
+  const _MetricData(
+    this.label,
+    this.value,
+    this.detail,
+    this.icon,
+    this.color,
+    this.soft,
+  );
 
   final String label;
   final String value;
+  final String detail;
   final IconData icon;
   final Color color;
   final Color soft;
 }
 
 class _ActionData {
-  const _ActionData(this.title, this.subtitle, this.icon, this.onTap);
+  const _ActionData(
+    this.title,
+    this.subtitle,
+    this.icon,
+    this.onTap,
+  );
 
   final String title;
   final String subtitle;
