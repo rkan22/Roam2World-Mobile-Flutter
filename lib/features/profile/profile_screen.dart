@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/routing/app_role.dart';
@@ -195,6 +196,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('Your secure business session will be removed from this device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _authRepository.signOut();
+    if (mounted) context.go('/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDealer = parseAppRole(_profile?.role ?? _session?.role) == AppRole.dealer;
@@ -229,6 +254,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _section('Change Password', _passwordForm()),
               const SizedBox(height: 18),
               _section('Theme Settings', _themeSettings()),
+              const SizedBox(height: 18),
+              _logoutCard(),
             ],
           ),
         ),
@@ -321,6 +348,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  Widget _logoutCard() => B2BSurface(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: .08),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(Icons.logout_rounded, color: AppColors.danger),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Log out', style: TextStyle(fontWeight: FontWeight.w900)),
+                  SizedBox(height: 2),
+                  Text('End this session on this device', style: TextStyle(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: _logout,
+              style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+              child: const Text('Log out'),
+            ),
+          ],
+        ),
+      );
 
   Widget _info(String label, String value, {bool last = false, Color? valueColor}) => Padding(
         padding: EdgeInsets.only(bottom: last ? 0 : 14),
