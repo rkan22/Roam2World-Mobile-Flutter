@@ -187,7 +187,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             package: visible[index],
             onTap: () => context.push('/packages/detail', extra: visible[index]),
           ),
-          if (index != visible.length - 1) const SizedBox(height: 12),
+          if (index != visible.length - 1) const SizedBox(height: 14),
         ],
       ],
     );
@@ -456,19 +456,29 @@ class _OperatorPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final manual = package.provider.toLowerCase() == 'manual';
-    const accent = AppColors.primary;
+    final typeLabel = package.packageType == 'simcard' ? 'SIM Card' : 'eSIM';
+
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
           decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: accent.withValues(alpha: .28)),
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+            boxShadow: theme.brightness == Brightness.light
+                ? const [
+                    BoxShadow(
+                      color: Color(0x14020817),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,58 +487,83 @@ class _OperatorPlanCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      package.name,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          package.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -.35,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          package.destination,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: .08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: _CountryVisual(
-                      code: package.countryCode,
-                      destinationKey: package.destinationKey,
+                  const SizedBox(width: 14),
+                  SizedBox.square(
+                    dimension: 64,
+                    child: Center(
+                      child: _CountryVisual(
+                        code: package.countryCode,
+                        destinationKey: package.destinationKey,
+                        size: 56,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      manual ? '${package.displayProvider} · manual delivery' : package.displayProvider,
-                      style: theme.textTheme.bodySmall?.copyWith(color: accent, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 20),
+              Text(
+                manual ? '${package.displayProvider} · manual delivery' : package.displayProvider,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               if (package.supportedCountries.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text('Supported countries', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w900, letterSpacing: .4)),
-                const SizedBox(height: 7),
-                _CoveragePreview(countries: package.supportedCountries, accent: accent),
+                const SizedBox(height: 10),
+                _CoveragePreview(countries: package.supportedCountries),
               ],
-              const SizedBox(height: 14),
+              const SizedBox(height: 22),
               _PlanDetailRow(label: 'Region', value: package.destination),
-              _PlanDetailRow(label: 'Type', value: package.packageType == 'simcard' ? 'SIM Card' : 'eSIM'),
+              _PlanDetailRow(label: 'Type', value: typeLabel),
               _PlanDetailRow(label: 'Data', value: package.dataLabel),
               _PlanDetailRow(label: 'Validity', value: package.validityLabel),
               _PlanDetailRow(label: 'Price', value: package.formattedPrice, emphasize: true),
-              const SizedBox(height: 14),
+              const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: FilledButton(
                   onPressed: onTap,
-                  style: FilledButton.styleFrom(backgroundColor: accent),
-                  child: Text(manual ? 'Review request' : 'View plan'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    manual ? 'Review request' : 'Order',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -550,19 +585,27 @@ class _PlanDetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label, style: theme.textTheme.bodySmall)),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
           const SizedBox(width: 14),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
               style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: emphasize ? AppColors.primary : null,
+                fontWeight: FontWeight.w900,
+                color: emphasize ? AppColors.primary : AppColors.textPrimary,
               ),
             ),
           ),
@@ -573,61 +616,53 @@ class _PlanDetailRow extends StatelessWidget {
 }
 
 class _CoveragePreview extends StatelessWidget {
-  const _CoveragePreview({required this.countries, required this.accent});
+  const _CoveragePreview({required this.countries});
   final List<PackageCountry> countries;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     const previewLimit = 8;
     final visible = countries.take(previewLimit).toList(growable: false);
     final remaining = countries.length - visible.length;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final country in visible)
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: accent.withValues(alpha: .20)),
+
+    return SizedBox(
+      height: 30,
+      child: Row(
+        children: [
+          for (var index = 0; index < visible.length; index++) ...[
+            if (index > 0) const SizedBox(width: 2),
+            _CountryVisual(
+              code: visible[index].code,
+              destinationKey: visible[index].code == 'EU' ? 'europe' : '',
+              size: 28,
             ),
-            child: _CountryVisual(
-              code: country.code,
-              destinationKey: country.code == 'EU' ? 'europe' : '',
-              compact: true,
-            ),
-          ),
-        if (remaining > 0)
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
+          ],
+          if (remaining > 0) ...[
+            const SizedBox(width: 8),
+            Text(
               '+$remaining',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w900,
                   ),
             ),
-          ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 }
 
 class _CountryVisual extends StatelessWidget {
-  const _CountryVisual({required this.code, required this.destinationKey, this.compact = false});
+  const _CountryVisual({
+    required this.code,
+    required this.destinationKey,
+    required this.size,
+  });
+
   final String code;
   final String destinationKey;
-  final bool compact;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -636,17 +671,28 @@ class _CountryVisual extends StatelessWidget {
     final url = isEurope
         ? 'https://flagcdn.com/w160/eu.png'
         : normalizedCode.length == 2
-            ? 'https://flagcdn.com/w40/${normalizedCode.toLowerCase()}.png'
+            ? 'https://flagcdn.com/w80/${normalizedCode.toLowerCase()}.png'
             : null;
-    if (url == null) return Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27);
-    final size = compact ? 26.0 : 36.0;
+
+    if (url == null) {
+      return Icon(
+        Icons.public_rounded,
+        color: AppColors.primary,
+        size: size * .72,
+      );
+    }
+
     return ClipOval(
       child: Image.network(
         url,
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.public_rounded, color: AppColors.primary, size: compact ? 18 : 27),
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.public_rounded,
+          color: AppColors.primary,
+          size: size * .72,
+        ),
       ),
     );
   }
