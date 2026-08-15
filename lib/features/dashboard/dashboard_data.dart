@@ -44,6 +44,13 @@ class DashboardData {
     required this.activeEsimCount,
     required this.expiredEsimCount,
     required this.recentOrders,
+    this.period = '30d',
+    this.grossProfit = 0,
+    this.grossMarginPercent = 0,
+    this.successfulOrders = 0,
+    this.pricedOrders = 0,
+    this.totalOrders = 0,
+    this.customerCount = 0,
   });
 
   final String role;
@@ -55,6 +62,13 @@ class DashboardData {
   final int activeEsimCount;
   final int expiredEsimCount;
   final List<DashboardOrderSummary> recentOrders;
+  final String period;
+  final double grossProfit;
+  final double grossMarginPercent;
+  final int successfulOrders;
+  final int pricedOrders;
+  final int totalOrders;
+  final int customerCount;
 
   DashboardData copyWith({
     double? balance,
@@ -65,6 +79,13 @@ class DashboardData {
     int? activeEsimCount,
     int? expiredEsimCount,
     List<DashboardOrderSummary>? recentOrders,
+    String? period,
+    double? grossProfit,
+    double? grossMarginPercent,
+    int? successfulOrders,
+    int? pricedOrders,
+    int? totalOrders,
+    int? customerCount,
   }) {
     return DashboardData(
       role: role,
@@ -76,6 +97,13 @@ class DashboardData {
       activeEsimCount: activeEsimCount ?? this.activeEsimCount,
       expiredEsimCount: expiredEsimCount ?? this.expiredEsimCount,
       recentOrders: recentOrders ?? this.recentOrders,
+      period: period ?? this.period,
+      grossProfit: grossProfit ?? this.grossProfit,
+      grossMarginPercent: grossMarginPercent ?? this.grossMarginPercent,
+      successfulOrders: successfulOrders ?? this.successfulOrders,
+      pricedOrders: pricedOrders ?? this.pricedOrders,
+      totalOrders: totalOrders ?? this.totalOrders,
+      customerCount: customerCount ?? this.customerCount,
     );
   }
 
@@ -85,15 +113,38 @@ class DashboardData {
     final metrics = _map(
       data['metrics'] ?? data['statistics'] ?? data['stats'],
     );
-    final sales = _map(data['sales_overview'] ?? metrics['sales']);
-    final esims = _map(data['esim_stats'] ?? metrics['esims']);
-    final balanceValue = data['current_credit'] ?? data['current_balance'];
-    final orders = data['recent_orders'] as List? ?? const [];
+    final sales = _map(
+      data['sales'] ?? data['sales_overview'] ?? metrics['sales'],
+    );
+    final esims = _map(data['esims'] ?? data['esim_stats'] ?? metrics['esims']);
+    final wallet = _map(data['wallet']);
+    final ordersMap = _map(data['orders']);
+    final customers = _map(data['customers']);
+    final balanceValue = _first([
+      wallet['balance'],
+      data['current_credit'],
+      data['current_balance'],
+    ]);
+    final orderItems =
+        ordersMap['recent'] as List? ?? data['recent_orders'] as List? ?? const [];
+    final revenue = _first([
+      sales['revenue'],
+      data['total_sales'],
+      data['monthly_sales'],
+      data['totalSales'],
+      data['monthlySales'],
+      sales['total_sales'],
+      sales['monthly_sales'],
+    ]);
 
     return DashboardData(
       role: data['role']?.toString() ?? '',
       balance: _toDouble(balanceValue),
-      currency: data['currency']?.toString() ?? 'USD',
+      currency: _first([
+            wallet['currency'],
+            data['currency'],
+          ])?.toString() ??
+          'USD',
       todaySales: _toDouble(
         _first([
           data['today_sales'],
@@ -102,53 +153,51 @@ class DashboardData {
           sales['todaySales'],
         ]),
       ),
-      monthlySales: _toDouble(
-        _first([
-          data['total_sales'],
-          data['monthly_sales'],
-          data['totalSales'],
-          data['monthlySales'],
-          sales['total_sales'],
-          sales['monthly_sales'],
-        ]),
-      ),
+      monthlySales: _toDouble(revenue),
       totalEsimCount: _toInt(
         _first([
+          esims['total'],
           data['total_esim_count'],
           data['total_esims'],
           data['totalEsims'],
           metrics['total_esims'],
-          esims['total'],
           esims['total_esims'],
         ]),
       ),
       activeEsimCount: _toInt(
         _first([
+          esims['active'],
           data['active_esim_count'],
           data['active_esims'],
           data['activeEsims'],
           metrics['active_esims'],
-          esims['active'],
           esims['active_esims'],
         ]),
       ),
       expiredEsimCount: _toInt(
         _first([
+          esims['expired'],
           data['expired_esim_count'],
           data['expired_esims'],
           data['expiredEsims'],
           metrics['expired_esims'],
-          esims['expired'],
           esims['expired_esims'],
         ]),
       ),
-      recentOrders: orders
+      recentOrders: orderItems
           .whereType<Map>()
           .map(
             (item) =>
                 DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false),
+      period: data['period']?.toString() ?? '30d',
+      grossProfit: _toDouble(sales['gross_profit']),
+      grossMarginPercent: _toDouble(sales['gross_margin_percent']),
+      successfulOrders: _toInt(sales['successful_orders']),
+      pricedOrders: _toInt(sales['priced_orders']),
+      totalOrders: _toInt(ordersMap['total']),
+      customerCount: _toInt(customers['total']),
     );
   }
 
