@@ -182,24 +182,52 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
         );
       }
       if (!mounted) return;
+      final prettyJson = const JsonEncoder.withIndent('  ').convert(result.data);
       await showModalBottomSheet<void>(
         context: context,
         showDragHandle: true,
+        isScrollControlled: true,
         builder: (context) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: .72,
+            minChildSize: .42,
+            maxChildSize: .92,
+            builder: (context, scrollController) => ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
               children: [
                 Text(
                   'Live provider status',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                SelectableText(
-                  const JsonEncoder.withIndent('  ').convert(result.data),
-                  style: Theme.of(context).textTheme.bodySmall,
+                const SizedBox(height: 6),
+                Text(
+                  'Latest response from the provider. Scroll to review the full payload.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(B2BRadius.lg),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: SelectableText(
+                    prettyJson,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      height: 1.45,
+                    ),
+                  ),
                 ),
               ],
             ),
