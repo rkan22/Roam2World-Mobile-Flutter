@@ -10,6 +10,7 @@ import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
+import 'dashboard_topup_sheet.dart';
 
 class PartnerBusinessDashboardScreen extends StatefulWidget {
   const PartnerBusinessDashboardScreen({
@@ -84,6 +85,16 @@ class _PartnerBusinessDashboardScreenState
     await _load(forceRefresh: true);
   }
 
+  Future<void> _openTopUp(String currency) async {
+    final submitted = await showDashboardTopUpSheet(
+      context,
+      currency: currency.trim().isEmpty ? 'USD' : currency,
+    );
+    if (submitted == true && mounted) {
+      await _load(forceRefresh: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading && _data == null) {
@@ -99,36 +110,39 @@ class _PartnerBusinessDashboardScreenState
     }
 
     final data = _data!;
-    return RefreshIndicator(
-      onRefresh: () => _load(forceRefresh: true),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-        children: [
-          _header(),
-          const SizedBox(height: 14),
-          _periodSelector(),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            _inlineError(),
-          ],
-          if (_isLowBalance(data)) ...[
-            const SizedBox(height: 12),
-            _lowBalanceBanner(data),
-          ],
-          const SizedBox(height: 14),
-          _operationsCard(data),
-          const SizedBox(height: 14),
-          _kpiGrid(data),
-          const SizedBox(height: 14),
-          _actionCenter(),
-          const SizedBox(height: 14),
-          _recentOrders(data),
-          if (!_isDealer) ...[
+    return SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
+        onRefresh: () => _load(forceRefresh: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+          children: [
+            _header(),
             const SizedBox(height: 14),
-            _resellerManagement(),
+            _periodSelector(),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              _inlineError(),
+            ],
+            if (_isLowBalance(data)) ...[
+              const SizedBox(height: 12),
+              _lowBalanceBanner(data),
+            ],
+            const SizedBox(height: 14),
+            _operationsCard(data),
+            const SizedBox(height: 14),
+            _kpiGrid(data),
+            const SizedBox(height: 14),
+            _actionCenter(),
+            const SizedBox(height: 14),
+            _recentOrders(data),
+            if (!_isDealer) ...[
+              const SizedBox(height: 14),
+              _resellerManagement(),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -149,6 +163,8 @@ class _PartnerBusinessDashboardScreenState
             children: [
               Text(
                 _isDealer ? 'Dealer Operations' : 'Reseller Operations',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: -.45,
@@ -159,6 +175,8 @@ class _PartnerBusinessDashboardScreenState
                 _isDealer
                     ? 'Sales, wallet, customers and eSIM activity.'
                     : 'Sales, dealer network, margin and eSIM operations.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                   height: 1.35,
@@ -301,105 +319,123 @@ class _PartnerBusinessDashboardScreenState
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  _isDealer
-                      ? Icons.point_of_sale_outlined
-                      : Icons.hub_outlined,
-                  color: AppColors.accent,
-                  size: 22,
-                ),
+          Positioned(
+            right: -18,
+            bottom: -24,
+            child: IgnorePointer(
+              child: Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 150,
+                color: Colors.white.withValues(alpha: .08),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _isDealer ? 'Sales workspace' : 'Partner workspace',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .08),
+                      borderRadius: BorderRadius.circular(13),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
+                    child: Icon(
                       _isDealer
-                          ? '${data.successfulOrders} successful orders'
-                          : '${data.customerCount} customers · ${data.successfulOrders} successful orders',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          ? Icons.point_of_sale_outlined
+                          : Icons.hub_outlined,
+                      color: AppColors.accent,
+                      size: 22,
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isDealer ? 'Sales workspace' : 'Partner workspace',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _isDealer
+                              ? '${data.successfulOrders} successful orders'
+                              : '${data.customerCount} customers · ${data.successfulOrders} successful orders',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () =>
+                        setState(() => _balanceVisible = !_balanceVisible),
+                    icon: Icon(
+                      _balanceVisible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Available balance',
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                onPressed: () =>
-                    setState(() => _balanceVisible = !_balanceVisible),
-                icon: Icon(
-                  _balanceVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: Colors.white70,
-                  size: 20,
+              const SizedBox(height: 5),
+              Text(
+                balance,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  height: 1,
+                  letterSpacing: -.8,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Available balance',
-            style: TextStyle(
-              color: Colors.white60,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            balance,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              height: 1,
-              letterSpacing: -.8,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _DarkMetric(
-                  label: 'Revenue',
-                  value: _money(data.monthlySales, currency),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DarkMetric(
-                  label: 'Margin',
-                  value: '${data.grossMarginPercent.toStringAsFixed(2)}%',
+              const SizedBox(height: 22),
+              SizedBox(
+                height: 44,
+                child: FilledButton.icon(
+                  onPressed: () => _openTopUp(currency),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.navy,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 19),
+                  label: const Text(
+                    'Add Funds',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
                 ),
               ),
             ],
@@ -983,49 +1019,6 @@ class _SquareIconButton extends StatelessWidget {
             border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
           ),
           child: Icon(icon, size: 20, color: AppColors.textPrimary),
-        ),
-      );
-}
-
-class _DarkMetric extends StatelessWidget {
-  const _DarkMetric({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .06),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: .08)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
         ),
       );
 }
