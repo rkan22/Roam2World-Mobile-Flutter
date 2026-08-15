@@ -362,7 +362,7 @@ class _PartnerBusinessDashboardScreenState
                       _isDealer
                           ? Icons.point_of_sale_outlined
                           : Icons.hub_outlined,
-                      color: AppColors.accent,
+                      color: Colors.white70,
                       size: 22,
                     ),
                   ),
@@ -465,8 +465,8 @@ class _PartnerBusinessDashboardScreenState
         _money(data.monthlySales, data.currency),
         '${data.successfulOrders} successful orders',
         Icons.trending_up_rounded,
-        AppColors.primary,
-        AppColors.primarySoft,
+        const Color(0xFF334155),
+        const Color(0xFFF1F5F9),
       ),
       _MetricData(
         'Gross Profit',
@@ -692,8 +692,38 @@ class _PartnerBusinessDashboardScreenState
     );
   }
 
+  Color _actionColor(String title) {
+    final value = title.toLowerCase();
+    if (value.contains('buy')) return AppColors.primary;
+    if (value.contains('pricing') || value.contains('renew')) {
+      return AppColors.violet;
+    }
+    if (value.contains('client') || value.contains('customer')) {
+      return AppColors.orange;
+    }
+    if (value.contains('query') || value.contains('usage')) {
+      return AppColors.success;
+    }
+    if (value.contains('balance') || value.contains('finance')) {
+      return AppColors.warning;
+    }
+    return const Color(0xFF334155);
+  }
+
+  Color _actionSoft(String title) {
+    final color = _actionColor(title);
+    if (color == AppColors.primary) return AppColors.primarySoft;
+    if (color == AppColors.violet) return const Color(0xFFF3EEFF);
+    if (color == AppColors.orange) return const Color(0xFFFFF2E8);
+    if (color == AppColors.success) return AppColors.successSoft;
+    if (color == AppColors.warning) return AppColors.warningSoft;
+    return const Color(0xFFF1F5F9);
+  }
+
   Widget _actionTile(_ActionData action) {
     final theme = Theme.of(context);
+    final iconColor = _actionColor(action.title);
+    final iconSoft = _actionSoft(action.title);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -716,10 +746,10 @@ class _PartnerBusinessDashboardScreenState
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: iconSoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(action.icon, size: 18, color: AppColors.primary),
+                    child: Icon(action.icon, size: 18, color: iconColor),
                   ),
                   const Spacer(),
                   const Icon(
@@ -849,13 +879,13 @@ class _PartnerBusinessDashboardScreenState
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(11),
             ),
             child: const Icon(
               Icons.shopping_bag_outlined,
               size: 18,
-              color: AppColors.primary,
+              color: Color(0xFF334155),
             ),
           ),
           const SizedBox(width: 10),
@@ -974,10 +1004,14 @@ class _PartnerBusinessDashboardScreenState
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
+                    color: _actionSoft(items[i].title),
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Icon(items[i].icon, size: 19, color: AppColors.primary),
+                  child: Icon(
+                    items[i].icon,
+                    size: 19,
+                    color: _actionColor(items[i].title),
+                  ),
                 ),
                 title: Text(
                   items[i].title,
