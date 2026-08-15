@@ -32,6 +32,7 @@ class _PartnerBusinessDashboardScreenState
   DashboardData? _data;
   Object? _error;
   bool _loading = true;
+  bool _refreshing = false;
   bool _balanceVisible = true;
   String _period = '30d';
 
@@ -76,6 +77,17 @@ class _PartnerBusinessDashboardScreenState
     }
   }
 
+  Future<void> _refreshDashboard() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    widget.repository.invalidateCache();
+    try {
+      await _load(forceRefresh: true);
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
   Future<void> _selectPeriod(String value) async {
     if (_period == value) return;
     setState(() {
@@ -91,7 +103,7 @@ class _PartnerBusinessDashboardScreenState
       currency: currency.trim().isEmpty ? 'USD' : currency,
     );
     if (submitted == true && mounted) {
-      await _load(forceRefresh: true);
+      await _refreshDashboard();
     }
   }
 
@@ -105,7 +117,7 @@ class _PartnerBusinessDashboardScreenState
         message: _error is ApiException
             ? (_error! as ApiException).message
             : 'Dashboard could not be loaded.',
-        onRetry: () => _load(forceRefresh: true),
+        onRetry: _refreshDashboard,
       );
     }
 
@@ -113,7 +125,7 @@ class _PartnerBusinessDashboardScreenState
     return SafeArea(
       bottom: false,
       child: RefreshIndicator(
-        onRefresh: () => _load(forceRefresh: true),
+        onRefresh: _refreshDashboard,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
@@ -188,7 +200,8 @@ class _PartnerBusinessDashboardScreenState
         const SizedBox(width: 8),
         _SquareIconButton(
           icon: Icons.refresh_rounded,
-          onTap: () => _load(forceRefresh: true),
+          onTap: _refreshDashboard,
+          loading: _refreshing,
         ),
         const SizedBox(width: 8),
         _SquareIconButton(
@@ -681,59 +694,62 @@ class _PartnerBusinessDashboardScreenState
 
   Widget _actionTile(_ActionData action) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: action.onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 108),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: action.onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 108),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(action.icon, size: 18, color: AppColors.primary),
                   ),
-                  child: Icon(action.icon, size: 18, color: AppColors.primary),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 16,
-                  color: AppColors.textMuted,
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            Text(
-              action.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w900,
+                  const Spacer(),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: AppColors.textMuted,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              action.subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10.5,
-                color: AppColors.textSecondary,
+              const SizedBox(height: 11),
+              Text(
+                action.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              Text(
+                action.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10.5,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -949,29 +965,32 @@ class _PartnerBusinessDashboardScreenState
           ),
           const SizedBox(height: 10),
           for (var i = 0; i < items.length; i++) ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              minVerticalPadding: 6,
-              leading: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(11),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                minVerticalPadding: 6,
+                leading: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(items[i].icon, size: 19, color: AppColors.primary),
                 ),
-                child: Icon(items[i].icon, size: 19, color: AppColors.primary),
+                title: Text(
+                  items[i].title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(
+                  items[i].subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: items[i].onTap,
               ),
-              title: Text(
-                items[i].title,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              subtitle: Text(
-                items[i].subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: items[i].onTap,
             ),
             if (i != items.length - 1) const Divider(height: 1),
           ],
@@ -1001,14 +1020,19 @@ class _PartnerBusinessDashboardScreenState
 }
 
 class _SquareIconButton extends StatelessWidget {
-  const _SquareIconButton({required this.icon, required this.onTap});
+  const _SquareIconButton({
+    required this.icon,
+    required this.onTap,
+    this.loading = false,
+  });
 
   final IconData icon;
   final VoidCallback onTap;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
+        onTap: loading ? null : onTap,
         borderRadius: BorderRadius.circular(13),
         child: Container(
           width: 40,
@@ -1018,7 +1042,14 @@ class _SquareIconButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(13),
             border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
           ),
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          child: loading
+              ? const Center(
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : Icon(icon, size: 20, color: AppColors.textPrimary),
         ),
       );
 }
