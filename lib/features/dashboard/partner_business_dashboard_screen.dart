@@ -465,8 +465,8 @@ class _PartnerBusinessDashboardScreenState
         _money(data.monthlySales, data.currency),
         '${data.successfulOrders} successful orders',
         Icons.trending_up_rounded,
-        AppColors.primary,
-        AppColors.primarySoft,
+        const Color(0xFF334155),
+        const Color(0xFFF1F5F9),
       ),
       _MetricData(
         'Gross Profit',
@@ -692,8 +692,27 @@ class _PartnerBusinessDashboardScreenState
     );
   }
 
+  (Color color, Color soft) _actionPalette(String title) {
+    return switch (title) {
+      'Buy package' || 'Buy eSIM' => (AppColors.primary, AppColors.primarySoft),
+      'Dealers' => (AppColors.violet, const Color(0xFFF3EEFF)),
+      'Dealer Pricing' => (AppColors.orange, const Color(0xFFFFF2E8)),
+      'Clients' => (const Color(0xFF475569), const Color(0xFFF1F5F9)),
+      'Query GB' => (const Color(0xFF2563EB), const Color(0xFFEFF6FF)),
+      'Renew / Top-up' => (AppColors.success, AppColors.successSoft),
+      'Request balance' => (AppColors.warning, AppColors.warningSoft),
+      'Orders' => (const Color(0xFF475569), const Color(0xFFF1F5F9)),
+      'Central Pricing' => (AppColors.violet, const Color(0xFFF3EEFF)),
+      'Operations' => (const Color(0xFF475569), const Color(0xFFF1F5F9)),
+      'Reports' => (AppColors.orange, const Color(0xFFFFF2E8)),
+      'Finance' => (AppColors.success, AppColors.successSoft),
+      _ => (const Color(0xFF475569), const Color(0xFFF1F5F9)),
+    };
+  }
+
   Widget _actionTile(_ActionData action) {
     final theme = Theme.of(context);
+    final palette = _actionPalette(action.title);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -716,10 +735,10 @@ class _PartnerBusinessDashboardScreenState
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: palette.soft,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(action.icon, size: 18, color: AppColors.primary),
+                    child: Icon(action.icon, size: 18, color: palette.color),
                   ),
                   const Spacer(),
                   const Icon(
@@ -849,13 +868,13 @@ class _PartnerBusinessDashboardScreenState
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(11),
             ),
             child: const Icon(
               Icons.shopping_bag_outlined,
               size: 18,
-              color: AppColors.primary,
+              color: Color(0xFF475569),
             ),
           ),
           const SizedBox(width: 10),
@@ -965,32 +984,37 @@ class _PartnerBusinessDashboardScreenState
           ),
           const SizedBox(height: 10),
           for (var i = 0; i < items.length; i++) ...[
-            Material(
-              color: Colors.transparent,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                minVerticalPadding: 6,
-                leading: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(11),
+            Builder(
+              builder: (context) {
+                final palette = _actionPalette(items[i].title);
+                return Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    minVerticalPadding: 6,
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: palette.soft,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Icon(items[i].icon, size: 19, color: palette.color),
+                    ),
+                    title: Text(
+                      items[i].title,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    subtitle: Text(
+                      items[i].subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: items[i].onTap,
                   ),
-                  child: Icon(items[i].icon, size: 19, color: AppColors.primary),
-                ),
-                title: Text(
-                  items[i].title,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Text(
-                  items[i].subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: items[i].onTap,
-              ),
+                );
+              },
             ),
             if (i != items.length - 1) const Divider(height: 1),
           ],
