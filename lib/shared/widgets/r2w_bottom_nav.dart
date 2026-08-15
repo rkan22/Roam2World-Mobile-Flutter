@@ -262,18 +262,14 @@ List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
   }
   if (role == AppRole.dealer) {
     return const [
-      _WorkspaceItem('Dashboard', '/dashboard', Icons.dashboard_outlined, 'Dealer dashboard'),
-      _WorkspaceItem('Catalog', '/packages', Icons.layers_outlined, 'SIM & eSIM catalog'),
-      _WorkspaceItem('Customer Pricing', '/pricing/customer', Icons.percent_rounded, 'Customer pricing rules'),
-      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Your scoped pricing rules'),
-      _WorkspaceItem('SIM Converter', '/sim-converter', Icons.swap_horiz_rounded, 'SIM conversion tools'),
-      _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
       _WorkspaceItem('My SIMs & eSIMs', '/esims', Icons.sim_card_outlined, 'SIM & eSIM inventory'),
+      _WorkspaceItem('SIM Converter', '/sim-converter', Icons.swap_horiz_rounded, 'SIM conversion tools'),
       _WorkspaceItem('Orders', '/orders', Icons.receipt_long_outlined, 'Dealer orders'),
-      _WorkspaceItem('Clients', '/customers', Icons.groups_outlined, 'Dealer clients'),
       _WorkspaceItem('Reports', '/reports', Icons.analytics_outlined, 'Reports & analytics'),
+      _WorkspaceItem('Clients', '/customers', Icons.groups_outlined, 'Dealer clients'),
+      _WorkspaceItem('Customer Pricing', '/pricing/customer', Icons.percent_rounded, 'Customer pricing rules'),
+      _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
       _WorkspaceItem('Profile', '/profile', Icons.person_outline_rounded, 'Dealer profile'),
-      _WorkspaceItem('Settings', '/settings', Icons.settings_outlined, 'Dealer settings'),
     ];
   }
   if (role == AppRole.admin) {
@@ -324,7 +320,7 @@ List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(
       'Unified Catalog' ||
       'Catalog Gov' ||
       'Coverage' => 'Catalog',
-      'Clients' ||
+      'Clients' || 'Customer Pricing' => 'Customers',
       'Dealers' ||
       'Resellers' ||
       'Customers & Orders' ||
@@ -332,14 +328,15 @@ List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(
       'Finance Ledger' ||
       'Dealer Wallet' ||
       'Dealer Pricing' ||
-      'Customer Pricing' ||
       'Central Pricing Rules' ||
       'Transactions' ||
       'Balance Top-ups' ||
       'Statements' ||
       'Credit Management' ||
       'Profitability' => 'Finance',
-      'My SIMs & eSIMs' || 'SIM Converter' => 'eSIM & SIM',
+      'SIM Converter' => 'Physical SIM',
+      'My SIMs & eSIMs' => 'My SIMs & eSIMs',
+      'Orders' || 'Reports' => 'Sales',
       'Operations' ||
       'Provider Ops' ||
       'Failed Orders' ||
@@ -348,7 +345,7 @@ List<(String, List<_WorkspaceItem>)> _groupWorkspaceItems(
       'Audit Log' ||
       'Audit & Access' => 'Operations',
       'Notifications' || 'Alert Rules' || 'WhatsApp' => 'Communication',
-      'Reports' || 'Analytics' => 'Reports',
+      'Analytics' => 'Reports',
       _ => 'Account',
     };
     groups.putIfAbsent(group, () => []).add(item);
