@@ -53,7 +53,7 @@ class DashboardRepository {
       var data = await _apiClient.get<DashboardData>(
         isAdmin ? ApiEndpoints.mobileAdminDashboard : ApiEndpoints.mobileDashboard,
         queryParameters: !isAdmin && explicitPeriod
-            ? {'period': period!.trim()}
+            ? {'period': period.trim()}
             : null,
         parser: isAdmin
             ? DashboardData.fromAdminResponse
