@@ -694,6 +694,7 @@ class _PartnerBusinessDashboardScreenState
 
   Widget _actionTile(_ActionData action) {
     final theme = Theme.of(context);
+    final actionColor = _actionColor(action.title);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -716,10 +717,10 @@ class _PartnerBusinessDashboardScreenState
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: actionColor.withValues(alpha: .10),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(action.icon, size: 18, color: AppColors.primary),
+                    child: Icon(action.icon, size: 18, color: actionColor),
                   ),
                   const Spacer(),
                   const Icon(
@@ -849,13 +850,13 @@ class _PartnerBusinessDashboardScreenState
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: AppColors.textSecondary.withValues(alpha: .10),
               borderRadius: BorderRadius.circular(11),
             ),
             child: const Icon(
               Icons.shopping_bag_outlined,
               size: 18,
-              color: AppColors.primary,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: 10),
@@ -974,10 +975,14 @@ class _PartnerBusinessDashboardScreenState
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
+                    color: _actionColor(items[i].title).withValues(alpha: .10),
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Icon(items[i].icon, size: 19, color: AppColors.primary),
+                  child: Icon(
+                    items[i].icon,
+                    size: 19,
+                    color: _actionColor(items[i].title),
+                  ),
                 ),
                 title: Text(
                   items[i].title,
@@ -998,6 +1003,15 @@ class _PartnerBusinessDashboardScreenState
       ),
     );
   }
+
+  Color _actionColor(String title) => switch (title) {
+        'Buy eSIM' || 'Buy package' => AppColors.primary,
+        'Query GB' || 'Central Pricing' => AppColors.violet,
+        'Renew / Top-up' || 'Dealer Pricing' => AppColors.orange,
+        'Clients' || 'Orders' || 'Reports' => AppColors.success,
+        'Request balance' || 'Finance' => AppColors.warning,
+        _ => AppColors.textSecondary,
+      };
 
   String _periodLabel(String value) {
     for (final item in _periods) {
