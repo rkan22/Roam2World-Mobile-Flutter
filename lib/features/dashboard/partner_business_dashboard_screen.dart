@@ -615,10 +615,10 @@ class _PartnerBusinessDashboardScreenState
               () => context.push('/dealers'),
             ),
             _ActionData(
-              'Dealer Wallet',
-              'Funding requests',
-              Icons.wallet_outlined,
-              () => context.push('/dealers'),
+              'Buy eSIM',
+              'Open catalog',
+              Icons.sim_card_download_outlined,
+              () => context.go('/packages'),
             ),
             _ActionData(
               'Dealer Pricing',
