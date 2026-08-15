@@ -452,31 +452,11 @@ class _OperatorPlanCard extends StatelessWidget {
   final MobilePackage package;
   final VoidCallback onTap;
 
-  Color get _accent {
-    switch (package.operatorKey) {
-      case 'vodafone':
-        return AppColors.vodafone;
-      case 'turkey':
-        return AppColors.danger;
-      case 'orange-world':
-      case 'worldmove':
-        return AppColors.orange;
-      case 'kpn':
-        return AppColors.violet;
-      case 'flexnet':
-        return AppColors.primary;
-      case 'orange-balkans':
-        return AppColors.accent;
-      default:
-        return AppColors.primary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final manual = package.provider.toLowerCase() == 'manual';
-    final accent = _accent;
+    const accent = AppColors.primary;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(18),
