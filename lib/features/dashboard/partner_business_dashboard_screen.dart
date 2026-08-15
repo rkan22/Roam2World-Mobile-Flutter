@@ -944,12 +944,6 @@ class _PartnerBusinessDashboardScreenState
     final theme = Theme.of(context);
     final items = <_ActionData>[
       _ActionData(
-        'Central Pricing',
-        'Markup and pricing rules',
-        Icons.rule_folder_outlined,
-        () => context.push('/pricing/rules'),
-      ),
-      _ActionData(
         'Operations',
         'Provider and order operations',
         Icons.dns_outlined,
@@ -988,7 +982,7 @@ class _PartnerBusinessDashboardScreenState
           ),
           const SizedBox(height: 4),
           Text(
-            'Pricing, finance and operational controls',
+            'Finance, reports and operational controls',
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
             ),
