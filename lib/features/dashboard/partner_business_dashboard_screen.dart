@@ -618,7 +618,7 @@ class _PartnerBusinessDashboardScreenState
               'Dealer Wallet',
               'Funding requests',
               Icons.wallet_outlined,
-              () => context.push('/wallet'),
+              () => context.push('/dealers'),
             ),
             _ActionData(
               'Dealer Pricing',
