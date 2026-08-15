@@ -219,7 +219,7 @@ class _PartnerBusinessDashboardScreenState
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _periods.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final item = _periods[index];
           final selected = _period == item.$1;
@@ -735,10 +735,10 @@ class _PartnerBusinessDashboardScreenState
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: palette.soft,
+                      color: palette.$2,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(action.icon, size: 18, color: palette.color),
+                    child: Icon(action.icon, size: 18, color: palette.$1),
                   ),
                   const Spacer(),
                   const Icon(
@@ -996,10 +996,10 @@ class _PartnerBusinessDashboardScreenState
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: palette.soft,
+                        color: palette.$2,
                         borderRadius: BorderRadius.circular(11),
                       ),
-                      child: Icon(items[i].icon, size: 19, color: palette.color),
+                      child: Icon(items[i].icon, size: 19, color: palette.$1),
                     ),
                     title: Text(
                       items[i].title,
