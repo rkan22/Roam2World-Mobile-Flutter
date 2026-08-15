@@ -311,6 +311,41 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
   }
 
+  String _displayPackageName(String rawName) {
+    var name = rawName.trim();
+    if (name.isEmpty) return 'eSIM package';
+
+    name = name.replaceAll('_', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    const providerPrefixes = <String>[
+      'Orange Big Data',
+      'Orange Balkans',
+      'Orange Europe',
+      'Orange World',
+      'T.T Turkey',
+      'KPN Europe',
+      'Roam2World',
+      'Worldmove',
+      'Vodafone',
+      'Flexnet',
+      'Airhub',
+      'TGT',
+    ];
+    for (final prefix in providerPrefixes) {
+      name = name.replaceFirst(
+        RegExp('^${RegExp.escape(prefix)}\\s*[-–—|:]\\s*', caseSensitive: false),
+        '',
+      );
+    }
+
+    name = name.replaceFirst(
+      RegExp(r'^[A-Z0-9]{2,}(?:-[A-Z0-9]{2,})+\s*[-–—|:]\s*', caseSensitive: false),
+      '',
+    );
+    name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return name.isEmpty ? rawName.trim() : name;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -393,7 +428,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _esim.packageName,
+                                  _displayPackageName(_esim.packageName),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.titleLarge?.copyWith(
