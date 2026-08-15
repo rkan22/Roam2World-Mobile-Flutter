@@ -63,7 +63,8 @@ class ProviderStatusSheet extends StatelessWidget {
       ['raw', 'data', 'status'],
     ]), fallback: 'Unknown');
     final normalizedStatus = status.toLowerCase();
-    final active = normalizedStatus.contains('active') && !normalizedStatus.contains('notactive');
+    final active = normalizedStatus.contains('active') &&
+        !normalizedStatus.contains('notactive');
     final statusColor = active ? AppColors.success : AppColors.danger;
 
     final iccid = _text(_read([
@@ -90,12 +91,6 @@ class ProviderStatusSheet extends StatelessWidget {
       ['usage', 'profile_status'],
       ['profile_status'],
       ['raw', 'data', 'profile_status'],
-    ]));
-    final orderNo = _text(_read([
-      ['usage', 'order_no'],
-      ['order_info', 'orderNo'],
-      ['raw', 'data', 'orderNo'],
-      ['order_no'],
     ]));
     final providerMessage = _text(_read([
       ['raw', 'msg'],
@@ -125,12 +120,16 @@ class ProviderStatusSheet extends StatelessWidget {
           children: [
             Text(
               'Live provider status',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: 5),
             Text(
               'Latest response from the provider.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 18),
             _Surface(
@@ -145,32 +144,60 @@ class ProviderStatusSheet extends StatelessWidget {
                           color: AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.sim_card_outlined, color: AppColors.primary),
+                        child: const Icon(
+                          Icons.sim_card_outlined,
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('eSIM Data Plan', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                            Text(
+                              'eSIM Data Plan',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                             const SizedBox(height: 2),
-                            Text('Provider status', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+                            Text(
+                              'Provider status',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: .10),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: Text(status.replaceAll('_', ' '), style: TextStyle(color: statusColor, fontWeight: FontWeight.w800, fontSize: 12)),
+                        child: Text(
+                          status.replaceAll('_', ' '),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 14),
                   const Divider(height: 1),
-                  _RowItem(icon: Icons.badge_outlined, label: 'ICCID', value: iccid),
+                  _RowItem(
+                    icon: Icons.badge_outlined,
+                    label: 'ICCID',
+                    value: iccid,
+                    singleLine: true,
+                  ),
                 ],
               ),
             ),
@@ -179,11 +206,29 @@ class ProviderStatusSheet extends StatelessWidget {
               title: 'Usage',
               child: Row(
                 children: [
-                  Expanded(child: _UsageCard(label: 'Total', value: _usage(total), icon: Icons.cloud_upload_outlined)),
+                  Expanded(
+                    child: _UsageCard(
+                      label: 'Total',
+                      value: _usage(total),
+                      icon: Icons.cloud_upload_outlined,
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: _UsageCard(label: 'Used', value: _usage(used), icon: Icons.pie_chart_outline_rounded)),
+                  Expanded(
+                    child: _UsageCard(
+                      label: 'Used',
+                      value: _usage(used),
+                      icon: Icons.pie_chart_outline_rounded,
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: _UsageCard(label: 'Remaining', value: _usage(remaining), icon: Icons.sync_rounded)),
+                  Expanded(
+                    child: _UsageCard(
+                      label: 'Remaining',
+                      value: _usage(remaining),
+                      icon: Icons.sync_rounded,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -192,9 +237,17 @@ class ProviderStatusSheet extends StatelessWidget {
               title: 'Profile',
               child: Column(
                 children: [
-                  _RowItem(icon: Icons.download_done_rounded, label: 'Profile status', value: profileStatus),
-                  _RowItem(icon: Icons.check_circle_outline_rounded, label: 'Provider message', value: providerMessage),
-                  _RowItem(icon: Icons.receipt_long_outlined, label: 'Order no', value: orderNo, last: true),
+                  _RowItem(
+                    icon: Icons.download_done_rounded,
+                    label: 'Profile status',
+                    value: profileStatus,
+                  ),
+                  _RowItem(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: 'Provider message',
+                    value: providerMessage,
+                    last: true,
+                  ),
                 ],
               ),
             ),
@@ -203,8 +256,19 @@ class ProviderStatusSheet extends StatelessWidget {
               title: 'Validity',
               child: Column(
                 children: [
-                  _RowItem(icon: Icons.calendar_month_outlined, label: 'Start date', value: _date(startDate)),
-                  _RowItem(icon: Icons.event_available_outlined, label: 'End date', value: _date(endDate), last: true),
+                  _RowItem(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Start date',
+                    value: _date(startDate),
+                    singleLine: true,
+                  ),
+                  _RowItem(
+                    icon: Icons.event_available_outlined,
+                    label: 'End date',
+                    value: _date(endDate),
+                    singleLine: true,
+                    last: true,
+                  ),
                 ],
               ),
             ),
@@ -217,6 +281,7 @@ class ProviderStatusSheet extends StatelessWidget {
 
 class _Surface extends StatelessWidget {
   const _Surface({required this.child, this.title});
+
   final Widget child;
   final String? title;
 
@@ -226,13 +291,20 @@ class _Surface extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(B2BRadius.lg),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (title != null) ...[
-              Text(title!, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+              Text(
+                title!,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
               const SizedBox(height: 12),
             ],
             child,
@@ -242,7 +314,12 @@ class _Surface extends StatelessWidget {
 }
 
 class _UsageCard extends StatelessWidget {
-  const _UsageCard({required this.label, required this.value, required this.icon});
+  const _UsageCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
   final String label;
   final String value;
   final IconData icon;
@@ -259,33 +336,85 @@ class _UsageCard extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(height: 8),
-            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
             const SizedBox(height: 2),
-            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w900)),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.primaryDark,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ],
         ),
       );
 }
 
 class _RowItem extends StatelessWidget {
-  const _RowItem({required this.icon, required this.label, required this.value, this.last = false});
+  const _RowItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.last = false,
+    this.singleLine = false,
+  });
+
   final IconData icon;
   final String label;
   final String value;
   final bool last;
+  final bool singleLine;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: AppColors.border))),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(
+                  bottom: BorderSide(color: AppColors.border),
+                ),
+        ),
         child: Row(
           children: [
             Icon(icon, color: AppColors.primary, size: 19),
             const SizedBox(width: 10),
-            Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary))),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ),
             const SizedBox(width: 12),
             Flexible(
-              child: Text(value, textAlign: TextAlign.right, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+              child: singleLine
+                  ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      value,
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
             ),
           ],
         ),
