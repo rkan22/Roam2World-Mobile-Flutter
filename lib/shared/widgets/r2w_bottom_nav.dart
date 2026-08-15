@@ -103,7 +103,9 @@ Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
                     ? 'Dealer Workspace'
                     : role == AppRole.reseller
                         ? 'Reseller Workspace'
-                        : 'Workspace',
+                        : role == AppRole.admin
+                            ? 'Admin Workspace'
+                            : 'Workspace',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -149,12 +151,63 @@ Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
                     },
                   ),
               ],
+              if (role == AppRole.admin) ...[
+                const SizedBox(height: 12),
+                const Divider(),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.errorContainer,
+                    child: Icon(
+                      Icons.logout_rounded,
+                      color: theme.colorScheme.error,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Log out',
+                    style: TextStyle(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  subtitle: const Text('End the admin session on this device'),
+                  onTap: () async {
+                    Navigator.of(sheetContext).pop();
+                    await _confirmAndLogout(context);
+                  },
+                ),
+              ],
             ],
           ),
         ),
       );
     },
   );
+}
+
+Future<void> _confirmAndLogout(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Log out?'),
+      content: const Text(
+        'Your secure admin session will be removed from this device.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text('Log out'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+  await AuthRepository().signOut();
+  if (context.mounted) context.go('/login');
 }
 
 bool _keepsBackHistory(String route) =>
