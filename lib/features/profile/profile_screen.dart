@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
-import '../../core/routing/app_router.dart';
+import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_controller.dart';
 import '../../design_system/components/b2b_surface.dart';
-import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import '../auth/auth_repository.dart';
 import '../auth/auth_session.dart';
-import '../wallet/wallet_data.dart';
-import '../wallet/wallet_repository.dart';
+import '../dashboard/dashboard_data.dart';
+import '../dashboard/dashboard_repository.dart';
+import 'profile_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,10 +21,16 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _authRepository = AuthRepository();
-  final _walletRepository = WalletRepository();
+  final _profileRepository = ProfileRepository();
+  final _oldPassword = TextEditingController();
+  final _newPassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
+
   AuthSession? _session;
-  WalletData? _wallet;
+  MobileUserProfile? _profile;
+  DashboardData? _dashboard;
   bool _loading = true;
+  bool _savingPassword = false;
 
   @override
   void initState() {
@@ -31,167 +38,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _oldPassword.dispose();
+    _newPassword.dispose();
+    _confirmPassword.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    if (mounted) setState(() => _loading = _session == null);
+    if (mounted) setState(() => _loading = true);
     final session = await _authRepository.readStoredProfile();
-    WalletData? wallet;
+    MobileUserProfile? profile;
+    DashboardData? dashboard;
     try {
-      wallet = await _walletRepository.fetchWallet();
+      profile = await _profileRepository.fetchProfile();
     } catch (_) {}
+    final role = parseAppRole(profile?.role ?? session?.role);
+    if (role == AppRole.dealer) {
+      try {
+        dashboard = await DashboardRepository(role: role).fetchDashboard();
+      } catch (_) {}
+    }
     if (!mounted) return;
     setState(() {
       _session = session;
-      _wallet = wallet;
+      _profile = profile;
+      _dashboard = dashboard;
       _loading = false;
     });
   }
 
-  Future<void> _logout() async {
-    final confirmed = await showDialog<bool>(
+  String _profileValue(String key) =>
+      (_profile?.profile[key] ?? '').toString().trim();
+
+  String get _fullName {
+    final value = _profile?.fullName.trim() ?? '';
+    if (value.isNotEmpty) return value;
+    final stored = _session?.displayName?.trim() ?? '';
+    return stored.isNotEmpty ? stored : 'Dealer account';
+  }
+
+  String get _email {
+    final value = _profile?.email.trim() ?? '';
+    return value.isNotEmpty ? value : (_session?.email ?? '');
+  }
+
+  String get _phone {
+    final number = _profile?.phoneNumber.trim() ?? '';
+    final code = _profile?.countryCode.trim() ?? '';
+    if (number.isEmpty) return 'Not provided';
+    return '$code $number'.trim();
+  }
+
+  Future<void> _editProfile() async {
+    final first = TextEditingController(text: _profile?.firstName ?? '');
+    final last = TextEditingController(text: _profile?.lastName ?? '');
+    final countryCode = TextEditingController(text: _profile?.countryCode ?? '');
+    final phone = TextEditingController(text: _profile?.phoneNumber ?? '');
+    final country = TextEditingController(text: _profileValue('country'));
+    final city = TextEditingController(text: _profileValue('city'));
+    final postal = TextEditingController(text: _profileValue('postal_code'));
+    final address = TextEditingController(text: _profileValue('address'));
+
+    final save = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text(
-          'Your secure business session will be removed from this device.',
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          4,
+          20,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + 20,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await _authRepository.signOut();
-    if (mounted) context.go(AppRoutes.login);
-  }
-
-  String get _balanceLabel {
-    final wallet = _wallet;
-    if (wallet == null) return 'Open wallet';
-    return '${_currencySymbol(wallet.currency)}${wallet.availableAmount.toStringAsFixed(2)}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: const R2WBottomNav(selectedIndex: 4),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              B2BSpacing.lg,
-              B2BSpacing.md,
-              B2BSpacing.lg,
-              B2BSpacing.xxl,
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(onRefresh: _load),
-              const SizedBox(height: B2BSpacing.lg),
-              _IdentityCard(
-                session: _session,
-                loading: _loading,
-              ),
-              const SizedBox(height: B2BSpacing.md),
-              _AccountOverview(
-                role: _session?.role,
-                balance: _balanceLabel,
-                onWallet: () => context.push(AppRoutes.wallet),
-              ),
-              const SizedBox(height: B2BSpacing.xl),
-              const _SectionTitle(
-                title: 'Workspace',
-                subtitle: 'Your everyday business tools',
-              ),
-              const SizedBox(height: B2BSpacing.sm),
-              _ActionGrid(
-                onWallet: () => context.push(AppRoutes.wallet),
-                onReports: () => context.push(AppRoutes.reports),
-                onCustomers: () => context.push(AppRoutes.customers),
-                onNotifications: () => context.push(AppRoutes.notifications),
-              ),
-              const SizedBox(height: B2BSpacing.xl),
-              const _SectionTitle(
-                title: 'Account',
-                subtitle: 'Preferences, support and app details',
-              ),
-              const SizedBox(height: B2BSpacing.sm),
-              B2BSurface(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _MenuTile(
-                      icon: Icons.tune_rounded,
-                      title: 'Settings',
-                      subtitle: 'Language, appearance and alerts',
-                      onTap: () => context.push(AppRoutes.settings),
-                    ),
-                    const Divider(height: 1),
-                    _MenuTile(
-                      icon: Icons.help_outline_rounded,
-                      title: 'Help & support',
-                      subtitle: 'Orders, wallet and installation help',
-                      onTap: () => context.push(AppRoutes.support),
-                    ),
-                    const Divider(height: 1),
-                    const _MenuTile(
-                      icon: Icons.verified_user_outlined,
-                      title: 'Roam2World B2B',
-                      subtitle: 'Partner mobile workspace',
-                      trailing: 'v1.0.0',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: B2BSpacing.xl),
-              B2BSurface(
-                padding: const EdgeInsets.all(B2BSpacing.md),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: .08),
-                        borderRadius: BorderRadius.circular(B2BRadius.md),
-                      ),
-                      child: const Icon(
-                        Icons.logout_rounded,
-                        color: AppColors.danger,
-                      ),
-                    ),
-                    const SizedBox(width: B2BSpacing.md),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sign out',
-                            style: TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'End this session on this device',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _logout,
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.danger,
-                      ),
-                      child: const Text('Log out'),
-                    ),
-                  ],
+              Text('Edit profile', style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 16),
+              Row(children: [
+                Expanded(child: TextField(controller: first, decoration: const InputDecoration(labelText: 'First name'))),
+                const SizedBox(width: 10),
+                Expanded(child: TextField(controller: last, decoration: const InputDecoration(labelText: 'Last name'))),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [
+                SizedBox(width: 100, child: TextField(controller: countryCode, decoration: const InputDecoration(labelText: 'Code'))),
+                const SizedBox(width: 10),
+                Expanded(child: TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone'))),
+              ]),
+              const SizedBox(height: 12),
+              TextField(controller: country, decoration: const InputDecoration(labelText: 'Country')),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(child: TextField(controller: city, decoration: const InputDecoration(labelText: 'City'))),
+                const SizedBox(width: 10),
+                Expanded(child: TextField(controller: postal, decoration: const InputDecoration(labelText: 'Postal code'))),
+              ]),
+              const SizedBox(height: 12),
+              TextField(controller: address, maxLines: 2, decoration: const InputDecoration(labelText: 'Address')),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  child: const Text('Save changes'),
                 ),
               ),
             ],
@@ -199,471 +152,212 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
-  }
-}
 
-class _Header extends StatelessWidget {
-  const _Header({required this.onRefresh});
-
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Profile',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const SizedBox(height: B2BSpacing.xxs),
-                Text(
-                  'Account, workspace and preferences',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          IconButton.filledTonal(
-            onPressed: onRefresh,
-            tooltip: 'Refresh profile',
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
+    if (save != true || !mounted) return;
+    try {
+      await _profileRepository.updateProfile(
+        firstName: first.text,
+        lastName: last.text,
+        countryCode: countryCode.text,
+        phoneNumber: phone.text,
+        country: country.text,
+        city: city.text,
+        postalCode: postal.text,
+        address: address.text,
       );
-}
+      await _load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile could not be updated: $error')));
+    }
+  }
 
-class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.session, required this.loading});
-
-  final AuthSession? session;
-  final bool loading;
+  Future<void> _changePassword() async {
+    if (_oldPassword.text.isEmpty || _newPassword.text.length < 8 || _newPassword.text != _confirmPassword.text) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Check your current password and make sure the new passwords match (minimum 8 characters).')));
+      return;
+    }
+    setState(() => _savingPassword = true);
+    try {
+      await _profileRepository.changePassword(
+        oldPassword: _oldPassword.text,
+        newPassword: _newPassword.text,
+        confirmPassword: _confirmPassword.text,
+      );
+      _oldPassword.clear();
+      _newPassword.clear();
+      _confirmPassword.clear();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed successfully.')));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password could not be changed: $error')));
+    } finally {
+      if (mounted) setState(() => _savingPassword = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final name = session?.displayName?.trim();
-    final title = name?.isNotEmpty == true ? name! : 'Roam2World B2B Account';
-    final email = session?.email.isNotEmpty == true
-        ? session!.email
-        : 'Business mobile workspace';
-    final role = _roleLabel(session?.role);
-    final initials = title
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .map((part) => part[0].toUpperCase())
-        .join();
-
-    return B2BSurface(
-      padding: const EdgeInsets.all(B2BSpacing.lg),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 68,
-            height: 68,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: AppColors.primaryLight),
-            ),
-            child: loading
-                ? const SizedBox.square(
-                    dimension: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    initials.isEmpty ? 'R2W' : initials,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: B2BSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const SizedBox(height: B2BSpacing.xxs),
-                Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-                const SizedBox(height: B2BSpacing.sm),
-                Wrap(
-                  spacing: B2BSpacing.xs,
-                  runSpacing: B2BSpacing.xs,
-                  children: [
-                    _Pill(
-                      icon: Icons.business_center_outlined,
-                      label: role,
-                    ),
-                    const _Pill(
-                      icon: Icons.verified_rounded,
-                      label: 'Verified account',
-                    ),
-                  ],
-                ),
+    final isDealer = parseAppRole(_profile?.role ?? _session?.role) == AppRole.dealer;
+    return Scaffold(
+      bottomNavigationBar: const R2WBottomNav(selectedIndex: 4),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
+            children: [
+              Row(children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Profile Settings', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 3),
+                  Text(isDealer ? 'Manage your dealer account and preferences.' : 'Manage your account and preferences.', style: Theme.of(context).textTheme.bodySmall),
+                ])),
+                OutlinedButton.icon(onPressed: _loading ? null : _editProfile, icon: const Icon(Icons.edit_outlined, size: 17), label: const Text('Edit Profile')),
+              ]),
+              const SizedBox(height: 18),
+              _section('Personal Information', _personalInformation()),
+              const SizedBox(height: 18),
+              _section('Account Status', _accountStatus()),
+              if (isDealer && _dashboard != null) ...[
+                const SizedBox(height: 18),
+                Text('Quick Stats', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 10),
+                _quickStats(),
               ],
-            ),
+              const SizedBox(height: 18),
+              _section('Change Password', _passwordForm()),
+              const SizedBox(height: 18),
+              _section('Theme Settings', _themeSettings()),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-}
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(B2BRadius.pill),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: AppColors.primary),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
-class _AccountOverview extends StatelessWidget {
-  const _AccountOverview({
-    required this.role,
-    required this.balance,
-    required this.onWallet,
-  });
-
-  final String? role;
-  final String balance;
-  final VoidCallback onWallet;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: _OverviewCard(
-              icon: Icons.badge_outlined,
-              label: 'Account type',
-              value: _roleLabel(role),
-            ),
-          ),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(
-            child: _OverviewCard(
-              icon: Icons.account_balance_wallet_outlined,
-              label: 'Available balance',
-              value: balance,
-              onTap: onWallet,
-            ),
-          ),
-        ],
-      );
-}
-
-class _OverviewCard extends StatelessWidget {
-  const _OverviewCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => B2BSurface(
-        onTap: onTap,
-        padding: const EdgeInsets.all(B2BSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(B2BRadius.sm),
-              ),
-              child: Icon(icon, size: 19, color: AppColors.primary),
-            ),
-            const SizedBox(height: B2BSpacing.md),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-            ),
-          ],
-        ),
-      );
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) => Column(
+  Widget _section(String title, Widget child) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          B2BSurface(padding: const EdgeInsets.all(16), child: child),
         ],
       );
-}
 
-class _ActionGrid extends StatelessWidget {
-  const _ActionGrid({
-    required this.onWallet,
-    required this.onReports,
-    required this.onCustomers,
-    required this.onNotifications,
-  });
+  Widget _personalInformation() => Column(children: [
+        _info('Full Name', _fullName),
+        _info('Email', _email.isEmpty ? 'Not provided' : _email),
+        _info('Phone Number', _phone),
+        _info('Country', _profileValue('country').isEmpty ? 'Not provided' : _profileValue('country')),
+        _info('City', _profileValue('city').isEmpty ? 'Not provided' : _profileValue('city')),
+        _info('Postal Code', _profileValue('postal_code').isEmpty ? 'Not provided' : _profileValue('postal_code')),
+        _info('Address', _profileValue('address').isEmpty ? 'Not provided' : _profileValue('address'), last: true),
+      ]);
 
-  final VoidCallback onWallet;
-  final VoidCallback onReports;
-  final VoidCallback onCustomers;
-  final VoidCallback onNotifications;
+  Widget _accountStatus() {
+    final created = _profile?.createdAt;
+    final login = _profile?.lastLogin;
+    return Column(children: [
+      _info('Status', _profile?.isActive == false ? 'Inactive' : 'Active', valueColor: _profile?.isActive == false ? AppColors.danger : AppColors.success),
+      _info('Account Type', _roleLabel(_profile?.role ?? _session?.role)),
+      if (created != null) _info('Member Since', DateFormat('MMM d, yyyy').format(created.toLocal())),
+      if (login != null) _info('Last Login', DateFormat('MMM d, yyyy, HH:mm').format(login.toLocal()), last: true),
+    ]);
+  }
 
-  @override
-  Widget build(BuildContext context) => GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: B2BSpacing.sm,
-        crossAxisSpacing: B2BSpacing.sm,
-        childAspectRatio: 1.55,
-        children: [
-          _ActionCard(
-            icon: Icons.account_balance_wallet_outlined,
-            title: 'Wallet',
-            subtitle: 'Balance & top-ups',
-            onTap: onWallet,
-          ),
-          _ActionCard(
-            icon: Icons.analytics_outlined,
-            title: 'Reports',
-            subtitle: 'Sales & activity',
-            onTap: onReports,
-          ),
-          _ActionCard(
-            icon: Icons.people_outline_rounded,
-            title: 'Customers',
-            subtitle: 'Accounts & orders',
-            onTap: onCustomers,
-          ),
-          _ActionCard(
-            icon: Icons.notifications_none_rounded,
-            title: 'Notifications',
-            subtitle: 'Account updates',
-            onTap: onNotifications,
-          ),
-        ],
-      );
-}
+  Widget _quickStats() {
+    final data = _dashboard!;
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 1.55,
+      children: [
+        _stat('Total eSIMs', '${data.totalEsimCount}', Icons.sim_card_outlined, const Color(0xFF334155), const Color(0xFFF1F5F9)),
+        _stat('Active eSIMs', '${data.activeEsimCount}', Icons.check_circle_outline_rounded, AppColors.success, AppColors.successSoft),
+        _stat('Total Orders', '${data.totalOrders}', Icons.receipt_long_outlined, AppColors.violet, const Color(0xFFF3EEFF)),
+        _stat('Sales (${data.period})', _money(data.monthlySales, data.currency), Icons.payments_outlined, AppColors.orange, const Color(0xFFFFF2E8)),
+      ],
+    );
+  }
 
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+  Widget _passwordForm() => Column(children: [
+        TextField(controller: _oldPassword, obscureText: true, decoration: const InputDecoration(labelText: 'Current Password')),
+        const SizedBox(height: 12),
+        TextField(controller: _newPassword, obscureText: true, decoration: const InputDecoration(labelText: 'New Password', helperText: 'Minimum 8 characters')),
+        const SizedBox(height: 12),
+        TextField(controller: _confirmPassword, obscureText: true, decoration: const InputDecoration(labelText: 'Confirm New Password')),
+        const SizedBox(height: 14),
+        Align(alignment: Alignment.centerLeft, child: FilledButton(onPressed: _savingPassword ? null : _changePassword, child: Text(_savingPassword ? 'Changing...' : 'Change Password'))),
+      ]);
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => B2BSurface(
-        onTap: onTap,
-        padding: const EdgeInsets.all(B2BSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(B2BRadius.sm),
-                  ),
-                  child: Icon(icon, size: 19, color: AppColors.primary),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_outward_rounded,
-                  size: 18,
-                  color: AppColors.textMuted,
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-              ],
-            ),
+  Widget _themeSettings() => ValueListenableBuilder<ThemeMode>(
+        valueListenable: ThemeController.mode,
+        builder: (context, selected, child) => Row(children: [
+          for (final mode in [ThemeMode.light, ThemeMode.dark, ThemeMode.system]) ...[
+            Expanded(child: _themeChoice(mode, selected)),
+            if (mode != ThemeMode.system) const SizedBox(width: 8),
           ],
+        ]),
+      );
+
+  Widget _themeChoice(ThemeMode mode, ThemeMode selected) {
+    final active = mode == selected;
+    final icon = mode == ThemeMode.light ? Icons.light_mode_outlined : mode == ThemeMode.dark ? Icons.dark_mode_outlined : Icons.settings_suggest_outlined;
+    return InkWell(
+      onTap: () => ThemeController.setMode(mode),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primarySoft : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: active ? AppColors.primary : Theme.of(context).colorScheme.outlineVariant),
         ),
+        child: Column(children: [Icon(icon, color: active ? AppColors.primary : AppColors.textSecondary), const SizedBox(height: 6), Text(ThemeController.label(mode), style: TextStyle(fontWeight: FontWeight.w800, color: active ? AppColors.primaryDark : null))]),
+      ),
+    );
+  }
+
+  Widget _info(String label, String value, {bool last = false, Color? valueColor}) => Padding(
+        padding: EdgeInsets.only(bottom: last ? 0 : 14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SizedBox(width: 118, child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700))),
+          const SizedBox(width: 12),
+          Expanded(child: Text(value, textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.w800, color: valueColor))),
+        ]),
+      );
+
+  Widget _stat(String label, String value, IconData icon, Color color, Color soft) => B2BSurface(
+        padding: const EdgeInsets.all(13),
+        child: Row(children: [
+          Container(width: 40, height: 40, decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 20)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))])),
+        ]),
       );
 }
 
-class _MenuTile extends StatelessWidget {
-  const _MenuTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String? trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: B2BSpacing.md,
-          vertical: B2BSpacing.xs,
-        ),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.primarySoft,
-            borderRadius: BorderRadius.circular(B2BRadius.sm),
-          ),
-          child: Icon(icon, size: 20, color: AppColors.primary),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: trailing != null
-            ? Text(
-                trailing!,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              )
-            : onTap != null
-                ? const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textMuted,
-                  )
-                : null,
-      );
+String _roleLabel(String? value) {
+  final role = (value ?? '').trim().toLowerCase();
+  if (role == 'dealer') return 'Dealer';
+  if (role == 'reseller') return 'Reseller';
+  if (role == 'admin') return 'Admin';
+  if (role == 'client' || role == 'customer') return 'Customer';
+  return role.isEmpty ? 'Account' : role;
 }
 
-String _roleLabel(String? role) {
-  final normalized = role?.trim().toLowerCase() ?? '';
-  return switch (normalized) {
-    'admin' => 'Admin',
-    'reseller' => 'Reseller',
-    'dealer' => 'Dealer',
-    'client' => 'Client',
-    'public' || 'public_user' => 'Public',
-    _ => role?.trim().isNotEmpty == true ? role!.trim() : 'Business partner',
-  };
-}
-
-String _currencySymbol(String currency) {
-  return switch (currency.toUpperCase()) {
+String _money(double value, String currency) {
+  final normalized = currency.trim().toUpperCase();
+  final symbol = switch (normalized) {
     'USD' => r'$',
     'EUR' => '€',
     'GBP' => '£',
     'TRY' => '₺',
-    _ => '${currency.toUpperCase()} ',
+    _ => '$normalized ',
   };
+  return '$symbol${NumberFormat('#,##0.00', 'en_US').format(value)}';
 }

@@ -11,6 +11,9 @@ class MobileUserProfile {
     required this.countryCode,
     required this.phoneNumber,
     required this.profile,
+    required this.isActive,
+    this.createdAt,
+    this.lastLogin,
   });
 
   final int id;
@@ -21,6 +24,9 @@ class MobileUserProfile {
   final String countryCode;
   final String phoneNumber;
   final Map<String, dynamic> profile;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? lastLogin;
 
   String get fullName => '$firstName $lastName'.trim();
 
@@ -45,6 +51,11 @@ class MobileUserProfile {
       profile: user['profile'] is Map
           ? Map<String, dynamic>.from(user['profile'] as Map)
           : const {},
+      isActive: user['is_active'] != false,
+      createdAt: DateTime.tryParse(
+        (user['created_at'] ?? user['date_joined'] ?? '').toString(),
+      ),
+      lastLogin: DateTime.tryParse((user['last_login'] ?? '').toString()),
     );
   }
 }
@@ -84,5 +95,19 @@ class ProfileRepository {
       if (postalCode != null) 'postal_code': postalCode.trim(),
     },
     parser: MobileUserProfile.fromResponse,
+  );
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) => _apiClient.post<void>(
+    ApiEndpoints.passwordChange,
+    data: {
+      'old_password': oldPassword,
+      'new_password': newPassword,
+      'confirm_password': confirmPassword,
+    },
+    parser: (_) {},
   );
 }
