@@ -94,32 +94,99 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
       final selected = await showModalBottomSheet<MobileRenewalOption>(
         context: context,
         showDragHandle: true,
-        builder: (context) => SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            children: [
-              Text('Renew eSIM', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 6),
-              Text(
-                'Prices include the backend pricing and markup rules.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 14),
-              for (final option in options)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('${option.dataGb} GB · ${option.validityDays} days'),
-                  subtitle: Text(option.displayProvider),
-                  trailing: Text(
-                    option.formattedPrice,
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+        isScrollControlled: true,
+        builder: (context) {
+          final theme = Theme.of(context);
+          return SafeArea(
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * .72,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                children: [
+                  Text(
+                    'Renew eSIM',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                  onTap: () => Navigator.pop(context, option),
-                ),
-            ],
-          ),
-        ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Prices include the backend pricing and markup rules.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  for (final option in options) ...[
+                    Material(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: () => Navigator.pop(context, option),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
+                            boxShadow: theme.brightness == Brightness.light
+                                ? B2BShadows.card
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${option.dataGb} GB · ${option.validityDays} days',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      option.displayProvider,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Text(
+                                option.formattedPrice,
+                                maxLines: 1,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       );
       if (selected == null || !mounted) return;
       setState(() => _renewing = true);
