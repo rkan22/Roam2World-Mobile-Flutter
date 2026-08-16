@@ -9,6 +9,10 @@ class CustomerDirectory {
   final List<CustomerDirectoryItem> customers;
   final int count;
 
+  /// Backwards-compatible name list used by existing callers/tests.
+  List<String> get names =>
+      customers.map((customer) => customer.name).toList(growable: false);
+
   factory CustomerDirectory.fromResponse(dynamic response) {
     final root = response is Map
         ? Map<String, dynamic>.from(response)
