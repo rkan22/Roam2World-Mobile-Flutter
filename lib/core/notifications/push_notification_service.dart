@@ -125,7 +125,7 @@ class PushNotificationService {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwin = DarwinInitializationSettings();
     await _localNotifications.initialize(
-      const InitializationSettings(android: android, iOS: darwin),
+      settings: const InitializationSettings(android: android, iOS: darwin),
       onDidReceiveNotificationResponse: (response) {
         final payload = response.payload;
         if (payload == null || payload.isEmpty) return;
@@ -151,10 +151,10 @@ class PushNotificationService {
     }
 
     await _localNotifications.show(
-      message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch,
-      title,
-      body,
-      const NotificationDetails(
+      id: message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'roam2world_operational',
           'Operational updates',
