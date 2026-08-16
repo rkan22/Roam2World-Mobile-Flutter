@@ -45,6 +45,7 @@ require_match 'android:usesCleartextTraffic="false"' android/app/src/main/Androi
 require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.b2b' ios/Flutter/Release.xcconfig
 require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.b2b;' ios/Runner.xcodeproj/project.pbxproj
 require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.b2b\.RunnerTests;' ios/Runner.xcodeproj/project.pbxproj
+require_match 'IPHONEOS_DEPLOYMENT_TARGET = 15\.0;' ios/Runner.xcodeproj/project.pbxproj
 require_match '<string>Roam2World Mobile</string>' ios/Runner/Info.plist
 require_match 'Icon-App-1024x1024@1x\.png' ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
 require_match "static const String appName = 'Roam2World B2B';" lib/core/config/app_environment.dart
