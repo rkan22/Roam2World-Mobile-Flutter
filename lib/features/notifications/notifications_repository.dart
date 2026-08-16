@@ -55,4 +55,10 @@ class NotificationsRepository {
       parser: (data) => data,
     );
   }
+
+  Future<void> unregisterDeviceToken(String token) async {
+    await _apiClient.delete(
+      '${ApiEndpoints.mobileDeviceToken}?token=${Uri.encodeQueryComponent(token.trim())}',
+    );
+  }
 }
