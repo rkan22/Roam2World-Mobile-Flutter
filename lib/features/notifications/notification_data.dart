@@ -23,6 +23,9 @@ class MobileNotificationItem {
   final Object? relatedEsimId;
   final Map<String, dynamic> metadata;
 
+  String get actionUrl =>
+      (metadata['action_url'] ?? metadata['actionUrl'] ?? '').toString();
+
   factory MobileNotificationItem.fromJson(Map<String, dynamic> json) {
     return MobileNotificationItem(
       id: (json['id'] as num?)?.toInt() ?? 0,

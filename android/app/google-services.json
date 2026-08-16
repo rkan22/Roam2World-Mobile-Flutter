@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "383607664330",
+    "project_id": "roam2world-b2b",
+    "storage_bucket": "roam2world-b2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383607664330:android:296c69695c96872a90ce33",
+        "android_client_info": {
+          "package_name": "com.example.roam2world_b2b"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrIMLouFSRrjzE7KEzFcWGmKtyfTX_n70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383607664330:android:23e28de4420ae79b90ce33",
+        "android_client_info": {
+          "package_name": "com.roam2world.b2b"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrIMLouFSRrjzE7KEzFcWGmKtyfTX_n70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

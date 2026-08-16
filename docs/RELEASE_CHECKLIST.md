@@ -2,7 +2,7 @@
 
 ## Identity and versioning
 
-- [x] Android application ID uses `com.roam2world.mobile`.
+- [x] Android and iOS application IDs use `com.roam2world.b2b`.
 - [ ] Confirm the iOS bundle identifier in Xcode.
 - [ ] Increment `version` in `pubspec.yaml` for every store upload.
 - [ ] Confirm the public app name is `Roam2World` on Android and iOS.
