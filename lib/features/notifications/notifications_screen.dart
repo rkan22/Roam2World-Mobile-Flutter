@@ -76,7 +76,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _items = next;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification status could not be updated.')),
+        const SnackBar(
+          content: Text('Notification status could not be updated.'),
+        ),
       );
     }
   }
@@ -96,7 +98,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _items = previous);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifications could not be marked as read.')),
+        const SnackBar(
+          content: Text('Notifications could not be marked as read.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _markingAll = false);
@@ -110,11 +114,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final unreadCount = _items.where((item) => !item.isRead).length;
-    return Scaffold(
-      body: SafeArea(
-        child: _buildBody(unreadCount),
-      ),
-    );
+    return Scaffold(body: SafeArea(child: _buildBody(unreadCount)));
   }
 
   Widget _buildBody(int unreadCount) {
@@ -137,7 +137,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           B2BSpacing.xxl,
         ),
         children: [
-          _PageHeader(onBack: context.pop, onRefresh: _load),
+          _PageHeader(
+            onBack: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/dashboard');
+              }
+            },
+            onRefresh: _load,
+          ),
           const SizedBox(height: B2BSpacing.lg),
           _InboxHero(
             totalCount: _items.length,
@@ -183,9 +192,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         earlier.add(item);
         continue;
       }
-      final difference = DateTime(now.year, now.month, now.day)
-          .difference(DateTime(date.year, date.month, date.day))
-          .inDays;
+      final difference = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).difference(DateTime(date.year, date.month, date.day)).inDays;
       if (difference == 0) {
         today.add(item);
       } else if (difference < 7) {
@@ -243,9 +254,15 @@ class _PageHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Business inbox', style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                'Business inbox',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: B2BSpacing.xxs),
-              Text('Notifications', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Notifications',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
             ],
           ),
         ),
@@ -358,7 +375,9 @@ class _InboxHero extends StatelessWidget {
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: .35)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: .35),
+                    ),
                   ),
                   onPressed: unreadCount == 0 || markingAll
                       ? null
@@ -444,9 +463,9 @@ class _SectionLabel extends StatelessWidget {
           child: Text(
             '$count',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -492,9 +511,8 @@ class _NotificationTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                     ),
                     if (!item.isRead)
@@ -511,9 +529,9 @@ class _NotificationTile extends StatelessWidget {
                 const SizedBox(height: B2BSpacing.xs),
                 Text(
                   item.message,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.45,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.45),
                 ),
                 const SizedBox(height: B2BSpacing.sm),
                 Row(
@@ -521,17 +539,17 @@ class _NotificationTile extends StatelessWidget {
                     Text(
                       _timeLabel(item.createdAt),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const Spacer(),
                     Text(
                       item.isRead ? 'Mark unread' : 'Mark read',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
