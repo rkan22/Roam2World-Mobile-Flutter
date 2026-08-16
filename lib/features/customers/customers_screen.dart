@@ -6,10 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
-import '../orders/order_history.dart';
-import '../orders/orders_repository.dart';
 import 'customers_repository.dart';
-import 'widgets/customers_adaptive_grid.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -19,25 +16,30 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
-  final _repository = OrdersRepository();
-  final _customersRepository = CustomersRepository();
+  final _repository = CustomersRepository();
   final _searchController = TextEditingController();
+
   bool _loading = true;
   String? _error;
-  List<_CustomerSummary> _customers = const [];
+  CustomerDirectory? _directory;
+  _CustomerFilter _filter = _CustomerFilter.all;
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_refreshSearch);
     _load();
-    _searchController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _searchController
+      ..removeListener(_refreshSearch)
+      ..dispose();
     super.dispose();
   }
+
+  void _refreshSearch() => setState(() {});
 
   Future<void> _load() async {
     setState(() {
@@ -45,21 +47,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
       _error = null;
     });
     try {
-      final history = await _repository.fetchOrders();
-      var directory = const CustomerDirectory(names: [], count: 0);
-      try {
-        directory = await _customersRepository.fetchCustomers();
-      } catch (_) {
-        // Orders still provide a useful customer fallback if the directory is
-        // temporarily unavailable.
-      }
+      final directory = await _repository.fetchCustomers();
       if (!mounted) return;
-      setState(
-        () => _customers = _aggregateCustomers(
-          history.orders,
-          directoryNames: directory.names,
-        ),
-      );
+      setState(() => _directory = directory);
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -71,36 +61,40 @@ class _CustomersScreenState extends State<CustomersScreen> {
     }
   }
 
-  List<_CustomerSummary> get _visibleCustomers {
+  List<CustomerDirectoryItem> get _visibleCustomers {
+    final customers = _directory?.customers ?? const <CustomerDirectoryItem>[];
     final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return _customers;
-    return _customers
-        .where((customer) => customer.name.toLowerCase().contains(query))
-        .toList();
+    return customers.where((customer) {
+      final matchesFilter = switch (_filter) {
+        _CustomerFilter.all => true,
+        _CustomerFilter.active => _statusOf(customer) == 'active',
+        _CustomerFilter.pending => _statusOf(customer) == 'pending',
+        _CustomerFilter.inactive => _statusOf(customer) == 'inactive',
+      };
+      if (!matchesFilter) return false;
+      if (query.isEmpty) return true;
+      return customer.name.toLowerCase().contains(query) ||
+          customer.email.toLowerCase().contains(query) ||
+          customer.phoneNumber.toLowerCase().contains(query) ||
+          customer.currentPlan.toLowerCase().contains(query);
+    }).toList(growable: false);
   }
 
   void _handleBack() {
     if (context.canPop()) {
       context.pop();
-      return;
+    } else {
+      context.go('/dashboard');
     }
-    context.go('/dashboard');
   }
 
   @override
   Widget build(BuildContext context) {
-    final visibleCustomers = _visibleCustomers;
-    final totalOrders = visibleCustomers.fold<int>(
-      0,
-      (sum, customer) => sum + customer.orders,
-    );
-    final totalSpend = visibleCustomers.fold<double>(
-      0,
-      (sum, customer) => sum + customer.totalSpend,
-    );
-    final currency = visibleCustomers.isEmpty
-        ? 'USD'
-        : visibleCustomers.first.currency;
+    final customers = _directory?.customers ?? const <CustomerDirectoryItem>[];
+    final activeClients = customers.where((item) => _statusOf(item) == 'active').length;
+    final pendingClients = customers.where((item) => _statusOf(item) == 'pending').length;
+    final activeEsims = customers.fold<int>(0, (sum, item) => sum + item.activeEsims);
+    final visible = _visibleCustomers;
 
     return Scaffold(
       body: SafeArea(
@@ -117,85 +111,113 @@ class _CustomersScreenState extends State<CustomersScreen> {
             children: [
               _Header(onBack: _handleBack, onRefresh: _load),
               const SizedBox(height: B2BSpacing.lg),
-              if (!_loading && _error == null && visibleCustomers.isNotEmpty)
-                _CustomerOverview(
-                  customerCount: visibleCustomers.length,
-                  orderCount: totalOrders,
-                  totalSpend: totalSpend,
-                  currency: currency,
-                  onNewSale: () => context.go('/packages'),
+              if (!_loading && _error == null) ...[
+                _KpiGrid(
+                  totalClients: _directory?.count ?? customers.length,
+                  activeClients: activeClients,
+                  activeEsims: activeEsims,
+                  pendingClients: pendingClients,
                 ),
-              if (!_loading && _error == null && visibleCustomers.isNotEmpty)
                 const SizedBox(height: B2BSpacing.lg),
-              _SearchField(controller: _searchController),
-              const SizedBox(height: B2BSpacing.lg),
+                _SearchField(controller: _searchController),
+                const SizedBox(height: B2BSpacing.sm),
+                _FilterBar(
+                  selected: _filter,
+                  onChanged: (value) => setState(() => _filter = value),
+                ),
+                const SizedBox(height: B2BSpacing.lg),
+              ],
               if (_loading)
                 const ContentLoadingState(label: 'Loading customers...')
               else if (_error != null)
                 ContentErrorState(message: _error!, onRetry: _load)
-              else if (visibleCustomers.isEmpty)
+              else if (visible.isEmpty)
                 ContentEmptyState(
-                  icon: Icons.people_outline_rounded,
-                  title: _customers.isEmpty
-                      ? 'No customers yet'
-                      : 'No matching customers',
-                  message: _customers.isEmpty
-                      ? 'Customers are created automatically from completed and pending B2B orders.'
-                      : 'Try another company or customer name.',
-                  actionLabel: _customers.isEmpty
-                      ? 'Create first sale'
-                      : 'Clear search',
-                  onAction: _customers.isEmpty
-                      ? () => context.go('/packages')
-                      : _searchController.clear,
+                  icon: Icons.groups_outlined,
+                  title: customers.isEmpty ? 'No customers yet' : 'No matching customers',
+                  message: customers.isEmpty
+                      ? 'No customer records were returned for this account.'
+                      : 'Try another search or status filter.',
+                  actionLabel: customers.isEmpty ? 'Refresh' : 'Show all',
+                  onAction: customers.isEmpty
+                      ? _load
+                      : () {
+                          _searchController.clear();
+                          setState(() => _filter = _CustomerFilter.all);
+                        },
                 )
               else ...[
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Accounts',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w900),
-                          ),
-                          const SizedBox(height: B2BSpacing.xxs),
-                          Text(
-                            '${visibleCustomers.length} customer${visibleCustomers.length == 1 ? '' : 's'} in this view',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                          ),
-                        ],
+                      child: Text(
+                        '${visible.length} customer${visible.length == 1 ? '' : 's'}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
                       ),
                     ),
                     TextButton.icon(
                       onPressed: () => context.go('/packages'),
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('New sale'),
+                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                      label: const Text('New order'),
                     ),
                   ],
                 ),
                 const SizedBox(height: B2BSpacing.sm),
-                CustomersAdaptiveGrid(
-                  children: [
-                    for (final customer in visibleCustomers)
-                      _CustomerCard(
-                        customer: customer,
-                        onTap: () => context.go('/orders'),
-                      ),
-                  ],
-                ),
+                for (final customer in visible) ...[
+                  _CustomerCard(
+                    customer: customer,
+                    onView: () => _showCustomer(customer),
+                    onOrder: () => context.go('/packages'),
+                  ),
+                  const SizedBox(height: B2BSpacing.sm),
+                ],
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCustomer(CustomerDirectoryItem customer) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                customer.name,
+                style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              _DetailRow(label: 'Email', value: _orDash(customer.email)),
+              _DetailRow(label: 'Phone', value: _orDash(customer.phoneNumber)),
+              _DetailRow(label: 'Status', value: _statusOf(customer)),
+              _DetailRow(label: 'Current plan', value: _orDash(customer.currentPlan)),
+              _DetailRow(label: 'Total orders', value: '${customer.totalOrders}'),
+              _DetailRow(label: 'Total spend', value: _money(customer.totalSpent)),
+              _DetailRow(label: 'eSIM / SIM', value: '${customer.activeEsims} active · ${customer.totalEsims} total'),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    context.go('/packages');
+                  },
+                  icon: const Icon(Icons.sim_card_outlined),
+                  label: const Text('Create order'),
+                ),
+              ),
             ],
           ),
         ),
@@ -211,67 +233,225 @@ class _Header extends StatelessWidget {
   final VoidCallback onRefresh;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        IconButton.filledTonal(
-          onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        const SizedBox(width: B2BSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Customers',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -.5,
-                    ),
-              ),
-              const SizedBox(height: B2BSpacing.xxs),
-              Text(
-                'Customer activity and sales value in one workspace.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+  Widget build(BuildContext context) => Row(
+        children: [
+          IconButton.filledTonal(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
-        ),
-        IconButton(
-          onPressed: onRefresh,
-          tooltip: 'Refresh',
-          icon: const Icon(Icons.refresh_rounded),
-        ),
-      ],
-    );
-  }
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Customers',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                Text(
+                  'Client plans, eSIM activity and spend.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onRefresh,
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      );
 }
 
-class _CustomerOverview extends StatelessWidget {
-  const _CustomerOverview({
-    required this.customerCount,
-    required this.orderCount,
-    required this.totalSpend,
-    required this.currency,
-    required this.onNewSale,
+class _KpiGrid extends StatelessWidget {
+  const _KpiGrid({
+    required this.totalClients,
+    required this.activeClients,
+    required this.activeEsims,
+    required this.pendingClients,
   });
 
-  final int customerCount;
-  final int orderCount;
-  final double totalSpend;
-  final String currency;
-  final VoidCallback onNewSale;
+  final int totalClients;
+  final int activeClients;
+  final int activeEsims;
+  final int pendingClients;
+
+  @override
+  Widget build(BuildContext context) => GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: B2BSpacing.sm,
+        crossAxisSpacing: B2BSpacing.sm,
+        childAspectRatio: 2.25,
+        children: [
+          _KpiCard(
+            label: 'Total clients',
+            value: '$totalClients',
+            icon: Icons.groups_outlined,
+            color: const Color(0xFF2563EB),
+            soft: const Color(0xFFEFF6FF),
+          ),
+          _KpiCard(
+            label: 'Active clients',
+            value: '$activeClients',
+            icon: Icons.person_outline_rounded,
+            color: AppColors.success,
+            soft: AppColors.successSoft,
+          ),
+          _KpiCard(
+            label: 'Active eSIM / SIM',
+            value: '$activeEsims',
+            icon: Icons.sim_card_outlined,
+            color: AppColors.violet,
+            soft: const Color(0xFFF3EEFF),
+          ),
+          _KpiCard(
+            label: 'Pending activation',
+            value: '$pendingClients',
+            icon: Icons.pending_actions_outlined,
+            color: AppColors.orange,
+            soft: const Color(0xFFFFF2E8),
+          ),
+        ],
+      );
+}
+
+class _KpiCard extends StatelessWidget {
+  const _KpiCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.soft,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final Color soft;
+
+  @override
+  Widget build(BuildContext context) => B2BSurface(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: soft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 20, color: color),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) => TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: 'Search name, email, phone or plan',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: controller.text.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: controller.clear,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+        ),
+      );
+}
+
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({required this.selected, required this.onChanged});
+
+  final _CustomerFilter selected;
+  final ValueChanged<_CustomerFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final filter in _CustomerFilter.values) ...[
+              ChoiceChip(
+                label: Text(filter.label),
+                selected: selected == filter,
+                onSelected: (_) => onChanged(filter),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      );
+}
+
+class _CustomerCard extends StatelessWidget {
+  const _CustomerCard({
+    required this.customer,
+    required this.onView,
+    required this.onOrder,
+  });
+
+  final CustomerDirectoryItem customer;
+  final VoidCallback onView;
+  final VoidCallback onOrder;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final status = _statusOf(customer);
+    final statusColor = switch (status) {
+      'active' => AppColors.success,
+      'pending' => AppColors.orange,
+      'inactive' => AppColors.textSecondary,
+      _ => AppColors.textSecondary,
+    };
+    final statusSoft = switch (status) {
+      'active' => AppColors.successSoft,
+      'pending' => const Color(0xFFFFF2E8),
+      _ => const Color(0xFFF1F5F9),
+    };
+
     return B2BSurface(
-      padding: const EdgeInsets.all(B2BSpacing.lg),
+      padding: const EdgeInsets.all(B2BSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -280,268 +460,20 @@ class _CustomerOverview extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(B2BRadius.md),
-                ),
-                child: const Icon(
-                  Icons.groups_2_outlined,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: B2BSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Portfolio overview',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
-                    const SizedBox(height: B2BSpacing.xxs),
-                    Text(
-                      'Live totals from your customer order history',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: onNewSale,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Sale'),
-              ),
-            ],
-          ),
-          const SizedBox(height: B2BSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: _OverviewValue(
-                  label: 'Customers',
-                  value: '$customerCount',
-                  icon: Icons.person_outline_rounded,
-                ),
-              ),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(
-                child: _OverviewValue(
-                  label: 'Orders',
-                  value: '$orderCount',
-                  icon: Icons.receipt_long_outlined,
-                ),
-              ),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(
-                child: _OverviewValue(
-                  label: 'Revenue',
-                  value:
-                      '${_currencySymbol(currency)}${totalSpend.toStringAsFixed(0)}',
-                  icon: Icons.payments_outlined,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OverviewValue extends StatelessWidget {
-  const _OverviewValue({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(B2BSpacing.sm),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
-        border: Border.all(color: scheme.outlineVariant),
-        borderRadius: BorderRadius.circular(B2BRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(height: B2BSpacing.sm),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: B2BSpacing.xxs),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  const _SearchField({required this.controller});
-
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: 'Search customers',
-        prefixIcon: const Icon(Icons.search_rounded),
-        suffixIcon: controller.text.isEmpty
-            ? null
-            : IconButton(
-                onPressed: controller.clear,
-                icon: const Icon(Icons.close_rounded),
-              ),
-        filled: true,
-        fillColor: scheme.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: B2BSpacing.md,
-          vertical: B2BSpacing.md,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(B2BRadius.lg),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(B2BRadius.lg),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(B2BRadius.lg),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-      ),
-    );
-  }
-}
-
-List<_CustomerSummary> _aggregateCustomers(
-  List<MobileOrderSummary> orders, {
-  List<String> directoryNames = const [],
-}) {
-  final grouped = <String, _CustomerSummary>{};
-  for (final name in directoryNames) {
-    grouped[name.toLowerCase()] = _CustomerSummary(
-      name: name,
-      orders: 0,
-      totalSpend: 0,
-      currency: 'USD',
-      lastOrderAt: null,
-    );
-  }
-  for (final order in orders) {
-    final name = order.customerName.trim();
-    if (name.isEmpty) continue;
-    final key = name.toLowerCase();
-    final existing = grouped[key];
-    grouped[key] = _CustomerSummary(
-      name: name,
-      orders: (existing?.orders ?? 0) + 1,
-      totalSpend: (existing?.totalSpend ?? 0) + order.amount,
-      currency: existing?.currency ?? order.currency,
-      lastOrderAt: _latest(existing?.lastOrderAt, order.createdAt),
-    );
-  }
-  final customers = grouped.values.toList();
-  customers.sort((a, b) {
-    final spendCompare = b.totalSpend.compareTo(a.totalSpend);
-    if (spendCompare != 0) return spendCompare;
-    final left = a.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-    final right = b.lastOrderAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-    return right.compareTo(left);
-  });
-  return customers;
-}
-
-DateTime? _latest(DateTime? first, DateTime? second) {
-  if (first == null) return second;
-  if (second == null) return first;
-  return first.isAfter(second) ? first : second;
-}
-
-class _CustomerSummary {
-  const _CustomerSummary({
-    required this.name,
-    required this.orders,
-    required this.totalSpend,
-    required this.currency,
-    required this.lastOrderAt,
-  });
-
-  final String name;
-  final int orders;
-  final double totalSpend;
-  final String currency;
-  final DateTime? lastOrderAt;
-}
-
-class _CustomerCard extends StatelessWidget {
-  const _CustomerCard({required this.customer, required this.onTap});
-
-  final _CustomerSummary customer;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = _initials(customer.name);
-    final scheme = Theme.of(context).colorScheme;
-    final symbol = _currencySymbol(customer.currency);
-    return B2BSurface(
-      onTap: onTap,
-      padding: const EdgeInsets.all(B2BSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primaryLight),
+                  color: const Color(0xFFEAF8FE),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  initials,
+                  _initials(customer.name),
                   style: const TextStyle(
                     color: AppColors.primaryDark,
-                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-              const SizedBox(width: B2BSpacing.md),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,58 +486,70 @@ class _CustomerCard extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                           ),
                     ),
-                    const SizedBox(height: B2BSpacing.xxs),
-                    Text(
-                      customer.lastOrderAt == null
-                          ? 'No recent activity'
-                          : 'Last order ${_formatDate(customer.lastOrderAt)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                    ),
+                    if (customer.email.isNotEmpty)
+                      _ContactLine(icon: Icons.mail_outline_rounded, text: customer.email),
+                    if (customer.phoneNumber.isNotEmpty)
+                      _ContactLine(icon: Icons.phone_outlined, text: customer.phoneNumber),
                   ],
                 ),
               ),
               Container(
-                width: 34,
-                height: 34,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLowest,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: scheme.outlineVariant),
+                  color: statusSoft,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: scheme.onSurfaceVariant,
-                  size: 20,
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: B2BSpacing.lg),
+          const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _CustomerMetric(
-                  label: 'Orders',
-                  value: '${customer.orders}',
-                  icon: Icons.receipt_long_outlined,
+                child: _Metric(
+                  label: 'Current plan',
+                  value: customer.currentPlan.isEmpty ? 'No assigned plan' : customer.currentPlan,
                 ),
               ),
-              Container(
-                height: 42,
-                width: 1,
-                color: scheme.outlineVariant,
-                margin: const EdgeInsets.symmetric(horizontal: B2BSpacing.md),
-              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: _CustomerMetric(
-                  label: 'Total spend',
-                  value: '$symbol${customer.totalSpend.toStringAsFixed(2)}',
-                  icon: Icons.payments_outlined,
-                  alignEnd: true,
+                child: _Metric(
+                  label: 'eSIM / SIM',
+                  value: '${customer.activeEsims} active · ${customer.totalEsims} total',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Metric(
+                  label: 'Spend',
+                  value: _money(customer.totalSpent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: onView,
+                icon: const Icon(Icons.visibility_outlined, size: 17),
+                label: const Text('View'),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onOrder,
+                  icon: const Icon(Icons.sim_card_outlined, size: 17),
+                  label: const Text('Order'),
                 ),
               ),
             ],
@@ -616,85 +560,124 @@ class _CustomerCard extends StatelessWidget {
   }
 }
 
-class _CustomerMetric extends StatelessWidget {
-  const _CustomerMetric({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.alignEnd = false,
-  });
-
-  final String label;
-  final String value;
+class _ContactLine extends StatelessWidget {
+  const _ContactLine({required this.icon, required this.text});
   final IconData icon;
-  final bool alignEnd;
+  final String text;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment:
-              alignEnd ? MainAxisAlignment.end : MainAxisAlignment.start,
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 3),
+        child: Row(
           children: [
-            Icon(icon, size: 15, color: scheme.onSurfaceVariant),
-            const SizedBox(width: B2BSpacing.xs),
-            Flexible(
+            Icon(icon, size: 13, color: AppColors.textSecondary),
+            const SizedBox(width: 5),
+            Expanded(
               child: Text(
-                label,
+                text,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
               ),
             ),
           ],
         ),
-        const SizedBox(height: B2BSpacing.xs),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-        ),
-      ],
-    );
-  }
+      );
 }
 
-String _currencySymbol(String currency) {
-  switch (currency.trim().toUpperCase()) {
-    case 'USD':
-      return r'$';
-    case 'EUR':
-      return '€';
-    case 'GBP':
-      return '£';
-    case 'TRY':
-      return '₺';
-    default:
-      final normalized = currency.trim().toUpperCase();
-      return normalized.isEmpty ? '' : '$normalized ';
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+          ),
+        ],
+      );
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 110,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+enum _CustomerFilter { all, active, pending, inactive }
+
+extension on _CustomerFilter {
+  String get label => switch (this) {
+        _CustomerFilter.all => 'All',
+        _CustomerFilter.active => 'Active',
+        _CustomerFilter.pending => 'Pending',
+        _CustomerFilter.inactive => 'Inactive',
+      };
+}
+
+String _statusOf(CustomerDirectoryItem customer) {
+  final status = customer.status.trim().toLowerCase();
+  if (status.contains('pending')) return 'pending';
+  if (status.contains('inactive') ||
+      status.contains('suspend') ||
+      status.contains('block') ||
+      customer.isActive == false) {
+    return 'inactive';
   }
+  if (status.contains('active') || customer.isActive == true) return 'active';
+  return status.isEmpty ? 'unknown' : status;
 }
 
 String _initials(String name) {
-  final parts = name
-      .split(RegExp(r'\s+'))
-      .where((part) => part.isNotEmpty)
-      .toList();
+  final parts = name.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
   if (parts.isEmpty) return '?';
   return parts.take(2).map((part) => part[0].toUpperCase()).join();
 }
 
-String _formatDate(DateTime? date) {
-  if (date == null) return 'No recent activity';
-  final local = date.toLocal();
-  return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
-}
+String _money(double value) => 'USD ${value.toStringAsFixed(2)}';
+String _orDash(String value) => value.trim().isEmpty ? 'Not provided' : value.trim();
