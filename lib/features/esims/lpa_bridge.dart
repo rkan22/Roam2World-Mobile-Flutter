@@ -20,13 +20,13 @@ class LpaCapability {
   final bool nekokoAvailable;
 
   factory LpaCapability.fromMap(Map<Object?, Object?> map) => LpaCapability(
-        platform: map['platform']?.toString() ?? 'unknown',
-        esimSupported: map['esimSupported'] == true,
-        directInstallSupported: map['directInstallSupported'] == true,
-        reason: map['reason']?.toString() ?? '',
-        transport: map['transport']?.toString() ?? 'none',
-        nekokoAvailable: map['nekokoAvailable'] == true,
-      );
+    platform: map['platform']?.toString() ?? 'unknown',
+    esimSupported: map['esimSupported'] == true,
+    directInstallSupported: map['directInstallSupported'] == true,
+    reason: map['reason']?.toString() ?? '',
+    transport: map['transport']?.toString() ?? 'none',
+    nekokoAvailable: map['nekokoAvailable'] == true,
+  );
 }
 
 class LpaInstallResult {
@@ -38,7 +38,8 @@ class LpaInstallResult {
   bool get installed => status == 'installed';
   bool get handedOff => status == 'handed_off';
 
-  factory LpaInstallResult.fromMap(Map<Object?, Object?> map) => LpaInstallResult(
+  factory LpaInstallResult.fromMap(Map<Object?, Object?> map) =>
+      LpaInstallResult(
         status: map['status']?.toString() ?? 'unknown',
         transport: map['transport']?.toString() ?? 'unknown',
       );
@@ -64,12 +65,15 @@ class LpaBridge {
         platform: 'unsupported',
         esimSupported: false,
         directInstallSupported: false,
-        reason: 'LPA installation is only available on supported mobile devices.',
+        reason:
+            'LPA installation is only available on supported mobile devices.',
       );
     }
 
     try {
-      final result = await _channel.invokeMethod<Map<Object?, Object?>>('getCapability');
+      final result = await _channel.invokeMethod<Map<Object?, Object?>>(
+        'getCapability',
+      );
       if (result == null) throw PlatformException(code: 'EMPTY_CAPABILITY');
       return LpaCapability.fromMap(result);
     } on PlatformException catch (error) {
@@ -96,7 +100,9 @@ class LpaBridge {
     return _invokeInstallMethod(
       'installActivationCode',
       activationCode,
-      extraArguments: <String, Object?>{'switchAfterDownload': switchAfterDownload},
+      extraArguments: <String, Object?>{
+        'switchAfterDownload': switchAfterDownload,
+      },
     );
   }
 
@@ -110,7 +116,10 @@ class LpaBridge {
     Map<String, Object?> extraArguments = const <String, Object?>{},
   }) async {
     if (activationCode.trim().isEmpty) {
-      throw const LpaBridgeException('INVALID_ACTIVATION_CODE', 'Activation code is empty.');
+      throw const LpaBridgeException(
+        'INVALID_ACTIVATION_CODE',
+        'Activation code is empty.',
+      );
     }
 
     try {
@@ -122,7 +131,10 @@ class LpaBridge {
         },
       );
       if (result == null) {
-        throw const LpaBridgeException('EMPTY_RESULT', 'The native LPA returned no result.');
+        throw const LpaBridgeException(
+          'EMPTY_RESULT',
+          'The native LPA returned no result.',
+        );
       }
       return LpaInstallResult.fromMap(result);
     } on PlatformException catch (error) {
@@ -132,7 +144,10 @@ class LpaBridge {
         details: error.details,
       );
     } on MissingPluginException {
-      throw const LpaBridgeException('MISSING_PLUGIN', 'Native LPA integration is not available in this build.');
+      throw const LpaBridgeException(
+        'MISSING_PLUGIN',
+        'Native LPA integration is not available in this build.',
+      );
     }
   }
 }

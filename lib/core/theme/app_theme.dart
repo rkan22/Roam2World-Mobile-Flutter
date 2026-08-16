@@ -12,25 +12,34 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
     final background = isDark ? const Color(0xFF090F20) : AppColors.background;
     final surface = isDark ? const Color(0xFF020817) : AppColors.card;
-    final surfaceMuted = isDark ? const Color(0xFF1E293B) : AppColors.surfaceMuted;
-    final textPrimary = isDark ? const Color(0xFFF8FAFC) : AppColors.textPrimary;
-    final textSecondary = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
+    final surfaceMuted = isDark
+        ? const Color(0xFF1E293B)
+        : AppColors.surfaceMuted;
+    final textPrimary = isDark
+        ? const Color(0xFFF8FAFC)
+        : AppColors.textPrimary;
+    final textSecondary = isDark
+        ? const Color(0xFF94A3B8)
+        : AppColors.textSecondary;
     final textMuted = isDark ? const Color(0xFF64748B) : AppColors.textMuted;
     final border = isDark ? const Color(0xFF1E293B) : AppColors.border;
     final primary = isDark ? const Color(0xFF22D0F7) : AppColors.primary;
-    final primarySoft = isDark ? const Color(0xFF1C263F) : AppColors.primaryLight;
+    final primarySoft = isDark
+        ? const Color(0xFF1C263F)
+        : AppColors.primaryLight;
 
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: brightness,
-    ).copyWith(
-      primary: primary,
-      secondary: AppColors.accent,
-      surface: surface,
-      error: AppColors.danger,
-      outline: border,
-      outlineVariant: border,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: brightness,
+        ).copyWith(
+          primary: primary,
+          secondary: AppColors.accent,
+          surface: surface,
+          error: AppColors.danger,
+          outline: border,
+          outlineVariant: border,
+        );
 
     final textTheme = TextTheme(
       displaySmall: TextStyle(
@@ -70,8 +79,16 @@ class AppTheme {
       bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: textPrimary),
       bodyMedium: TextStyle(fontSize: 14, height: 1.45, color: textSecondary),
       bodySmall: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: textPrimary),
-      labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textSecondary),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w800,
+        color: textPrimary,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: textSecondary,
+      ),
     );
 
     return ThemeData(
@@ -247,10 +264,7 @@ class AppTheme {
         backgroundColor: surfaceMuted,
         selectedColor: primarySoft,
         side: BorderSide(color: border),
-        labelStyle: TextStyle(
-          color: textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
+        labelStyle: TextStyle(color: textPrimary, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(B2BRadius.full),
         ),

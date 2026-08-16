@@ -50,16 +50,20 @@ class EsimHistoryItem {
   final DateTime? purchasedAt;
   final DateTime? expiresAt;
 
-  String get customerName => [customerFirstName, customerLastName]
-      .where((value) => value.trim().isNotEmpty)
-      .join(' ');
+  String get customerName => [
+    customerFirstName,
+    customerLastName,
+  ].where((value) => value.trim().isNotEmpty).join(' ');
 
   bool get supportsTgtGbCheck =>
-      provider.toLowerCase() == 'tgt' && iccid.replaceAll(RegExp(r'\D'), '').startsWith('8997');
+      provider.toLowerCase() == 'tgt' &&
+      iccid.replaceAll(RegExp(r'\D'), '').startsWith('8997');
 
   factory EsimHistoryItem.fromJson(Map<String, dynamic> json) {
-    double? number(Object? value) => value == null ? null : double.tryParse('$value');
-    int? integer(Object? value) => value == null ? null : int.tryParse('$value');
+    double? number(Object? value) =>
+        value == null ? null : double.tryParse('$value');
+    int? integer(Object? value) =>
+        value == null ? null : int.tryParse('$value');
 
     return EsimHistoryItem(
       id: int.tryParse('${json['id'] ?? json['esim_id'] ?? ''}') ?? 0,
@@ -112,7 +116,8 @@ class TgtUsageSnapshot {
     final usage = root['usage'] is Map
         ? Map<String, dynamic>.from(root['usage'] as Map)
         : <String, dynamic>{};
-    double? number(Object? value) => value == null ? null : double.tryParse('$value');
+    double? number(Object? value) =>
+        value == null ? null : double.tryParse('$value');
     return TgtUsageSnapshot(
       supported: root['supported'] == true,
       iccid: '${root['iccid'] ?? ''}',
@@ -128,7 +133,8 @@ class TgtUsageSnapshot {
 }
 
 class EsimHistoryRepository {
-  EsimHistoryRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  EsimHistoryRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -152,9 +158,16 @@ class EsimHistoryRepository {
         return EsimHistoryPage(
           items: raw
               .whereType<Map>()
-              .map((item) => EsimHistoryItem.fromJson(Map<String, dynamic>.from(item)))
+              .map(
+                (item) =>
+                    EsimHistoryItem.fromJson(Map<String, dynamic>.from(item)),
+              )
               .toList(),
-          totalCount: int.tryParse('${root['total_count'] ?? root['count'] ?? raw.length}') ?? raw.length,
+          totalCount:
+              int.tryParse(
+                '${root['total_count'] ?? root['count'] ?? raw.length}',
+              ) ??
+              raw.length,
           hasMore: root['has_more'] == true,
         );
       },

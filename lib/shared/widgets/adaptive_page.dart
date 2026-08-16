@@ -67,16 +67,17 @@ class AdaptiveGrid extends StatelessWidget {
       builder: (context, constraints) {
         final resolvedSpacing = gap ?? spacing;
         final availableWidth = constraints.maxWidth;
-        final calculatedColumns = ((availableWidth + resolvedSpacing) /
-                (minItemWidth + resolvedSpacing))
-            .floor();
+        final calculatedColumns =
+            ((availableWidth + resolvedSpacing) /
+                    (minItemWidth + resolvedSpacing))
+                .floor();
         final columnLimit = maxColumns == null
             ? children.length
             : math.min(children.length, maxColumns!);
         final columnCount = calculatedColumns.clamp(1, columnLimit);
         final itemWidth =
             (availableWidth - (resolvedSpacing * (columnCount - 1))) /
-                columnCount;
+            columnCount;
 
         return Wrap(
           spacing: resolvedSpacing,

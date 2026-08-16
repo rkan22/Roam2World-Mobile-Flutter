@@ -4,7 +4,7 @@ import 'provider_retry_data.dart';
 
 class ProviderRetryRepository {
   ProviderRetryRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -25,11 +25,7 @@ class ProviderRetryRepository {
   }
 
   Future<ProviderRetryItem> triggerRetry(int itemId, {String? note}) {
-    return _action(
-      itemId,
-      action: 'trigger_retry',
-      note: note,
-    );
+    return _action(itemId, action: 'trigger_retry', note: note);
   }
 
   Future<ProviderRetryItem> scheduleRetry(

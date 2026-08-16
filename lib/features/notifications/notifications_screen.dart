@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/notifications/push_notification_service.dart';
+import '../../core/notifications/push_route_resolver.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -39,6 +41,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final items = await _repository.fetchNotifications();
       if (!mounted) return;
       setState(() => _items = items);
+      _syncUnreadCount();
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -62,6 +65,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       next[index] = updated;
       _items = next;
     });
+    _syncUnreadCount();
     try {
       if (item.isRead) {
         await _repository.markUnread(item.id);
@@ -75,6 +79,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         next[index] = item;
         _items = next;
       });
+      _syncUnreadCount();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Notification status could not be updated.'),
@@ -92,11 +97,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .map((item) => item.copyWith(isRead: true, readAt: DateTime.now()))
           .toList();
     });
+    _syncUnreadCount();
     try {
       await _repository.markAllRead();
     } catch (_) {
       if (!mounted) return;
       setState(() => _items = previous);
+      _syncUnreadCount();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Notifications could not be marked as read.'),
@@ -105,6 +112,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } finally {
       if (mounted) setState(() => _markingAll = false);
     }
+  }
+
+  void _syncUnreadCount() {
+    mobileNotificationUnreadCount.value = _items
+        .where((item) => !item.isRead)
+        .length;
+  }
+
+  Future<void> _openNotification(MobileNotificationItem item) async {
+    if (!item.isRead) await _toggle(item);
+    if (!mounted) return;
+    final data = <String, dynamic>{...item.metadata, 'type': item.type};
+    context.go(resolvePushRoute(data));
   }
 
   List<MobileNotificationItem> get _visibleItems => _unreadOnly
@@ -219,7 +239,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         widgets.add(
           _NotificationTile(
             item: sectionItems[index],
-            onTap: () => _toggle(sectionItems[index]),
+            onTap: () => _openNotification(sectionItems[index]),
+            onToggle: () => _toggle(sectionItems[index]),
           ),
         );
         if (index != sectionItems.length - 1) {
@@ -294,6 +315,67 @@ class _InboxHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return B2BSurface(
+      padding: const EdgeInsets.all(B2BSpacing.md),
+      backgroundColor: AppColors.card,
+      borderColor: AppColors.border,
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(B2BRadius.md),
+            ),
+            child: const Icon(
+              Icons.notifications_active_outlined,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: B2BSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$unreadCount unread',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  '$totalCount operational updates',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: unreadOnly ? 'Show all' : 'Unread only',
+            onPressed: onUnreadToggle,
+            icon: Icon(
+              unreadOnly
+                  ? Icons.inbox_rounded
+                  : Icons.mark_email_unread_outlined,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: unreadCount == 0 || markingAll ? null : onMarkAllRead,
+            icon: markingAll
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.done_all_rounded, size: 18),
+            label: const Text('Read all'),
+          ),
+        ],
+      ),
+    );
+    /* Legacy hero retained below for reference.
     return Container(
       padding: const EdgeInsets.all(B2BSpacing.xl),
       decoration: BoxDecoration(
@@ -398,7 +480,7 @@ class _InboxHero extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ); */
   }
 }
 
@@ -474,10 +556,15 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.item, required this.onTap});
+  const _NotificationTile({
+    required this.item,
+    required this.onTap,
+    required this.onToggle,
+  });
 
   final MobileNotificationItem item;
   final VoidCallback onTap;
+  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -544,13 +631,20 @@ class _NotificationTile extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      item.isRead ? 'Mark unread' : 'Mark read',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
+                    TextButton(
+                      onPressed: onToggle,
+                      style: TextButton.styleFrom(
+                        minimumSize: Size.zero,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
+                      child: Text(item.isRead ? 'Mark unread' : 'Mark read'),
                     ),
+                    const SizedBox(width: B2BSpacing.xs),
+                    const Icon(Icons.chevron_right_rounded, size: 20),
                   ],
                 ),
               ],

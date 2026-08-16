@@ -49,7 +49,8 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Dealer network could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Dealer network could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -60,9 +61,13 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     if (data == null) return const [];
     final query = _searchController.text.trim().toLowerCase();
     return data.dealers.where((dealer) {
-      final matchesQuery = query.isEmpty ||
-          [dealer.name, dealer.email, dealer.phone]
-              .any((value) => value.toLowerCase().contains(query));
+      final matchesQuery =
+          query.isEmpty ||
+          [
+            dealer.name,
+            dealer.email,
+            dealer.phone,
+          ].any((value) => value.toLowerCase().contains(query));
       final matchesStatus = switch (_filter) {
         1 => dealer.isActive,
         2 => !dealer.isActive,
@@ -77,14 +82,16 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
       await _repository.approveRequest(request);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${request.dealerName} funding request approved.')),
+        SnackBar(
+          content: Text('${request.dealerName} funding request approved.'),
+        ),
       );
       await _load();
     } on ApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
     }
   }
@@ -112,14 +119,27 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Dealer wallet', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Dealer wallet',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: B2BSpacing.xs),
-              Text('${dealer.name} · ${dealer.currency} ${dealer.currentBalance.toStringAsFixed(2)}'),
+              Text(
+                '${dealer.name} · ${dealer.currency} ${dealer.currentBalance.toStringAsFixed(2)}',
+              ),
               const SizedBox(height: B2BSpacing.lg),
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(value: true, label: Text('Credit'), icon: Icon(Icons.add_rounded)),
-                  ButtonSegment(value: false, label: Text('Debit'), icon: Icon(Icons.remove_rounded)),
+                  ButtonSegment(
+                    value: true,
+                    label: Text('Credit'),
+                    icon: Icon(Icons.add_rounded),
+                  ),
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Debit'),
+                    icon: Icon(Icons.remove_rounded),
+                  ),
                 ],
                 selected: {credit},
                 onSelectionChanged: submitting
@@ -130,8 +150,13 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
               TextField(
                 controller: amount,
                 enabled: !submitting,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: 'Amount', prefixText: '${dealer.currency} '),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  prefixText: '${dealer.currency} ',
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
               TextField(
@@ -144,7 +169,10 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                 const SizedBox(height: B2BSpacing.sm),
                 Text(
                   error!,
-                  style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: AppColors.danger,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
               const SizedBox(height: B2BSpacing.lg),
@@ -156,7 +184,9 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                       : () async {
                           final value = double.tryParse(amount.text.trim());
                           if (value == null || value <= 0) {
-                            setSheetState(() => error = 'Enter a valid amount.');
+                            setSheetState(
+                              () => error = 'Enter a valid amount.',
+                            );
                             return;
                           }
                           setSheetState(() {
@@ -181,7 +211,13 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                             }
                           }
                         },
-                  child: Text(submitting ? 'Processing...' : credit ? 'Credit dealer' : 'Debit dealer'),
+                  child: Text(
+                    submitting
+                        ? 'Processing...'
+                        : credit
+                        ? 'Credit dealer'
+                        : 'Debit dealer',
+                  ),
                 ),
               ),
             ],
@@ -206,12 +242,15 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     final data = _data;
     final visible = _visibleDealers;
     final active = data?.dealers.where((item) => item.isActive).length ?? 0;
-    final networkBalance = data?.dealers.fold<double>(
+    final networkBalance =
+        data?.dealers.fold<double>(
           0,
           (sum, item) => sum + item.currentBalance,
         ) ??
         0;
-    final currency = data?.dealers.isNotEmpty == true ? data!.dealers.first.currency : 'USD';
+    final currency = data?.dealers.isNotEmpty == true
+        ? data!.dealers.first.currency
+        : 'USD';
 
     return Scaffold(
       appBar: AppBar(
@@ -220,7 +259,9 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: const Text('Dealers'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -233,7 +274,10 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
             B2BSpacing.xxl,
           ),
           children: [
-            Text('Dealer network', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Dealer network',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Manage dealer exposure, funding requests and wallet balances.',
@@ -286,7 +330,10 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
               ),
               if (data.pendingRequests.isNotEmpty) ...[
                 const SizedBox(height: B2BSpacing.lg),
-                Text('Funding requests', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Funding requests',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: B2BSpacing.sm),
                 for (final request in data.pendingRequests) ...[
                   B2BSurface(
@@ -296,18 +343,27 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(request.dealerName, style: const TextStyle(fontWeight: FontWeight.w900)),
+                              Text(
+                                request.dealerName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                               if (request.dealerEmail.isNotEmpty)
                                 Text(
                                   request.dealerEmail,
-                                  style: const TextStyle(color: AppColors.textSecondary),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               if (request.note.isNotEmpty)
                                 Text(
                                   request.note,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: AppColors.textSecondary),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                             ],
                           ),
@@ -318,7 +374,9 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                           children: [
                             Text(
                               '${request.currency} ${request.amount.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.w900),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                             const SizedBox(height: B2BSpacing.xs),
                             FilledButton.tonal(
@@ -347,7 +405,8 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: 3,
-                  separatorBuilder: (_, _) => const SizedBox(width: B2BSpacing.xs),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: B2BSpacing.xs),
                   itemBuilder: (context, index) => ChoiceChip(
                     label: Text(const ['All', 'Active', 'Suspended'][index]),
                     selected: _filter == index,
@@ -376,7 +435,9 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: AppColors.primaryLight,
-                                borderRadius: BorderRadius.circular(B2BRadius.md),
+                                borderRadius: BorderRadius.circular(
+                                  B2BRadius.md,
+                                ),
                               ),
                               child: Text(
                                 _initials(dealer.name),
@@ -391,13 +452,20 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(dealer.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+                                  Text(
+                                    dealer.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                   if (dealer.email.isNotEmpty)
                                     Text(
                                       dealer.email,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: AppColors.textSecondary),
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -413,11 +481,15 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
                             Expanded(
                               child: _Metric(
                                 label: 'Available',
-                                value: '${dealer.currency} ${dealer.currentBalance.toStringAsFixed(2)}',
+                                value:
+                                    '${dealer.currency} ${dealer.currentBalance.toStringAsFixed(2)}',
                               ),
                             ),
                             Expanded(
-                              child: _Metric(label: 'Clients', value: '${dealer.totalClients}'),
+                              child: _Metric(
+                                label: 'Clients',
+                                value: '${dealer.totalClients}',
+                              ),
                             ),
                             Expanded(
                               child: _Metric(
@@ -442,30 +514,36 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value, this.alignEnd = false});
+  const _Metric({
+    required this.label,
+    required this.value,
+    this.alignEnd = false,
+  });
   final String label;
   final String value;
   final bool alignEnd;
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-        ],
-      );
+    crossAxisAlignment: alignEnd
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w900),
+      ),
+    ],
+  );
 }
 
 class _Status extends StatelessWidget {
@@ -494,6 +572,11 @@ class _Status extends StatelessWidget {
 }
 
 String _initials(String name) {
-  final parts = name.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).take(2);
-  return parts.isEmpty ? 'D' : parts.map((part) => part[0].toUpperCase()).join();
+  final parts = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2);
+  return parts.isEmpty
+      ? 'D'
+      : parts.map((part) => part[0].toUpperCase()).join();
 }

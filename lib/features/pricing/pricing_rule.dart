@@ -24,22 +24,22 @@ class PricingRule {
   final bool isActive;
 
   factory PricingRule.fromJson(Map<String, dynamic> json) => PricingRule(
-        id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
-        provider: json['provider']?.toString() ?? '',
-        packageId: json['package_id']?.toString() ?? '',
-        dealerId: int.tryParse((json['dealer'] ?? '').toString()),
-        targetRole: (json['target_role'] ?? '').toString(),
-        markupPercentage:
-            double.tryParse((json['markup_percentage'] ?? 0).toString()) ?? 0,
-        minMarkupPercentage: double.tryParse(
-          (json['min_markup_percentage'] ?? '').toString(),
-        ),
-        maxMarkupPercentage: double.tryParse(
-          (json['max_markup_percentage'] ?? '').toString(),
-        ),
-        priority: int.tryParse((json['priority'] ?? 0).toString()) ?? 0,
-        isActive: json['is_active'] != false,
-      );
+    id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
+    provider: json['provider']?.toString() ?? '',
+    packageId: json['package_id']?.toString() ?? '',
+    dealerId: int.tryParse((json['dealer'] ?? '').toString()),
+    targetRole: (json['target_role'] ?? '').toString(),
+    markupPercentage:
+        double.tryParse((json['markup_percentage'] ?? 0).toString()) ?? 0,
+    minMarkupPercentage: double.tryParse(
+      (json['min_markup_percentage'] ?? '').toString(),
+    ),
+    maxMarkupPercentage: double.tryParse(
+      (json['max_markup_percentage'] ?? '').toString(),
+    ),
+    priority: int.tryParse((json['priority'] ?? 0).toString()) ?? 0,
+    isActive: json['is_active'] != false,
+  );
 }
 
 List<PricingRule> pricingRulesFromResponse(dynamic response) {
@@ -47,13 +47,15 @@ List<PricingRule> pricingRulesFromResponse(dynamic response) {
       ? Map<String, dynamic>.from(response)
       : <String, dynamic>{};
   final data = root['data'] ?? root;
-  final raw = data is Map ? (data['results'] ?? data['data'] ?? const []) : data;
+  final raw = data is Map
+      ? (data['results'] ?? data['data'] ?? const [])
+      : data;
   return raw is List
       ? raw
-          .whereType<Map>()
-          .map(
-            (item) => PricingRule.fromJson(Map<String, dynamic>.from(item)),
-          )
-          .toList()
+            .whereType<Map>()
+            .map(
+              (item) => PricingRule.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList()
       : const [];
 }

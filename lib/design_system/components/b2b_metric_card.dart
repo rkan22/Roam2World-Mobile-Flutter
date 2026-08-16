@@ -29,8 +29,8 @@ class B2BMetricCard extends StatelessWidget {
     final trendColor = trendPositive == null
         ? scheme.onSurfaceVariant
         : trendPositive!
-            ? AppColors.success
-            : AppColors.danger;
+        ? AppColors.success
+        : AppColors.danger;
 
     return B2BSurface(
       onTap: onTap,

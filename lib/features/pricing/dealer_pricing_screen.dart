@@ -41,7 +41,8 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Pricing rules could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Pricing rules could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -54,7 +55,9 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
     if (providers.isEmpty) return;
 
     var dealerId = rule?.dealerId ?? data.dealers.first.id;
-    var provider = rule?.provider.isNotEmpty == true ? rule!.provider : providers.first;
+    var provider = rule?.provider.isNotEmpty == true
+        ? rule!.provider
+        : providers.first;
     var packageId = rule?.packageId ?? '';
     final markup = TextEditingController(
       text: rule?.markupPercentage.toStringAsFixed(2) ?? '0',
@@ -115,9 +118,8 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
                         .toList(),
                     onChanged: submitting
                         ? null
-                        : (value) => setSheetState(
-                              () => dealerId = value ?? dealerId,
-                            ),
+                        : (value) =>
+                              setSheetState(() => dealerId = value ?? dealerId),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   DropdownButtonFormField<String>(
@@ -139,15 +141,17 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
                     onChanged: submitting
                         ? null
                         : (value) => setSheetState(() {
-                              provider = value ?? provider;
-                              packageId = '';
-                            }),
+                            provider = value ?? provider;
+                            packageId = '';
+                          }),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: packageId,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Package scope'),
+                    decoration: const InputDecoration(
+                      labelText: 'Package scope',
+                    ),
                     items: [
                       const DropdownMenuItem(
                         value: '',
@@ -170,16 +174,16 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
                     ],
                     onChanged: submitting
                         ? null
-                        : (value) => setSheetState(
-                              () => packageId = value ?? '',
-                            ),
+                        : (value) =>
+                              setSheetState(() => packageId = value ?? ''),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   TextField(
                     controller: markup,
                     enabled: !submitting,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Markup %',
                       prefixIcon: Icon(Icons.percent_rounded),
@@ -243,8 +247,8 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
                         submitting
                             ? 'Saving...'
                             : rule == null
-                                ? 'Save rule'
-                                : 'Update rule',
+                            ? 'Save rule'
+                            : 'Update rule',
                       ),
                     ),
                   ),
@@ -264,15 +268,17 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final data = _data;
-    final rules = data?.rules.where((rule) => rule.dealerId != null).toList() ??
+    final rules =
+        data?.rules.where((rule) => rule.dealerId != null).toList() ??
         const <PricingRule>[];
 
     return Scaffold(
@@ -365,11 +371,7 @@ class _DealerPricingScreenState extends State<DealerPricingScreen> {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+  const _Stat({required this.label, required this.value, required this.icon});
 
   final String label;
   final String value;
@@ -377,29 +379,23 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        child: Row(
+    child: Row(
+      children: [
+        Icon(icon, color: AppColors.primary),
+        const SizedBox(width: B2BSpacing.sm),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: AppColors.primary),
-            const SizedBox(width: B2BSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+            Text(label, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
             ),
           ],
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _RuleCard extends StatelessWidget {
@@ -419,64 +415,62 @@ class _RuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dealer?.name ?? 'Dealer #${rule.dealerId}',
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${_providerLabel(rule.provider)} · ${package?.name ?? (rule.packageId.isEmpty ? 'All packages' : rule.packageId)}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            const TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dealer?.name ?? 'Dealer #${rule.dealerId}',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) =>
-                      value == 'edit' ? onEdit() : onDelete(),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_providerLabel(rule.provider)} · ${package?.name ?? (rule.packageId.isEmpty ? 'All packages' : rule.packageId)}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: B2BSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: _Mini(
-                    label: 'Markup',
-                    value: '${rule.markupPercentage.toStringAsFixed(2)}%',
-                  ),
-                ),
-                Expanded(
-                  child: _Mini(label: 'Priority', value: '${rule.priority}'),
-                ),
-                Expanded(
-                  child: _Mini(
-                    label: 'Status',
-                    value: rule.isActive ? 'Active' : 'Inactive',
-                    end: true,
-                  ),
-                ),
+            PopupMenuButton<String>(
+              onSelected: (value) => value == 'edit' ? onEdit() : onDelete(),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
             ),
           ],
         ),
-      );
+        const SizedBox(height: B2BSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _Mini(
+                label: 'Markup',
+                value: '${rule.markupPercentage.toStringAsFixed(2)}%',
+              ),
+            ),
+            Expanded(
+              child: _Mini(label: 'Priority', value: '${rule.priority}'),
+            ),
+            Expanded(
+              child: _Mini(
+                label: 'Status',
+                value: rule.isActive ? 'Active' : 'Inactive',
+                end: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class _Mini extends StatelessWidget {
@@ -488,28 +482,25 @@ class _Mini extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment:
-            end ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
-        ],
-      );
+    crossAxisAlignment: end ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+      ),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
+    ],
+  );
 }
 
 List<String> _providers(List<MobilePackage> packages) {
-  final values = packages
-      .map((item) => item.provider)
-      .where((item) => item.isNotEmpty)
-      .toSet()
-      .toList()
-    ..sort();
+  final values =
+      packages
+          .map((item) => item.provider)
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
   return values;
 }
 

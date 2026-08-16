@@ -1,11 +1,7 @@
 import 'package:dio/dio.dart';
 
 class ApiException implements Exception {
-  const ApiException({
-    required this.message,
-    this.statusCode,
-    this.code,
-  });
+  const ApiException({required this.message, this.statusCode, this.code});
 
   final String message;
   final int? statusCode;
@@ -19,7 +15,8 @@ class ApiException implements Exception {
 
     if (data is Map) {
       final map = Map<String, dynamic>.from(data);
-      responseMessage = map['message']?.toString() ??
+      responseMessage =
+          map['message']?.toString() ??
           map['error']?.toString() ??
           map['detail']?.toString();
       responseCode = map['code']?.toString();

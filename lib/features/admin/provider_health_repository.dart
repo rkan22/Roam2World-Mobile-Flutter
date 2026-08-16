@@ -62,8 +62,12 @@ class ProviderHealthItem {
   final int failedOrders;
 
   factory ProviderHealthItem.fromJson(Map<String, dynamic> json) {
-    final live = json['live'] is Map ? Map<String, dynamic>.from(json['live'] as Map) : const <String, dynamic>{};
-    final stats = json['stats'] is Map ? Map<String, dynamic>.from(json['stats'] as Map) : const <String, dynamic>{};
+    final live = json['live'] is Map
+        ? Map<String, dynamic>.from(json['live'] as Map)
+        : const <String, dynamic>{};
+    final stats = json['stats'] is Map
+        ? Map<String, dynamic>.from(json['stats'] as Map)
+        : const <String, dynamic>{};
     final supports = json['supports'] is List
         ? (json['supports'] as List).map((value) => '$value').toList()
         : const <String>[];
@@ -74,10 +78,16 @@ class ProviderHealthItem {
       configured: json['configured'] == true,
       adapterReady: json['adapter_ready'] == true,
       supports: supports,
-      liveCheckOk: live['live_check_ok'] is bool ? live['live_check_ok'] as bool : null,
+      liveCheckOk: live['live_check_ok'] is bool
+          ? live['live_check_ok'] as bool
+          : null,
       latencyMs: int.tryParse('${live['latency_ms'] ?? ''}'),
       error: '${live['error'] ?? stats['last_error'] ?? ''}',
-      totalOrders: int.tryParse('${stats['total_orders'] ?? stats['total_records'] ?? 0}') ?? 0,
+      totalOrders:
+          int.tryParse(
+            '${stats['total_orders'] ?? stats['total_records'] ?? 0}',
+          ) ??
+          0,
       failedOrders: int.tryParse('${stats['failed'] ?? 0}') ?? 0,
     );
   }
@@ -144,7 +154,9 @@ class ProviderHealthData {
     final summary = root['summary'] is Map
         ? Map<String, dynamic>.from(root['summary'] as Map)
         : const <String, dynamic>{};
-    final providers = root['providers'] is List ? root['providers'] as List : const [];
+    final providers = root['providers'] is List
+        ? root['providers'] as List
+        : const [];
     final routes = root['routes'] is List ? root['routes'] as List : const [];
     return ProviderHealthData(
       healthStatus: '${root['health_status'] ?? summary['status'] ?? ''}',
@@ -152,18 +164,26 @@ class ProviderHealthData {
       summary: ProviderHealthSummary.fromJson(summary),
       providers: providers
           .whereType<Map>()
-          .map((item) => ProviderHealthItem.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                ProviderHealthItem.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(),
       routes: routes
           .whereType<Map>()
-          .map((item) => ProviderRouteHealthItem.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) => ProviderRouteHealthItem.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
           .toList(),
     );
   }
 }
 
 class ProviderHealthRepository {
-  ProviderHealthRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  ProviderHealthRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 

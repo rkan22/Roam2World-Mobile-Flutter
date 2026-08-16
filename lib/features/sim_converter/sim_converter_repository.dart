@@ -4,7 +4,7 @@ import 'sim_converter_data.dart';
 
 class SimConverterRepository {
   SimConverterRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 

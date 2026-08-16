@@ -52,7 +52,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Admin dashboard could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Admin dashboard could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -83,13 +84,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
             children: [
               _header(),
-              if (_stale) ...[
-                const SizedBox(height: 12),
-                const _StaleBanner(),
-              ],
+              if (_stale) ...[const SizedBox(height: 12), const _StaleBanner()],
               const SizedBox(height: 14),
               if (_loading && _data == null)
-                const ContentLoadingState(label: 'Loading admin control center...')
+                const ContentLoadingState(
+                  label: 'Loading admin control center...',
+                )
               else if (_error != null && _data == null)
                 ContentErrorState(message: _error!, onRetry: _refresh)
               else if (_data != null)
@@ -244,7 +244,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withValues(alpha: .16),
                       borderRadius: BorderRadius.circular(999),
@@ -296,7 +299,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 runSpacing: 10,
                 children: [
                   _HeroMetric(label: 'Orders', value: '${data.totalOrders}'),
-                  _HeroMetric(label: 'Resellers', value: '${data.resellerCount}'),
+                  _HeroMetric(
+                    label: 'Resellers',
+                    value: '${data.resellerCount}',
+                  ),
                   _HeroMetric(label: 'Dealers', value: '${data.dealerCount}'),
                 ],
               ),
@@ -417,12 +423,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           Text(
             'Operations Status',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
             'Live order and wallet request counts',
-            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -485,10 +495,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _adminTools() {
     final theme = Theme.of(context);
     final tools = <_ToolData>[
-      _ToolData('Operations', 'Provider & order ops', Icons.dns_outlined, '/operations'),
-      _ToolData('Reports', 'Sales & analytics', Icons.analytics_outlined, '/reports'),
-      _ToolData('Finance', 'Ledger & wallet', Icons.account_balance_wallet_outlined, '/finance'),
-      _ToolData('Resellers', 'Partner management', Icons.hub_outlined, '/admin/resellers'),
+      _ToolData(
+        'Operations',
+        'Provider & order ops',
+        Icons.dns_outlined,
+        '/operations',
+      ),
+      _ToolData(
+        'Reports',
+        'Sales & analytics',
+        Icons.analytics_outlined,
+        '/reports',
+      ),
+      _ToolData(
+        'Finance',
+        'Ledger & wallet',
+        Icons.account_balance_wallet_outlined,
+        '/finance',
+      ),
+      _ToolData(
+        'Resellers',
+        'Partner management',
+        Icons.hub_outlined,
+        '/admin/resellers',
+      ),
     ];
 
     return Container(
@@ -504,12 +534,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           Text(
             'Admin Tools',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Platform controls and partner operations',
-            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 12),
           LayoutBuilder(
@@ -560,7 +594,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     child: Icon(tool.icon, size: 18, color: AppColors.primary),
                   ),
                   const Spacer(),
-                  const Icon(Icons.arrow_outward_rounded, size: 16, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 16,
+                    color: AppColors.textMuted,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -568,7 +606,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 tool.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
@@ -610,12 +650,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     children: [
                       Text(
                         'Recent Orders',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${data.totalOrders} platform orders',
-                        style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -669,7 +713,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(11),
                 ),
-                child: const Icon(Icons.shopping_bag_outlined, size: 18, color: AppColors.primary),
+                child: const Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -680,7 +728,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       order.productName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -733,29 +783,31 @@ class _SquareIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: loading ? null : onTap,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: loading ? null : onTap,
+      borderRadius: BorderRadius.circular(13),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(13),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: loading
-                ? const Center(
-                    child: SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : Icon(icon, size: 20, color: AppColors.textPrimary),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
         ),
-      );
+        child: loading
+            ? const Center(
+                child: SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : Icon(icon, size: 20, color: AppColors.textPrimary),
+      ),
+    ),
+  );
 }
 
 class _HeroMetric extends StatelessWidget {
@@ -766,38 +818,38 @@ class _HeroMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        constraints: const BoxConstraints(minWidth: 92),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .07),
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: Colors.white.withValues(alpha: .08)),
+    constraints: const BoxConstraints(minWidth: 92),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .07),
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: Colors.white.withValues(alpha: .08)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _StatusBlock extends StatelessWidget {
@@ -815,37 +867,37 @@ class _StatusBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+    decoration: BoxDecoration(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Column(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(height: 7),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
         ),
-        child: Column(
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(height: 7),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 9.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _StaleBanner extends StatelessWidget {
@@ -853,25 +905,25 @@ class _StaleBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.warningSoft,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppColors.warningSoft,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.cloud_off_outlined, size: 18, color: AppColors.warning),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Showing cached admin data. Pull down or tap refresh to retry.',
+            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+          ),
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.cloud_off_outlined, size: 18, color: AppColors.warning),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Showing cached admin data. Pull down or tap refresh to retry.',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }
 
 class _MetricData {

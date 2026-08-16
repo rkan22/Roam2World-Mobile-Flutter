@@ -33,7 +33,22 @@ class _PackagesScreenState extends State<PackagesScreen> {
     ('Manual Fulfillment', 'manual'),
   ];
   final _validityOptions = const [30, 60, 90];
-  final _dataOptions = const [1, 3, 5, 10, 20, 30, 50, 60, 100, 135, 200, 300, 400, 500];
+  final _dataOptions = const [
+    1,
+    3,
+    5,
+    10,
+    20,
+    30,
+    50,
+    60,
+    100,
+    135,
+    200,
+    300,
+    400,
+    500,
+  ];
 
   Timer? _searchTimer;
   List<MobilePackage> _packages = const [];
@@ -64,7 +79,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
       _error = null;
     });
     try {
-      final catalog = await _repository.fetchPackages(forceRefresh: forceRefresh);
+      final catalog = await _repository.fetchPackages(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
       setState(() {
         _packages = catalog.packages;
@@ -83,24 +100,34 @@ class _PackagesScreenState extends State<PackagesScreen> {
 
   List<MobilePackage> get _visiblePackages {
     final term = _searchController.text.trim().toLowerCase();
-    return _packages.where((item) {
-      if (_selectedOperator.isNotEmpty && item.operatorKey != _selectedOperator) return false;
-      if (_selectedType.isNotEmpty && item.packageType.toLowerCase() != _selectedType) return false;
-      if (_selectedValidity != null && item.validityDays != _selectedValidity) return false;
-      if (_selectedData != null && item.dataGb != _selectedData) return false;
-      if (term.isNotEmpty && ![
-        item.name,
-        item.destination,
-        item.displayProvider,
-        item.provider,
-        item.id,
-        item.dataLabel,
-        item.validityLabel,
-      ].any((value) => value.toLowerCase().contains(term))) {
-        return false;
-      }
-      return true;
-    }).toList(growable: false);
+    return _packages
+        .where((item) {
+          if (_selectedOperator.isNotEmpty &&
+              item.operatorKey != _selectedOperator)
+            return false;
+          if (_selectedType.isNotEmpty &&
+              item.packageType.toLowerCase() != _selectedType)
+            return false;
+          if (_selectedValidity != null &&
+              item.validityDays != _selectedValidity)
+            return false;
+          if (_selectedData != null && item.dataGb != _selectedData)
+            return false;
+          if (term.isNotEmpty &&
+              ![
+                item.name,
+                item.destination,
+                item.displayProvider,
+                item.provider,
+                item.id,
+                item.dataLabel,
+                item.validityLabel,
+              ].any((value) => value.toLowerCase().contains(term))) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   void _onSearchChanged(String _) {
@@ -147,9 +174,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 validity: _selectedValidity,
                 data: _selectedData,
                 searchController: _searchController,
-                onOperatorChanged: (value) => setState(() => _selectedOperator = value),
+                onOperatorChanged: (value) =>
+                    setState(() => _selectedOperator = value),
                 onTypeChanged: (value) => setState(() => _selectedType = value),
-                onValidityChanged: (value) => setState(() => _selectedValidity = value),
+                onValidityChanged: (value) =>
+                    setState(() => _selectedValidity = value),
                 onDataChanged: (value) => setState(() => _selectedData = value),
                 onSearchChanged: _onSearchChanged,
               ),
@@ -167,9 +196,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 
   Widget _buildCatalogContent(List<MobilePackage> visible) {
-    if (_loading) return const ContentLoadingState(label: 'Loading packages...');
+    if (_loading)
+      return const ContentLoadingState(label: 'Loading packages...');
     if (_error != null && _packages.isEmpty) {
-      return ContentErrorState(message: _error!, onRetry: () => _load(forceRefresh: true));
+      return ContentErrorState(
+        message: _error!,
+        onRetry: () => _load(forceRefresh: true),
+      );
     }
     if (visible.isEmpty) {
       return ContentEmptyState(
@@ -185,7 +218,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
         for (var index = 0; index < visible.length; index++) ...[
           _OperatorPlanCard(
             package: visible[index],
-            onTap: () => context.push('/packages/detail', extra: visible[index]),
+            onTap: () =>
+                context.push('/packages/detail', extra: visible[index]),
           ),
           if (index != visible.length - 1) const SizedBox(height: 14),
         ],
@@ -210,7 +244,9 @@ class _CatalogHero extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(B2BRadius.xl),
         border: Border.all(color: AppColors.primaryLight),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
       ),
       child: Row(
         children: [
@@ -221,16 +257,28 @@ class _CatalogHero extends StatelessWidget {
               color: Colors.white.withValues(alpha: .9),
               borderRadius: BorderRadius.circular(17),
             ),
-            child: const Icon(Icons.public_rounded, color: AppColors.primary, size: 28),
+            child: const Icon(
+              Icons.public_rounded,
+              color: AppColors.primary,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Unified Operator Catalog', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                Text(
+                  'Unified Operator Catalog',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('Multi-provider eSIM inventory with smart routing', style: theme.textTheme.bodySmall),
+                Text(
+                  'Multi-provider eSIM inventory with smart routing',
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -246,7 +294,11 @@ class _CatalogHero extends StatelessWidget {
 }
 
 class _CatalogSection extends StatelessWidget {
-  const _CatalogSection({required this.title, required this.trailing, required this.child});
+  const _CatalogSection({
+    required this.title,
+    required this.trailing,
+    required this.child,
+  });
 
   final String title;
   final String trailing;
@@ -261,18 +313,39 @@ class _CatalogSection extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
         border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(999)),
-                child: Text(trailing, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w800)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  trailing,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ],
           ),
@@ -324,14 +397,24 @@ class _CatalogFilterPanel extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
         border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Catalog filters', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            'Catalog filters',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('Filter by operator, product type, validity, data and plan name.', style: theme.textTheme.bodySmall),
+          Text(
+            'Filter by operator, product type, validity, data and plan name.',
+            style: theme.textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           _FilterField(
             label: 'Operator',
@@ -339,7 +422,12 @@ class _CatalogFilterPanel extends StatelessWidget {
               key: ValueKey(operator),
               initialValue: operator,
               isExpanded: true,
-              items: operators.map((item) => DropdownMenuItem(value: item.$2, child: Text(item.$1))).toList(),
+              items: operators
+                  .map(
+                    (item) =>
+                        DropdownMenuItem(value: item.$2, child: Text(item.$1)),
+                  )
+                  .toList(),
               onChanged: (value) => onOperatorChanged(value ?? ''),
             ),
           ),
@@ -370,9 +458,15 @@ class _CatalogFilterPanel extends StatelessWidget {
                     isExpanded: true,
                     items: [
                       const DropdownMenuItem(value: '', child: Text('All')),
-                      ...validityOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('$item Days'))),
+                      ...validityOptions.map(
+                        (item) => DropdownMenuItem(
+                          value: '$item',
+                          child: Text('$item Days'),
+                        ),
+                      ),
                     ],
-                    onChanged: (value) => onValidityChanged(int.tryParse(value ?? '')),
+                    onChanged: (value) =>
+                        onValidityChanged(int.tryParse(value ?? '')),
                   ),
                 ),
               ),
@@ -386,9 +480,15 @@ class _CatalogFilterPanel extends StatelessWidget {
                     isExpanded: true,
                     items: [
                       const DropdownMenuItem(value: '', child: Text('All')),
-                      ...dataOptions.map((item) => DropdownMenuItem(value: '$item', child: Text('${item}GB'))),
+                      ...dataOptions.map(
+                        (item) => DropdownMenuItem(
+                          value: '$item',
+                          child: Text('${item}GB'),
+                        ),
+                      ),
                     ],
-                    onChanged: (value) => onDataChanged(num.tryParse(value ?? '')),
+                    onChanged: (value) =>
+                        onDataChanged(num.tryParse(value ?? '')),
                   ),
                 ),
               ),
@@ -400,7 +500,10 @@ class _CatalogFilterPanel extends StatelessWidget {
             child: TextField(
               controller: searchController,
               onChanged: onSearchChanged,
-              decoration: const InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search_rounded)),
+              decoration: const InputDecoration(
+                hintText: 'Search',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
             ),
           ),
         ],
@@ -416,13 +519,19 @@ class _FilterField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: .7)),
-          const SizedBox(height: 6),
-          child,
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+          letterSpacing: .7,
+        ),
+      ),
+      const SizedBox(height: 6),
+      child,
+    ],
+  );
 }
 
 class _StaleDataBanner extends StatelessWidget {
@@ -430,20 +539,25 @@ class _StaleDataBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: AppColors.warning.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Could not refresh. Showing the last available packages.',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 19, color: AppColors.warning),
-            SizedBox(width: 10),
-            Expanded(child: Text('Could not refresh. Showing the last available packages.', style: TextStyle(fontWeight: FontWeight.w700))),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }
 
 class _OperatorPlanCard extends StatelessWidget {
@@ -528,7 +642,9 @@ class _OperatorPlanCard extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                manual ? '${package.displayProvider} · manual delivery' : package.displayProvider,
+                manual
+                    ? '${package.displayProvider} · manual delivery'
+                    : package.displayProvider,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w800,
@@ -543,7 +659,11 @@ class _OperatorPlanCard extends StatelessWidget {
               _PlanDetailRow(label: 'Type', value: typeLabel),
               _PlanDetailRow(label: 'Data', value: package.dataLabel),
               _PlanDetailRow(label: 'Validity', value: package.validityLabel),
-              _PlanDetailRow(label: 'Price', value: package.formattedPrice, emphasize: true),
+              _PlanDetailRow(
+                label: 'Price',
+                value: package.formattedPrice,
+                emphasize: true,
+              ),
               const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
@@ -575,7 +695,11 @@ class _OperatorPlanCard extends StatelessWidget {
 }
 
 class _PlanDetailRow extends StatelessWidget {
-  const _PlanDetailRow({required this.label, required this.value, this.emphasize = false});
+  const _PlanDetailRow({
+    required this.label,
+    required this.value,
+    this.emphasize = false,
+  });
 
   final String label;
   final String value;
@@ -642,9 +766,9 @@ class _CoveragePreview extends StatelessWidget {
             Text(
               '+$remaining',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w900,
-                  ),
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ],
         ],
@@ -667,12 +791,13 @@ class _CountryVisual extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final normalizedCode = code.toUpperCase();
-    final isEurope = destinationKey.toLowerCase() == 'europe' || normalizedCode == 'EU';
+    final isEurope =
+        destinationKey.toLowerCase() == 'europe' || normalizedCode == 'EU';
     final url = isEurope
         ? 'https://flagcdn.com/w160/eu.png'
         : normalizedCode.length == 2
-            ? 'https://flagcdn.com/w80/${normalizedCode.toLowerCase()}.png'
-            : null;
+        ? 'https://flagcdn.com/w80/${normalizedCode.toLowerCase()}.png'
+        : null;
 
     if (url == null) {
       return Icon(

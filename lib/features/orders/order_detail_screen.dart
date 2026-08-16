@@ -85,7 +85,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Order detail', style: theme.textTheme.headlineMedium),
+                      Text(
+                        'Order detail',
+                        style: theme.textTheme.headlineMedium,
+                      ),
                       const SizedBox(height: B2BSpacing.xxs),
                       Text(orderNumber, style: theme.textTheme.bodyMedium),
                     ],
@@ -364,20 +367,16 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(B2BRadius.pill),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(B2BRadius.pill),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+    ),
+  );
 }
 
 class _DetailRow extends StatelessWidget {
@@ -395,47 +394,44 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: B2BSpacing.md,
-          vertical: 15,
-        ),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 92,
-              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-            ),
-            const SizedBox(width: B2BSpacing.sm),
-            Expanded(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: valueColor,
-                ),
+    padding: const EdgeInsets.symmetric(
+      horizontal: B2BSpacing.md,
+      vertical: 15,
+    ),
+    decoration: BoxDecoration(
+      border: last
+          ? null
+          : Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
             ),
-          ],
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 92,
+          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ),
-      );
+        const SizedBox(width: B2BSpacing.sm),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(fontWeight: FontWeight.w800, color: valueColor),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 Color _statusColor(String status) => switch (status.toLowerCase()) {
-      'completed' || 'success' => AppColors.success,
-      'failed' || 'cancelled' => AppColors.danger,
-      _ => AppColors.warning,
-    };
+  'completed' || 'success' => AppColors.success,
+  'failed' || 'cancelled' => AppColors.danger,
+  _ => AppColors.warning,
+};
 
 String _titleCase(String value) {
   if (value.isEmpty) return 'Pending';

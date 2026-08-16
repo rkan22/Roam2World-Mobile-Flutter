@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/notifications/push_notification_service.dart';
 import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -28,7 +29,8 @@ class PartnerBusinessDashboardScreen extends StatefulWidget {
 }
 
 class _PartnerBusinessDashboardScreenState
-    extends State<PartnerBusinessDashboardScreen> {
+    extends State<PartnerBusinessDashboardScreen>
+    with WidgetsBindingObserver {
   DashboardData? _data;
   Object? _error;
   bool _loading = true;
@@ -49,7 +51,22 @@ class _PartnerBusinessDashboardScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+    PushNotificationService.instance.refreshUnreadCount();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      PushNotificationService.instance.refreshUnreadCount();
+    }
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
@@ -133,10 +150,7 @@ class _PartnerBusinessDashboardScreenState
             _header(),
             const SizedBox(height: 14),
             _periodSelector(),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              _inlineError(),
-            ],
+            if (_error != null) ...[const SizedBox(height: 12), _inlineError()],
             if (_isLowBalance(data)) ...[
               const SizedBox(height: 12),
               _lowBalanceBanner(data),
@@ -204,9 +218,18 @@ class _PartnerBusinessDashboardScreenState
           loading: _refreshing,
         ),
         const SizedBox(width: 8),
-        _SquareIconButton(
-          icon: Icons.notifications_none_rounded,
-          onTap: () => context.push('/notifications'),
+        ValueListenableBuilder<int>(
+          valueListenable: mobileNotificationUnreadCount,
+          builder: (context, unreadCount, _) => _SquareIconButton(
+            icon: Icons.notifications_none_rounded,
+            badgeCount: unreadCount,
+            onTap: () async {
+              await context.push('/notifications');
+              if (mounted) {
+                PushNotificationService.instance.refreshUnreadCount();
+              }
+            },
+          ),
         ),
       ],
     );
@@ -247,69 +270,69 @@ class _PartnerBusinessDashboardScreenState
   }
 
   Widget _inlineError() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.warningSoft,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: AppColors.warningSoft,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    ),
+    child: const Row(
+      children: [
+        Icon(Icons.info_outline_rounded, size: 17, color: AppColors.warning),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Could not refresh this period. Showing the last loaded data.',
+            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+          ),
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.info_outline_rounded, size: 17, color: AppColors.warning),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Could not refresh this period. Showing the last loaded data.',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 
   bool _isLowBalance(DashboardData data) =>
       data.balance <= (_isDealer ? 5 : 20);
 
   Widget _lowBalanceBanner(DashboardData data) => Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: AppColors.warningSoft,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .3)),
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(
+      color: AppColors.warningSoft,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .3)),
+    ),
+    child: Row(
+      children: [
+        const Icon(
+          Icons.account_balance_wallet_outlined,
+          color: AppColors.warning,
+          size: 20,
         ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.account_balance_wallet_outlined,
-              color: AppColors.warning,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Low balance',
-                    style: TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _isDealer
-                        ? 'Request balance before the next customer order.'
-                        : 'Add funds to keep dealer and customer orders moving.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Low balance',
+                style: TextStyle(fontWeight: FontWeight.w900),
               ),
-            ),
-            TextButton(
-              onPressed: () => context.push('/finance'),
-              child: Text(_isDealer ? 'Request' : 'Open'),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                _isDealer
+                    ? 'Request balance before the next customer order.'
+                    : 'Add funds to keep dealer and customer orders moving.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
-      );
+        TextButton(
+          onPressed: () => context.push('/finance'),
+          child: Text(_isDealer ? 'Request' : 'Open'),
+        ),
+      ],
+    ),
+  );
 
   Widget _operationsCard(DashboardData data) {
     final currency = data.currency.trim().isEmpty
@@ -855,18 +878,20 @@ class _PartnerBusinessDashboardScreenState
     final theme = Theme.of(context);
     final status = order.status.trim().isEmpty ? 'processing' : order.status;
     final lower = status.toLowerCase();
-    final success = lower.contains('complete') ||
+    final success =
+        lower.contains('complete') ||
         lower.contains('success') ||
         lower.contains('active') ||
         lower.contains('deliver');
-    final failure = lower.contains('fail') ||
+    final failure =
+        lower.contains('fail') ||
         lower.contains('cancel') ||
         lower.contains('refund');
     final statusColor = failure
         ? AppColors.danger
         : success
-            ? AppColors.success
-            : AppColors.warning;
+        ? AppColors.success
+        : AppColors.warning;
     final date = order.createdAt == null
         ? order.orderNumber
         : DateFormat('MMM d, HH:mm').format(order.createdAt!.toLocal());
@@ -1052,34 +1077,68 @@ class _SquareIconButton extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.loading = false,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final VoidCallback onTap;
   final bool loading;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: loading ? null : onTap,
+    onTap: loading ? null : onTap,
+    borderRadius: BorderRadius.circular(13),
+    child: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(13),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-          ),
-          child: loading
-              ? const Center(
-                  child: SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: loading
+          ? const Center(
+              child: SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 20, color: AppColors.textPrimary),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -7,
+                    top: -7,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.danger,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
-                )
-              : Icon(icon, size: 20, color: AppColors.textPrimary),
-        ),
-      );
+              ],
+            ),
+    ),
+  );
 }
 
 class _MetricData {
@@ -1101,12 +1160,7 @@ class _MetricData {
 }
 
 class _ActionData {
-  const _ActionData(
-    this.title,
-    this.subtitle,
-    this.icon,
-    this.onTap,
-  );
+  const _ActionData(this.title, this.subtitle, this.icon, this.onTap);
 
   final String title;
   final String subtitle;

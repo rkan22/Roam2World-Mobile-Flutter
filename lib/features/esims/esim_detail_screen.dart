@@ -70,16 +70,16 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     if (value.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label copied.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$label copied.')));
   }
 
   Future<void> _openLpa() async {
     if (!_esim.hasQr && _esim.activationCode.isEmpty) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LpaInstallScreen(esim: _esim)),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => LpaInstallScreen(esim: _esim)));
   }
 
   Future<void> _renewWithBackendOptions() async {
@@ -149,19 +149,21 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                                       '${option.dataGb} GB · ${option.validityDays} days',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                      ),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                     ),
                                     const SizedBox(height: 5),
                                     Text(
                                       option.displayProvider,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -204,15 +206,15 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
               finalPrice: selected.price,
             );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => _renewing = false);
     }
@@ -257,9 +259,9 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => _operating = false);
     }
@@ -345,9 +347,9 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) setState(() => _operating = false);
     }
@@ -381,13 +383,19 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     ];
     for (final prefix in providerPrefixes) {
       name = name.replaceFirst(
-        RegExp('^${RegExp.escape(prefix)}\\s*[-–—|:]\\s*', caseSensitive: false),
+        RegExp(
+          '^${RegExp.escape(prefix)}\\s*[-–—|:]\\s*',
+          caseSensitive: false,
+        ),
         '',
       );
     }
 
     name = name.replaceFirst(
-      RegExp(r'^[A-Z0-9]{2,}(?:-[A-Z0-9]{2,})+\s*[-–—|:]\s*', caseSensitive: false),
+      RegExp(
+        r'^[A-Z0-9]{2,}(?:-[A-Z0-9]{2,})+\s*[-–—|:]\s*',
+        caseSensitive: false,
+      ),
       '',
     );
     name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -419,7 +427,10 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('eSIM details', style: theme.textTheme.headlineMedium),
+                        Text(
+                          'eSIM details',
+                          style: theme.textTheme.headlineMedium,
+                        ),
                         const SizedBox(height: B2BSpacing.xxs),
                         Text(
                           _esim.provider,
@@ -567,7 +578,9 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              _esim.hasQr ? 'Installation QR' : 'Installation pending',
+                              _esim.hasQr
+                                  ? 'Installation QR'
+                                  : 'Installation pending',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w900,
                               ),
@@ -678,10 +691,8 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                 if (_esim.activationCode.isNotEmpty) ...[
                   const SizedBox(height: B2BSpacing.sm),
                   _ActionButton(
-                    onPressed: () => _copy(
-                      _esim.activationCode,
-                      'Activation details',
-                    ),
+                    onPressed: () =>
+                        _copy(_esim.activationCode, 'Activation details'),
                     icon: Icons.copy_rounded,
                     label: 'Copy activation details',
                     filled: false,
@@ -746,22 +757,18 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(B2BRadius.pill),
-        ),
-        child: Text(
-          status,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(B2BRadius.pill),
+    ),
+    child: Text(
+      status,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+    ),
+  );
 }
 
 class _InfoCard extends StatelessWidget {
@@ -821,36 +828,31 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: AppColors.border),
-                ),
+    padding: const EdgeInsets.symmetric(vertical: 13),
+    decoration: BoxDecoration(
+      border: last
+          ? null
+          : const Border(bottom: BorderSide(color: AppColors.border)),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 92,
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 92,
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }

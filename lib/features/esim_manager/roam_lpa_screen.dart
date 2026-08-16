@@ -54,7 +54,6 @@ class RoamLpaScreen extends StatelessWidget {
   }
 }
 
-
 class _ReadinessPanel extends StatelessWidget {
   const _ReadinessPanel();
 

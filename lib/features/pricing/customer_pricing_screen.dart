@@ -40,7 +40,8 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Customer pricing could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Customer pricing could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -52,7 +53,9 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
     final providers = _providers(data.packages);
     if (providers.isEmpty) return;
 
-    var provider = rule?.provider.isNotEmpty == true ? rule!.provider : providers.first;
+    var provider = rule?.provider.isNotEmpty == true
+        ? rule!.provider
+        : providers.first;
     var packageId = rule?.packageId ?? '';
     final markup = TextEditingController(
       text: rule?.markupPercentage.toStringAsFixed(2) ?? '0',
@@ -116,15 +119,17 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                     onChanged: submitting
                         ? null
                         : (value) => setSheetState(() {
-                              provider = value ?? provider;
-                              packageId = '';
-                            }),
+                            provider = value ?? provider;
+                            packageId = '';
+                          }),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: packageId,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Package scope'),
+                    decoration: const InputDecoration(
+                      labelText: 'Package scope',
+                    ),
                     items: [
                       const DropdownMenuItem(
                         value: '',
@@ -147,16 +152,16 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                     ],
                     onChanged: submitting
                         ? null
-                        : (value) => setSheetState(
-                              () => packageId = value ?? '',
-                            ),
+                        : (value) =>
+                              setSheetState(() => packageId = value ?? ''),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   TextField(
                     controller: markup,
                     enabled: !submitting,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Customer markup %',
                       prefixIcon: Icon(Icons.percent_rounded),
@@ -180,7 +185,8 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                             final value = double.tryParse(markup.text.trim());
                             if (value == null) {
                               setSheetState(
-                                () => error = 'Enter a valid markup percentage.',
+                                () =>
+                                    error = 'Enter a valid markup percentage.',
                               );
                               return;
                             }
@@ -212,9 +218,7 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                               }
                             }
                           },
-                    child: Text(
-                      submitting ? 'Saving...' : 'Save pricing rule',
-                    ),
+                    child: Text(submitting ? 'Saving...' : 'Save pricing rule'),
                   ),
                 ],
               ),
@@ -232,16 +236,17 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final data = _data;
-    final rules = data?.rules
+    final rules =
+        data?.rules
             .where(
               (rule) =>
                   rule.targetRole.toLowerCase() == 'dealer' &&
@@ -258,10 +263,7 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
         ),
         title: const Text('Customer Pricing'),
         actions: [
-          IconButton(
-            onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded),
-          ),
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
         ],
       ),
       floatingActionButton: data == null
@@ -326,7 +328,7 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                                           data!.packages,
                                           rule.packageId,
                                         )?.name ??
-                                      rule.packageId),
+                                        rule.packageId),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -349,10 +351,7 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
                             : _delete(rule),
                         itemBuilder: (_) => const [
                           PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Delete'),
-                          ),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
                         ],
                       ),
                     ],
@@ -368,12 +367,13 @@ class _CustomerPricingScreenState extends State<CustomerPricingScreen> {
 }
 
 List<String> _providers(List<MobilePackage> packages) {
-  final values = packages
-      .map((item) => item.provider)
-      .where((item) => item.isNotEmpty)
-      .toSet()
-      .toList()
-    ..sort();
+  final values =
+      packages
+          .map((item) => item.provider)
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
   return values;
 }
 

@@ -50,7 +50,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     }
     try {
-      final result = await _repository.fetchDashboard(forceRefresh: forceRefresh);
+      final result = await _repository.fetchDashboard(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
       setState(() {
         _data = result;
@@ -83,31 +85,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   DashboardData get _demoData => DashboardData(
-        role: 'Reseller',
-        balance: 12540,
-        currency: 'USD',
-        todaySales: 8760.50,
-        monthlySales: 98760.50,
-        totalEsimCount: 1290,
-        activeEsimCount: 1248,
-        expiredEsimCount: 42,
-        recentOrders: [
-          DashboardOrderSummary(
-            id: 1,
-            orderNumber: 'R2W-1042',
-            productName: 'United States • 10 GB • 30 Days',
-            status: 'completed',
-            totalAmount: 23.09,
-            createdAt: DateTime.now().subtract(const Duration(minutes: 18)),
-          ),
-        ],
-      );
+    role: 'Reseller',
+    balance: 12540,
+    currency: 'USD',
+    todaySales: 8760.50,
+    monthlySales: 98760.50,
+    totalEsimCount: 1290,
+    activeEsimCount: 1248,
+    expiredEsimCount: 42,
+    recentOrders: [
+      DashboardOrderSummary(
+        id: 1,
+        orderNumber: 'R2W-1042',
+        productName: 'United States • 10 GB • 30 Days',
+        status: 'completed',
+        totalAmount: 23.09,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 18)),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(child: _buildBody()),
-      );
+    backgroundColor: AppColors.background,
+    body: SafeArea(child: _buildBody()),
+  );
 
   Widget _buildBody() {
     if (_loading && _data == null) {
@@ -285,7 +287,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(999),
@@ -454,7 +459,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Theme.of(context);
     final total = data.totalEsimCount;
     final active = data.activeEsimCount;
-    final ratio = total <= 0 ? 0.0 : (active / total).clamp(0.0, 1.0).toDouble();
+    final ratio = total <= 0
+        ? 0.0
+        : (active / total).clamp(0.0, 1.0).toDouble();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -635,10 +642,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -664,9 +668,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.35,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.35,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
@@ -710,8 +714,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _walletHero(DashboardData data) {
-    final currency = data.currency.trim().isEmpty ? 'USD' : data.currency.trim().toUpperCase();
-    final balance = _balanceVisible ? _money(data.balance, currency) : '••••••••';
+    final currency = data.currency.trim().isEmpty
+        ? 'USD'
+        : data.currency.trim().toUpperCase();
+    final balance = _balanceVisible
+        ? _money(data.balance, currency)
+        : '••••••••';
 
     return Container(
       height: 190,
@@ -755,9 +763,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
+                    onPressed: () =>
+                        setState(() => _balanceVisible = !_balanceVisible),
                     icon: Icon(
-                      _balanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _balanceVisible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.white70,
                       size: 20,
                     ),
@@ -828,10 +839,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _metricStrip(DashboardData data) {
     final metrics = [
-      _MetricData('Total Sales', _money(data.monthlySales, data.currency), Icons.account_balance_wallet_outlined, AppColors.primary, AppColors.primaryLight),
-      _MetricData('Total eSIMs', '${data.totalEsimCount}', Icons.sim_card_outlined, AppColors.sky, const Color(0xFFEAF7FE)),
-      _MetricData('Active eSIMs', '${data.activeEsimCount}', Icons.groups_2_outlined, AppColors.success, AppColors.successSoft),
-      _MetricData('Expired', '${data.expiredEsimCount}', Icons.pie_chart_outline_rounded, AppColors.warning, AppColors.warningSoft),
+      _MetricData(
+        'Total Sales',
+        _money(data.monthlySales, data.currency),
+        Icons.account_balance_wallet_outlined,
+        AppColors.primary,
+        AppColors.primaryLight,
+      ),
+      _MetricData(
+        'Total eSIMs',
+        '${data.totalEsimCount}',
+        Icons.sim_card_outlined,
+        AppColors.sky,
+        const Color(0xFFEAF7FE),
+      ),
+      _MetricData(
+        'Active eSIMs',
+        '${data.activeEsimCount}',
+        Icons.groups_2_outlined,
+        AppColors.success,
+        AppColors.successSoft,
+      ),
+      _MetricData(
+        'Expired',
+        '${data.expiredEsimCount}',
+        Icons.pie_chart_outline_rounded,
+        AppColors.warning,
+        AppColors.warningSoft,
+      ),
     ];
     return GridView.builder(
       shrinkWrap: true,
@@ -870,21 +905,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Icon(metric.icon, size: 16, color: metric.color),
           ),
           const Spacer(),
-          Text(metric.label, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5)),
+          Text(
+            metric.label,
+            style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5),
+          ),
           const SizedBox(height: 3),
           Text(
             metric.value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w800),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
             metric.label == 'Expired'
                 ? 'Live status'
                 : metric.label == 'Active eSIMs'
-                    ? 'In service'
-                    : 'Updated now',
+                ? 'In service'
+                : 'Updated now',
             style: theme.textTheme.bodySmall?.copyWith(
               fontSize: 9.5,
               color: AppColors.success,
@@ -898,7 +939,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _recentOrders(DashboardData data, {bool adminStyle = false}) {
     final theme = Theme.of(context);
-    final orders = data.recentOrders.take(adminStyle ? 5 : 4).toList(growable: false);
+    final orders = data.recentOrders
+        .take(adminStyle ? 5 : 4)
+        .toList(growable: false);
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -918,7 +961,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         'Recent Orders',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       if (adminStyle) ...[
                         const SizedBox(height: 2),
@@ -932,14 +977,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-                TextButton(onPressed: () => context.push('/orders'), child: const Text('View all')),
+                TextButton(
+                  onPressed: () => context.push('/orders'),
+                  child: const Text('View all'),
+                ),
               ],
             ),
           ),
           if (orders.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-              child: Text('Latest eSIM orders will appear here.', style: theme.textTheme.bodyMedium),
+              child: Text(
+                'Latest eSIM orders will appear here.',
+                style: theme.textTheme.bodyMedium,
+              ),
             )
           else
             for (var i = 0; i < orders.length; i++) ...[
@@ -958,7 +1009,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _orderRow(DashboardOrderSummary order, String currency) {
     final theme = Theme.of(context);
-    final completed = order.status.toLowerCase().contains('complete') ||
+    final completed =
+        order.status.toLowerCase().contains('complete') ||
         order.status.toLowerCase().contains('success');
     final date = order.createdAt == null
         ? order.orderNumber
@@ -974,7 +1026,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(9),
             ),
-            child: const Icon(Icons.public_rounded, size: 16, color: AppColors.primary),
+            child: const Icon(
+              Icons.public_rounded,
+              size: 16,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1031,15 +1087,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _quickActions(AppRole role) {
     final actions = <_ActionData>[
-      _ActionData('My eSIMs', Icons.sim_card_outlined, AppColors.sky, () => context.go('/esims')),
-      _ActionData('SIM Tools', Icons.sim_card_rounded, AppColors.navy, () => context.push('/sim-tools')),
+      _ActionData(
+        'My eSIMs',
+        Icons.sim_card_outlined,
+        AppColors.sky,
+        () => context.go('/esims'),
+      ),
+      _ActionData(
+        'SIM Tools',
+        Icons.sim_card_rounded,
+        AppColors.navy,
+        () => context.push('/sim-tools'),
+      ),
       if (!kIsWeb &&
-          (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS))
-        _ActionData('Roam2World eSIM', Icons.qr_code_2_rounded, AppColors.navy, () => context.push('/roam-lpa')),
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS))
+        _ActionData(
+          'Roam2World eSIM',
+          Icons.qr_code_2_rounded,
+          AppColors.navy,
+          () => context.push('/roam-lpa'),
+        ),
       if (role == AppRole.reseller || role == AppRole.dealer)
-        _ActionData('GB Query', Icons.data_usage_rounded, AppColors.primary, () => context.push('/provider-tools/usage')),
+        _ActionData(
+          'GB Query',
+          Icons.data_usage_rounded,
+          AppColors.primary,
+          () => context.push('/provider-tools/usage'),
+        ),
       if (role == AppRole.reseller || role == AppRole.dealer)
-        _ActionData('Renew / Top-up', Icons.autorenew_rounded, AppColors.success, () => context.push('/provider-tools/renew')),
+        _ActionData(
+          'Renew / Top-up',
+          Icons.autorenew_rounded,
+          AppColors.success,
+          () => context.push('/provider-tools/renew'),
+        ),
     ];
 
     return Container(
@@ -1055,7 +1137,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Text(
             'Quick Actions',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
           Row(
@@ -1073,61 +1157,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _actionItem(_ActionData action) => InkWell(
-        onTap: action.onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          children: [
-            Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: action.color.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: action.color.withValues(alpha: .10)),
-              ),
-              child: Center(child: Icon(action.icon, color: action.color, size: 21)),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              action.label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 9,
-                    height: 1.1,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ],
+    onTap: action.onTap,
+    borderRadius: BorderRadius.circular(14),
+    child: Column(
+      children: [
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: action.color.withValues(alpha: .08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: action.color.withValues(alpha: .10)),
+          ),
+          child: Center(
+            child: Icon(action.icon, color: action.color, size: 21),
+          ),
         ),
-      );
+        const SizedBox(height: 7),
+        Text(
+          action.label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 9,
+            height: 1.1,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _staleBanner() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: AppColors.warningSoft,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+    decoration: BoxDecoration(
+      color: AppColors.warningSoft,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.warning.withValues(alpha: .25)),
+    ),
+    child: Row(
+      children: [
+        const Icon(
+          Icons.info_outline_rounded,
+          color: AppColors.warning,
+          size: 17,
         ),
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 17),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                kDebugMode && widget.allowDemoFallback
-                    ? 'Preview data is shown while dashboard API access is unavailable.'
-                    : 'Showing the last available dashboard data.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            kDebugMode && widget.allowDemoFallback
+                ? 'Preview data is shown while dashboard API access is unavailable.'
+                : 'Showing the last available dashboard data.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
-          ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   String _friendlyRole(String role) {
     final value = role.trim();
@@ -1161,37 +1251,37 @@ class _AdminDarkMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .06),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: .08)),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .06),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: Colors.white.withValues(alpha: .08)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        const SizedBox(height: 3),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _AdminStatusValue extends StatelessWidget {
@@ -1207,60 +1297,67 @@ class _AdminStatusValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-        ],
-      );
+    children: [
+      Text(
+        value,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+      ),
+    ],
+  );
 }
 
 class _SquareIconButton extends StatelessWidget {
-  const _SquareIconButton({required this.icon, required this.onTap, this.badge = false});
+  const _SquareIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badge = false,
+  });
   final IconData icon;
   final VoidCallback onTap;
   final bool badge;
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(13),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Icon(icon, size: 20, color: AppColors.textPrimary),
-            ),
-            if (badge)
-              const Positioned(
-                right: 4,
-                top: 4,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                  child: SizedBox(width: 7, height: 7),
-                ),
-              ),
-          ],
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(13),
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Icon(icon, size: 20, color: AppColors.textPrimary),
         ),
-      );
+        if (badge)
+          const Positioned(
+            right: 4,
+            top: 4,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(width: 7, height: 7),
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 class _MetricData {

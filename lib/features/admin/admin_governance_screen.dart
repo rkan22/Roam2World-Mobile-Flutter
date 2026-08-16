@@ -37,7 +37,10 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
       final data = await _repository.fetchAll();
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Governance configuration could not be loaded.');
+      if (mounted)
+        setState(
+          () => _error = 'Governance configuration could not be loaded.',
+        );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -77,8 +80,14 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
@@ -89,12 +98,16 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
       if (decoded is! Map) throw const FormatException();
       await save(Map<String, dynamic>.from(decoded));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Governance configuration saved.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Governance configuration saved.')),
+      );
       await _load();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid JSON or server rejected the configuration.')),
+        const SnackBar(
+          content: Text('Invalid JSON or server rejected the configuration.'),
+        ),
       );
     }
   }
@@ -104,17 +117,30 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
     final data = _data;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Governance'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.md, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.md,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('Platform governance', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Platform governance',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Live role, account and catalog governance stored by the backend.',
@@ -130,21 +156,33 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
                 'Role permissions',
                 Icons.admin_panel_settings_outlined,
                 data.rolePermissions,
-                () => _edit('Role permissions', data.rolePermissions, _repository.saveRolePermissions),
+                () => _edit(
+                  'Role permissions',
+                  data.rolePermissions,
+                  _repository.saveRolePermissions,
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
               _section(
                 'Account governance',
                 Icons.manage_accounts_outlined,
                 data.accountGovernance,
-                () => _edit('Account governance', data.accountGovernance, _repository.saveAccountGovernance),
+                () => _edit(
+                  'Account governance',
+                  data.accountGovernance,
+                  _repository.saveAccountGovernance,
+                ),
               ),
               const SizedBox(height: B2BSpacing.md),
               _section(
                 'Catalog governance',
                 Icons.inventory_2_outlined,
                 data.catalogGovernance,
-                () => _edit('Catalog governance', data.catalogGovernance, _repository.saveCatalogGovernance),
+                () => _edit(
+                  'Catalog governance',
+                  data.catalogGovernance,
+                  _repository.saveCatalogGovernance,
+                ),
               ),
             ],
           ],
@@ -153,18 +191,37 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
     );
   }
 
-  Widget _section(String title, IconData icon, Map<String, dynamic> value, VoidCallback edit) {
+  Widget _section(
+    String title,
+    IconData icon,
+    Map<String, dynamic> value,
+    VoidCallback edit,
+  ) {
     final preview = const JsonEncoder.withIndent('  ').convert(value);
     return B2BSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Icon(icon, color: AppColors.primary),
-            const SizedBox(width: B2BSpacing.sm),
-            Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
-            OutlinedButton.icon(onPressed: edit, icon: const Icon(Icons.edit_outlined), label: const Text('Edit')),
-          ]),
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary),
+              const SizedBox(width: B2BSpacing.sm),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: edit,
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Edit'),
+              ),
+            ],
+          ),
           const SizedBox(height: B2BSpacing.md),
           Container(
             width: double.infinity,
@@ -175,7 +232,9 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
             ),
             child: SelectableText(
               preview,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ),
         ],

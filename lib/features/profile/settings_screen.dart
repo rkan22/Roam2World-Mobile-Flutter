@@ -217,7 +217,10 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Settings', style: Theme.of(context).textTheme.headlineLarge),
+              Text(
+                'Settings',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
               const SizedBox(height: B2BSpacing.xxs),
               Text(
                 'Control your Roam2World business workspace.',

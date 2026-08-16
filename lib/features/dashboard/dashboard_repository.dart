@@ -51,7 +51,9 @@ class DashboardRepository {
     try {
       final isAdmin = effectiveRole == AppRole.admin;
       var data = await _apiClient.get<DashboardData>(
-        isAdmin ? ApiEndpoints.mobileAdminDashboard : ApiEndpoints.mobileDashboard,
+        isAdmin
+            ? ApiEndpoints.mobileAdminDashboard
+            : ApiEndpoints.mobileDashboard,
         queryParameters: !isAdmin && explicitPeriod
             ? {'period': period.trim()}
             : null,
@@ -92,21 +94,25 @@ class DashboardRepository {
         ApiEndpoints.mobileOrders,
         parser: OrderHistory.fromResponse,
       );
-      final successfulOrders = history.orders.where((order) {
-        final status = order.status.toLowerCase();
-        return status != 'failed' &&
-            status != 'cancelled' &&
-            status != 'canceled' &&
-            status != 'refunded';
-      }).toList(growable: false);
+      final successfulOrders = history.orders
+          .where((order) {
+            final status = order.status.toLowerCase();
+            return status != 'failed' &&
+                status != 'cancelled' &&
+                status != 'canceled' &&
+                status != 'refunded';
+          })
+          .toList(growable: false);
       final now = DateTime.now();
-      final todaySales = successfulOrders.where((order) {
-        final createdAt = order.createdAt?.toLocal();
-        return createdAt != null &&
-            createdAt.year == now.year &&
-            createdAt.month == now.month &&
-            createdAt.day == now.day;
-      }).fold<double>(0, (sum, order) => sum + order.amount);
+      final todaySales = successfulOrders
+          .where((order) {
+            final createdAt = order.createdAt?.toLocal();
+            return createdAt != null &&
+                createdAt.year == now.year &&
+                createdAt.month == now.month &&
+                createdAt.day == now.day;
+          })
+          .fold<double>(0, (sum, order) => sum + order.amount);
       final totalSales = successfulOrders.fold<double>(
         0,
         (sum, order) => sum + order.amount,

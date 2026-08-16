@@ -23,7 +23,8 @@ class BusinessDashboardScreen extends StatefulWidget {
   final DashboardRepository? repository;
 
   @override
-  State<BusinessDashboardScreen> createState() => _BusinessDashboardScreenState();
+  State<BusinessDashboardScreen> createState() =>
+      _BusinessDashboardScreenState();
 }
 
 class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
@@ -128,9 +129,9 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.35,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.35,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
@@ -174,7 +175,9 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
 
   Widget _walletHero(DashboardData data) {
     final currency = data.currency.trim().isEmpty ? 'USD' : data.currency;
-    final balance = _balanceVisible ? _money(data.balance, currency) : '••••••••';
+    final balance = _balanceVisible
+        ? _money(data.balance, currency)
+        : '••••••••';
 
     return Container(
       height: 190,
@@ -182,7 +185,11 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.heroStart, AppColors.heroMiddle, AppColors.heroEnd],
+          colors: [
+            AppColors.heroStart,
+            AppColors.heroMiddle,
+            AppColors.heroEnd,
+          ],
         ),
         borderRadius: BorderRadius.circular(22),
         boxShadow: B2BShadows.hero,
@@ -284,7 +291,11 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.public_rounded, color: Colors.white, size: 14),
+                              const Icon(
+                                Icons.public_rounded,
+                                color: Colors.white,
+                                size: 14,
+                              ),
                               const SizedBox(width: 6),
                               const Expanded(
                                 child: Text(
@@ -301,8 +312,13 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                               IconButton(
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                onPressed: () => setState(() => _balanceVisible = !_balanceVisible),
+                                constraints: const BoxConstraints(
+                                  minWidth: 28,
+                                  minHeight: 28,
+                                ),
+                                onPressed: () => setState(
+                                  () => _balanceVisible = !_balanceVisible,
+                                ),
                                 icon: Icon(
                                   _balanceVisible
                                       ? Icons.visibility_outlined
@@ -396,7 +412,10 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Recent orders', style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  'Recent orders',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
               TextButton(
                 onPressed: () => context.go('/orders'),
@@ -412,9 +431,11 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
               message: 'Recent orders will appear here.',
             )
           else
-            for (var index = 0;
-                index < data.recentOrders.length && index < 4;
-                index++) ...[
+            for (
+              var index = 0;
+              index < data.recentOrders.length && index < 4;
+              index++
+            ) ...[
               _OrderRow(
                 order: data.recentOrders[index],
                 amount: _money(data.recentOrders[index].totalAmount, currency),
@@ -458,7 +479,10 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                 borderRadius: BorderRadius.circular(14),
                 onTap: () => context.go(action.route),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(14),
@@ -472,7 +496,10 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                           action.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -487,65 +514,98 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
   }
 
   String get _subtitle => switch (widget.role) {
-        AppRole.admin => 'Here’s what’s happening across the platform today.',
-        AppRole.reseller => 'Here’s what’s happening with your reseller business today.',
-        AppRole.dealer => 'Here’s what’s happening with your dealer business today.',
-        _ => 'Here’s what’s happening with your business today.',
-      };
+    AppRole.admin => 'Here’s what’s happening across the platform today.',
+    AppRole.reseller =>
+      'Here’s what’s happening with your reseller business today.',
+    AppRole.dealer =>
+      'Here’s what’s happening with your dealer business today.',
+    _ => 'Here’s what’s happening with your business today.',
+  };
 
   String get _balanceLabel => switch (widget.role) {
-        AppRole.reseller => 'Available Credit',
-        AppRole.dealer => 'Available Balance',
-        _ => 'Wallet Balance',
-      };
+    AppRole.reseller => 'Available Credit',
+    AppRole.dealer => 'Available Balance',
+    _ => 'Wallet Balance',
+  };
 
   String get _primaryHeroLabel => switch (widget.role) {
-        AppRole.admin => 'Operations',
-        AppRole.reseller => 'Add Funds',
-        AppRole.dealer => 'Add Funds',
-        _ => 'Wallet',
-      };
+    AppRole.admin => 'Operations',
+    AppRole.reseller => 'Add Funds',
+    AppRole.dealer => 'Add Funds',
+    _ => 'Wallet',
+  };
 
   IconData get _primaryHeroIcon => switch (widget.role) {
-        AppRole.admin => Icons.monitor_heart_outlined,
-        _ => Icons.add_rounded,
-      };
+    AppRole.admin => Icons.monitor_heart_outlined,
+    _ => Icons.add_rounded,
+  };
 
   String get _primaryHeroRoute => switch (widget.role) {
-        AppRole.admin => '/operations',
-        _ => '/wallet',
-      };
+    AppRole.admin => '/operations',
+    _ => '/wallet',
+  };
 
   List<_DashboardAction> get _actions => switch (widget.role) {
-        AppRole.admin => const [
-            _DashboardAction('Orders', Icons.receipt_long_outlined, '/orders'),
-            _DashboardAction('Operations', Icons.monitor_heart_outlined, '/operations'),
-            _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
-            _DashboardAction('eSIMs', Icons.sim_card_outlined, '/esims'),
-            _DashboardAction('Catalog', Icons.inventory_2_outlined, '/packages'),
-            _DashboardAction('Wallet', Icons.account_balance_wallet_outlined, '/wallet'),
-          ],
-        AppRole.reseller => const [
-            _DashboardAction('Dealer Network', Icons.storefront_outlined, '/dealers'),
-            _DashboardAction('Dealer Pricing', Icons.percent_rounded, '/dealers/pricing'),
-            _DashboardAction('Finance', Icons.account_balance_wallet_outlined, '/finance'),
-            _DashboardAction('Operations', Icons.monitor_heart_outlined, '/operations'),
-            _DashboardAction('Clients', Icons.groups_outlined, '/clients'),
-            _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
-          ],
-        AppRole.dealer => const [
-            _DashboardAction('Customer Pricing', Icons.percent_rounded, '/pricing/customer'),
-            _DashboardAction('Finance', Icons.account_balance_wallet_outlined, '/finance'),
-            _DashboardAction('Clients', Icons.groups_outlined, '/clients'),
-            _DashboardAction('Orders', Icons.receipt_long_outlined, '/orders'),
-            _DashboardAction('eSIMs', Icons.sim_card_outlined, '/esims'),
-            _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
-          ],
-        _ => const [],
-      };
+    AppRole.admin => const [
+      _DashboardAction('Orders', Icons.receipt_long_outlined, '/orders'),
+      _DashboardAction(
+        'Operations',
+        Icons.monitor_heart_outlined,
+        '/operations',
+      ),
+      _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
+      _DashboardAction('eSIMs', Icons.sim_card_outlined, '/esims'),
+      _DashboardAction('Catalog', Icons.inventory_2_outlined, '/packages'),
+      _DashboardAction(
+        'Wallet',
+        Icons.account_balance_wallet_outlined,
+        '/wallet',
+      ),
+    ],
+    AppRole.reseller => const [
+      _DashboardAction('Dealer Network', Icons.storefront_outlined, '/dealers'),
+      _DashboardAction(
+        'Dealer Pricing',
+        Icons.percent_rounded,
+        '/dealers/pricing',
+      ),
+      _DashboardAction(
+        'Finance',
+        Icons.account_balance_wallet_outlined,
+        '/finance',
+      ),
+      _DashboardAction(
+        'Operations',
+        Icons.monitor_heart_outlined,
+        '/operations',
+      ),
+      _DashboardAction('Clients', Icons.groups_outlined, '/clients'),
+      _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
+    ],
+    AppRole.dealer => const [
+      _DashboardAction(
+        'Customer Pricing',
+        Icons.percent_rounded,
+        '/pricing/customer',
+      ),
+      _DashboardAction(
+        'Finance',
+        Icons.account_balance_wallet_outlined,
+        '/finance',
+      ),
+      _DashboardAction('Clients', Icons.groups_outlined, '/clients'),
+      _DashboardAction('Orders', Icons.receipt_long_outlined, '/orders'),
+      _DashboardAction('eSIMs', Icons.sim_card_outlined, '/esims'),
+      _DashboardAction('Reports', Icons.analytics_outlined, '/reports'),
+    ],
+    _ => const [],
+  };
 
   String _money(double value, String currency) {
-    return NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
+    return NumberFormat.currency(
+      name: currency,
+      symbol: '$currency ',
+    ).format(value);
   }
 
   Widget _staleBanner() {
@@ -586,7 +646,9 @@ class _SquareIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Icon(icon, size: 21),
       ),
@@ -622,7 +684,11 @@ class _OrderRow extends StatelessWidget {
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.shopping_bag_outlined, size: 18, color: AppColors.primary),
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -7,20 +7,24 @@ class DealerPerformanceData {
 
   int get totalOrders => orders.length;
   int get completedOrders => orders.where((order) {
+    final status = order.status.toLowerCase();
+    return status == 'completed' || status == 'success';
+  }).length;
+  double get completedRevenue => orders
+      .where((order) {
         final status = order.status.toLowerCase();
         return status == 'completed' || status == 'success';
-      }).length;
-  double get completedRevenue => orders.where((order) {
-        final status = order.status.toLowerCase();
-        return status == 'completed' || status == 'success';
-      }).fold<double>(0, (sum, order) => sum + order.amount);
-  double get successRate => totalOrders == 0 ? 0 : completedOrders / totalOrders * 100;
-  double get averageCompletedOrder => completedOrders == 0 ? 0 : completedRevenue / completedOrders;
+      })
+      .fold<double>(0, (sum, order) => sum + order.amount);
+  double get successRate =>
+      totalOrders == 0 ? 0 : completedOrders / totalOrders * 100;
+  double get averageCompletedOrder =>
+      completedOrders == 0 ? 0 : completedRevenue / completedOrders;
 }
 
 class DealerPerformanceRepository {
   DealerPerformanceRepository({OrdersRepository? ordersRepository})
-      : _ordersRepository = ordersRepository ?? OrdersRepository();
+    : _ordersRepository = ordersRepository ?? OrdersRepository();
 
   final OrdersRepository _ordersRepository;
 

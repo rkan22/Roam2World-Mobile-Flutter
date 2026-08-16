@@ -30,11 +30,12 @@ class AdminPricingSnapshot {
       activeRules: _int(data['active_rules']),
       items: rows is List
           ? rows
-              .whereType<Map>()
-              .map((row) => AdminPricingItem.fromJson(
-                    Map<String, dynamic>.from(row),
-                  ))
-              .toList(growable: false)
+                .whereType<Map>()
+                .map(
+                  (row) =>
+                      AdminPricingItem.fromJson(Map<String, dynamic>.from(row)),
+                )
+                .toList(growable: false)
           : const [],
     );
   }
@@ -113,7 +114,7 @@ class AdminReportsSnapshot {
 
 class AdminCommercialRepository {
   AdminCommercialRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -147,5 +148,4 @@ Map<String, dynamic> _map(dynamic value) =>
 
 int _int(dynamic value) => int.tryParse((value ?? 0).toString()) ?? 0;
 
-double _double(dynamic value) =>
-    double.tryParse((value ?? 0).toString()) ?? 0;
+double _double(dynamic value) => double.tryParse((value ?? 0).toString()) ?? 0;

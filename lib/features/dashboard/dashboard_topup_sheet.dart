@@ -143,7 +143,9 @@ class _DashboardTopUpSheetState extends State<_DashboardTopUpSheet> {
                   ),
                 ),
                 IconButton(
-                  onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+                  onPressed: _submitting
+                      ? null
+                      : () => Navigator.of(context).pop(false),
                   icon: const Icon(Icons.close_rounded),
                 ),
               ],
@@ -151,7 +153,9 @@ class _DashboardTopUpSheetState extends State<_DashboardTopUpSheet> {
             const SizedBox(height: 18),
             Text(
               'Quick amount',
-              style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -178,7 +182,9 @@ class _DashboardTopUpSheetState extends State<_DashboardTopUpSheet> {
             TextField(
               controller: _amountController,
               enabled: !_submitting,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: InputDecoration(
                 labelText: 'Custom amount',
                 prefixText: '$currency ',
@@ -212,11 +218,17 @@ class _DashboardTopUpSheetState extends State<_DashboardTopUpSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.danger.withValues(alpha: .08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.danger.withValues(alpha: .18)),
+                  border: Border.all(
+                    color: AppColors.danger.withValues(alpha: .18),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 18),
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.danger,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -238,22 +250,31 @@ class _DashboardTopUpSheetState extends State<_DashboardTopUpSheet> {
               child: FilledButton.icon(
                 onPressed: _submitting || _success ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: _success ? AppColors.success : AppColors.navy,
+                  backgroundColor: _success
+                      ? AppColors.success
+                      : AppColors.navy,
                   foregroundColor: Colors.white,
                 ),
                 icon: _submitting
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : Icon(_success ? Icons.check_circle_rounded : Icons.add_rounded),
+                    : Icon(
+                        _success
+                            ? Icons.check_circle_rounded
+                            : Icons.add_rounded,
+                      ),
                 label: Text(
                   _success
                       ? 'Request submitted'
                       : _submitting
-                          ? 'Submitting...'
-                          : 'Submit top-up request',
+                      ? 'Submitting...'
+                      : 'Submit top-up request',
                 ),
               ),
             ),

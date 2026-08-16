@@ -20,6 +20,9 @@ const _androidChannel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
+/// Shared unread count used by dashboard notification badges.
+final ValueNotifier<int> mobileNotificationUnreadCount = ValueNotifier<int>(0);
+
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -63,19 +66,22 @@ class PushNotificationService {
             badge: true,
             sound: false,
           );
+      await refreshUnreadCount();
       await _registerCurrentToken();
       _tokenSubscription ??= FirebaseMessaging.instance.onTokenRefresh.listen(
         _registerTokenSafely,
       );
 
-      final initialMessage =
-          await FirebaseMessaging.instance.getInitialMessage();
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
       if (initialMessage != null) {
         scheduleMicrotask(() => _openMessage(initialMessage));
       }
     } catch (error, stackTrace) {
       _enabled = false;
-      debugPrint('Push notifications could not be enabled: $error\n$stackTrace');
+      debugPrint(
+        'Push notifications could not be enabled: $error\n$stackTrace',
+      );
     }
   }
 
@@ -107,10 +113,12 @@ class PushNotificationService {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
       await _initializeLocalNotifications();
-      _foregroundSubscription ??=
-          FirebaseMessaging.onMessage.listen(_showForegroundMessage);
-      _openedSubscription ??=
-          FirebaseMessaging.onMessageOpenedApp.listen(_openMessage);
+      _foregroundSubscription ??= FirebaseMessaging.onMessage.listen(
+        _showForegroundMessage,
+      );
+      _openedSubscription ??= FirebaseMessaging.onMessageOpenedApp.listen(
+        _openMessage,
+      );
       _initialized = true;
       return true;
     } catch (error, stackTrace) {
@@ -123,7 +131,7 @@ class PushNotificationService {
 
   Future<void> _initializeLocalNotifications() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwin = DarwinInitializationSettings();
+    const darwin = DarwinInitializationSettings(defaultPresentSound: true);
     await _localNotifications.initialize(
       settings: const InitializationSettings(android: android, iOS: darwin),
       onDidReceiveNotificationResponse: (response) {
@@ -138,7 +146,8 @@ class PushNotificationService {
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
   }
 
@@ -167,10 +176,12 @@ class PushNotificationService {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
+          sound: 'default',
         ),
       ),
       payload: jsonEncode(message.data),
     );
+    mobileNotificationUnreadCount.value += 1;
   }
 
   void _openMessage(RemoteMessage message) => _navigate(message.data);
@@ -179,6 +190,20 @@ class PushNotificationService {
     final router = _router;
     if (router == null) return;
     router.go(resolvePushRoute(data));
+  }
+
+  Future<void> refreshUnreadCount() async {
+    try {
+      final items = await _repository.fetchNotifications();
+      mobileNotificationUnreadCount.value = items
+          .where((item) => !item.isRead)
+          .length;
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Notification unread count could not be refreshed: '
+        '$error\n$stackTrace',
+      );
+    }
   }
 
   Future<void> _registerCurrentToken() async {

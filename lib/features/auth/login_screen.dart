@@ -93,14 +93,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: B2BShadows.card,
                         ),
-                        child: const Icon(Icons.public_rounded, color: Colors.white, size: 25),
+                        child: const Icon(
+                          Icons.public_rounded,
+                          color: Colors.white,
+                          size: 25,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Roam2World', style: theme.textTheme.titleLarge),
-                          Text('Partner workspace', style: theme.textTheme.bodySmall),
+                          Text(
+                            'Partner workspace',
+                            style: theme.textTheme.bodySmall,
+                          ),
                         ],
                       ),
                     ],
@@ -132,7 +139,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 11,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: .14),
                                 borderRadius: BorderRadius.circular(999),
@@ -176,7 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(B2BRadius.xl),
-                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                      ),
                       boxShadow: B2BShadows.card,
                     ),
                     child: Form(
@@ -184,9 +196,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Sign in to your account', style: theme.textTheme.titleLarge),
+                          Text(
+                            'Sign in to your account',
+                            style: theme.textTheme.titleLarge,
+                          ),
                           const SizedBox(height: 6),
-                          Text('Use your Roam2World partner credentials.', style: theme.textTheme.bodyMedium),
+                          Text(
+                            'Use your Roam2World partner credentials.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _emailController,
@@ -200,8 +218,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             validator: (value) {
                               final text = value?.trim() ?? '';
-                              if (text.isEmpty) return 'Enter your email address';
-                              if (!text.contains('@')) return 'Enter a valid email address';
+                              if (text.isEmpty)
+                                return 'Enter your email address';
+                              if (!text.contains('@'))
+                                return 'Enter a valid email address';
                               return null;
                             },
                           ),
@@ -215,11 +235,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             onFieldSubmitted: (_) => _submit(),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline_rounded),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
                               suffixIcon: IconButton(
                                 onPressed: _isLoading
                                     ? null
-                                    : () => setState(() => _hidePassword = !_hidePassword),
+                                    : () => setState(
+                                        () => _hidePassword = !_hidePassword,
+                                      ),
                                 icon: Icon(
                                   _hidePassword
                                       ? Icons.visibility_outlined
@@ -228,7 +252,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             validator: (value) {
-                              if ((value ?? '').isEmpty) return 'Enter your password';
+                              if ((value ?? '').isEmpty)
+                                return 'Enter your password';
                               if ((value ?? '').length < 6) {
                                 return 'Password must be at least 6 characters';
                               }
@@ -242,14 +267,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                 value: _rememberMe,
                                 onChanged: _isLoading
                                     ? null
-                                    : (value) => setState(() => _rememberMe = value ?? true),
+                                    : (value) => setState(
+                                        () => _rememberMe = value ?? true,
+                                      ),
                               ),
-                              Text('Remember me', style: theme.textTheme.bodyMedium),
+                              Text(
+                                'Remember me',
+                                style: theme.textTheme.bodyMedium,
+                              ),
                               const Spacer(),
                               TextButton(
                                 onPressed: _isLoading
                                     ? null
-                                    : () => context.push(AppRoutes.forgotPassword),
+                                    : () => context.push(
+                                        AppRoutes.forgotPassword,
+                                      ),
                                 child: const Text('Forgot password?'),
                               ),
                             ],
@@ -275,7 +307,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 18),
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.successSoft,
                         borderRadius: BorderRadius.circular(999),
@@ -283,7 +318,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.verified_user_outlined, size: 17, color: AppColors.success),
+                          Icon(
+                            Icons.verified_user_outlined,
+                            size: 17,
+                            color: AppColors.success,
+                          ),
                           SizedBox(width: 7),
                           Text(
                             'Secure partner access',

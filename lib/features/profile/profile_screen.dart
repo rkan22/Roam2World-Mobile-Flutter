@@ -95,7 +95,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _editProfile() async {
     final first = TextEditingController(text: _profile?.firstName ?? '');
     final last = TextEditingController(text: _profile?.lastName ?? '');
-    final countryCode = TextEditingController(text: _profile?.countryCode ?? '');
+    final countryCode = TextEditingController(
+      text: _profile?.countryCode ?? '',
+    );
     final phone = TextEditingController(text: _profile?.phoneNumber ?? '');
     final country = TextEditingController(text: _profileValue('country'));
     final city = TextEditingController(text: _profileValue('city'));
@@ -117,29 +119,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit profile', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Edit profile',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 16),
-              Row(children: [
-                Expanded(child: TextField(controller: first, decoration: const InputDecoration(labelText: 'First name'))),
-                const SizedBox(width: 10),
-                Expanded(child: TextField(controller: last, decoration: const InputDecoration(labelText: 'Last name'))),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: first,
+                      decoration: const InputDecoration(
+                        labelText: 'First name',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: last,
+                      decoration: const InputDecoration(labelText: 'Last name'),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
-              Row(children: [
-                SizedBox(width: 100, child: TextField(controller: countryCode, decoration: const InputDecoration(labelText: 'Code'))),
-                const SizedBox(width: 10),
-                Expanded(child: TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone'))),
-              ]),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: TextField(
+                      controller: countryCode,
+                      decoration: const InputDecoration(labelText: 'Code'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: phone,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(labelText: 'Phone'),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
-              TextField(controller: country, decoration: const InputDecoration(labelText: 'Country')),
+              TextField(
+                controller: country,
+                decoration: const InputDecoration(labelText: 'Country'),
+              ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(child: TextField(controller: city, decoration: const InputDecoration(labelText: 'City'))),
-                const SizedBox(width: 10),
-                Expanded(child: TextField(controller: postal, decoration: const InputDecoration(labelText: 'Postal code'))),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: city,
+                      decoration: const InputDecoration(labelText: 'City'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: postal,
+                      decoration: const InputDecoration(
+                        labelText: 'Postal code',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
-              TextField(controller: address, maxLines: 2, decoration: const InputDecoration(labelText: 'Address')),
+              TextField(
+                controller: address,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -167,15 +221,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         address: address.text,
       );
       await _load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile could not be updated: $error')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile could not be updated: $error')),
+        );
     }
   }
 
   Future<void> _changePassword() async {
-    if (_oldPassword.text.isEmpty || _newPassword.text.length < 8 || _newPassword.text != _confirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Check your current password and make sure the new passwords match (minimum 8 characters).')));
+    if (_oldPassword.text.isEmpty ||
+        _newPassword.text.length < 8 ||
+        _newPassword.text != _confirmPassword.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Check your current password and make sure the new passwords match (minimum 8 characters).',
+          ),
+        ),
+      );
       return;
     }
     setState(() => _savingPassword = true);
@@ -188,9 +256,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _oldPassword.clear();
       _newPassword.clear();
       _confirmPassword.clear();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed successfully.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password changed successfully.')),
+        );
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password could not be changed: $error')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password could not be changed: $error')),
+        );
     } finally {
       if (mounted) setState(() => _savingPassword = false);
     }
@@ -201,7 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Log out?'),
-        content: const Text('Your secure business session will be removed from this device.'),
+        content: const Text(
+          'Your secure business session will be removed from this device.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -222,7 +298,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDealer = parseAppRole(_profile?.role ?? _session?.role) == AppRole.dealer;
+    final isDealer =
+        parseAppRole(_profile?.role ?? _session?.role) == AppRole.dealer;
     return Scaffold(
       bottomNavigationBar: const R2WBottomNav(selectedIndex: 4),
       body: SafeArea(
@@ -232,21 +309,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
             children: [
-              Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Profile Settings', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 3),
-                  Text(isDealer ? 'Manage your dealer account and preferences.' : 'Manage your account and preferences.', style: Theme.of(context).textTheme.bodySmall),
-                ])),
-                OutlinedButton.icon(onPressed: _loading ? null : _editProfile, icon: const Icon(Icons.edit_outlined, size: 17), label: const Text('Edit Profile')),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Profile Settings',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isDealer
+                              ? 'Manage your dealer account and preferences.'
+                              : 'Manage your account and preferences.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _loading ? null : _editProfile,
+                    icon: const Icon(Icons.edit_outlined, size: 17),
+                    label: const Text('Edit Profile'),
+                  ),
+                ],
+              ),
               const SizedBox(height: 18),
               _section('Personal Information', _personalInformation()),
               const SizedBox(height: 18),
               _section('Account Status', _accountStatus()),
               if (isDealer && _dashboard != null) ...[
                 const SizedBox(height: 18),
-                Text('Quick Stats', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  'Quick Stats',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
                 const SizedBox(height: 10),
                 _quickStats(),
               ],
@@ -264,33 +366,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _section(String title, Widget child) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10),
-          B2BSurface(padding: const EdgeInsets.all(16), child: child),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 10),
+      B2BSurface(padding: const EdgeInsets.all(16), child: child),
+    ],
+  );
 
-  Widget _personalInformation() => Column(children: [
-        _info('Full Name', _fullName),
-        _info('Email', _email.isEmpty ? 'Not provided' : _email),
-        _info('Phone Number', _phone),
-        _info('Country', _profileValue('country').isEmpty ? 'Not provided' : _profileValue('country')),
-        _info('City', _profileValue('city').isEmpty ? 'Not provided' : _profileValue('city')),
-        _info('Postal Code', _profileValue('postal_code').isEmpty ? 'Not provided' : _profileValue('postal_code')),
-        _info('Address', _profileValue('address').isEmpty ? 'Not provided' : _profileValue('address'), last: true),
-      ]);
+  Widget _personalInformation() => Column(
+    children: [
+      _info('Full Name', _fullName),
+      _info('Email', _email.isEmpty ? 'Not provided' : _email),
+      _info('Phone Number', _phone),
+      _info(
+        'Country',
+        _profileValue('country').isEmpty
+            ? 'Not provided'
+            : _profileValue('country'),
+      ),
+      _info(
+        'City',
+        _profileValue('city').isEmpty ? 'Not provided' : _profileValue('city'),
+      ),
+      _info(
+        'Postal Code',
+        _profileValue('postal_code').isEmpty
+            ? 'Not provided'
+            : _profileValue('postal_code'),
+      ),
+      _info(
+        'Address',
+        _profileValue('address').isEmpty
+            ? 'Not provided'
+            : _profileValue('address'),
+        last: true,
+      ),
+    ],
+  );
 
   Widget _accountStatus() {
     final created = _profile?.createdAt;
     final login = _profile?.lastLogin;
-    return Column(children: [
-      _info('Status', _profile?.isActive == false ? 'Inactive' : 'Active', valueColor: _profile?.isActive == false ? AppColors.danger : AppColors.success),
-      _info('Account Type', _roleLabel(_profile?.role ?? _session?.role)),
-      if (created != null) _info('Member Since', DateFormat('MMM d, yyyy').format(created.toLocal())),
-      if (login != null) _info('Last Login', DateFormat('MMM d, yyyy, HH:mm').format(login.toLocal()), last: true),
-    ]);
+    return Column(
+      children: [
+        _info(
+          'Status',
+          _profile?.isActive == false ? 'Inactive' : 'Active',
+          valueColor: _profile?.isActive == false
+              ? AppColors.danger
+              : AppColors.success,
+        ),
+        _info('Account Type', _roleLabel(_profile?.role ?? _session?.role)),
+        if (created != null)
+          _info(
+            'Member Since',
+            DateFormat('MMM d, yyyy').format(created.toLocal()),
+          ),
+        if (login != null)
+          _info(
+            'Last Login',
+            DateFormat('MMM d, yyyy, HH:mm').format(login.toLocal()),
+            last: true,
+          ),
+      ],
+    );
   }
 
   Widget _quickStats() {
@@ -303,102 +448,249 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisSpacing: 10,
       childAspectRatio: 1.55,
       children: [
-        _stat('Total eSIMs', '${data.totalEsimCount}', Icons.sim_card_outlined, const Color(0xFF334155), const Color(0xFFF1F5F9)),
-        _stat('Active eSIMs', '${data.activeEsimCount}', Icons.check_circle_outline_rounded, AppColors.success, AppColors.successSoft),
-        _stat('Total Orders', '${data.totalOrders}', Icons.receipt_long_outlined, AppColors.violet, const Color(0xFFF3EEFF)),
-        _stat('Sales (${data.period})', _money(data.monthlySales, data.currency), Icons.payments_outlined, AppColors.orange, const Color(0xFFFFF2E8)),
+        _stat(
+          'Total eSIMs',
+          '${data.totalEsimCount}',
+          Icons.sim_card_outlined,
+          const Color(0xFF334155),
+          const Color(0xFFF1F5F9),
+        ),
+        _stat(
+          'Active eSIMs',
+          '${data.activeEsimCount}',
+          Icons.check_circle_outline_rounded,
+          AppColors.success,
+          AppColors.successSoft,
+        ),
+        _stat(
+          'Total Orders',
+          '${data.totalOrders}',
+          Icons.receipt_long_outlined,
+          AppColors.violet,
+          const Color(0xFFF3EEFF),
+        ),
+        _stat(
+          'Sales (${data.period})',
+          _money(data.monthlySales, data.currency),
+          Icons.payments_outlined,
+          AppColors.orange,
+          const Color(0xFFFFF2E8),
+        ),
       ],
     );
   }
 
-  Widget _passwordForm() => Column(children: [
-        TextField(controller: _oldPassword, obscureText: true, decoration: const InputDecoration(labelText: 'Current Password')),
-        const SizedBox(height: 12),
-        TextField(controller: _newPassword, obscureText: true, decoration: const InputDecoration(labelText: 'New Password', helperText: 'Minimum 8 characters')),
-        const SizedBox(height: 12),
-        TextField(controller: _confirmPassword, obscureText: true, decoration: const InputDecoration(labelText: 'Confirm New Password')),
-        const SizedBox(height: 14),
-        Align(alignment: Alignment.centerLeft, child: FilledButton(onPressed: _savingPassword ? null : _changePassword, child: Text(_savingPassword ? 'Changing...' : 'Change Password'))),
-      ]);
+  Widget _passwordForm() => Column(
+    children: [
+      TextField(
+        controller: _oldPassword,
+        obscureText: true,
+        decoration: const InputDecoration(labelText: 'Current Password'),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _newPassword,
+        obscureText: true,
+        decoration: const InputDecoration(
+          labelText: 'New Password',
+          helperText: 'Minimum 8 characters',
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _confirmPassword,
+        obscureText: true,
+        decoration: const InputDecoration(labelText: 'Confirm New Password'),
+      ),
+      const SizedBox(height: 14),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton(
+          onPressed: _savingPassword ? null : _changePassword,
+          child: Text(_savingPassword ? 'Changing...' : 'Change Password'),
+        ),
+      ),
+    ],
+  );
 
   Widget _themeSettings() => ValueListenableBuilder<ThemeMode>(
-        valueListenable: ThemeController.mode,
-        builder: (context, selected, child) => Row(children: [
-          for (final mode in [ThemeMode.light, ThemeMode.dark, ThemeMode.system]) ...[
-            Expanded(child: _themeChoice(mode, selected)),
-            if (mode != ThemeMode.system) const SizedBox(width: 8),
-          ],
-        ]),
-      );
+    valueListenable: ThemeController.mode,
+    builder: (context, selected, child) => Row(
+      children: [
+        for (final mode in [
+          ThemeMode.light,
+          ThemeMode.dark,
+          ThemeMode.system,
+        ]) ...[
+          Expanded(child: _themeChoice(mode, selected)),
+          if (mode != ThemeMode.system) const SizedBox(width: 8),
+        ],
+      ],
+    ),
+  );
 
   Widget _themeChoice(ThemeMode mode, ThemeMode selected) {
     final active = mode == selected;
-    final icon = mode == ThemeMode.light ? Icons.light_mode_outlined : mode == ThemeMode.dark ? Icons.dark_mode_outlined : Icons.settings_suggest_outlined;
+    final icon = mode == ThemeMode.light
+        ? Icons.light_mode_outlined
+        : mode == ThemeMode.dark
+        ? Icons.dark_mode_outlined
+        : Icons.settings_suggest_outlined;
     return InkWell(
       onTap: () => ThemeController.setMode(mode),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.primarySoft : Theme.of(context).colorScheme.surface,
+          color: active
+              ? AppColors.primarySoft
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: active ? AppColors.primary : Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(
+            color: active
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
-        child: Column(children: [Icon(icon, color: active ? AppColors.primary : AppColors.textSecondary), const SizedBox(height: 6), Text(ThemeController.label(mode), style: TextStyle(fontWeight: FontWeight.w800, color: active ? AppColors.primaryDark : null))]),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: active ? AppColors.primary : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              ThemeController.label(mode),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: active ? AppColors.primaryDark : null,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _logoutCard() => B2BSurface(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.danger.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: const Icon(Icons.logout_rounded, color: AppColors.danger),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Log out', style: TextStyle(fontWeight: FontWeight.w900)),
-                  SizedBox(height: 2),
-                  Text('End this session on this device', style: TextStyle(color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: _logout,
-              style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-              child: const Text('Log out'),
-            ),
-          ],
+    padding: const EdgeInsets.all(16),
+    child: Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.danger.withValues(alpha: .08),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Icon(Icons.logout_rounded, color: AppColors.danger),
         ),
-      );
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Log out', style: TextStyle(fontWeight: FontWeight.w900)),
+              SizedBox(height: 2),
+              Text(
+                'End this session on this device',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: _logout,
+          style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+          child: const Text('Log out'),
+        ),
+      ],
+    ),
+  );
 
-  Widget _info(String label, String value, {bool last = false, Color? valueColor}) => Padding(
-        padding: EdgeInsets.only(bottom: last ? 0 : 14),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SizedBox(width: 118, child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700))),
-          const SizedBox(width: 12),
-          Expanded(child: Text(value, textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.w800, color: valueColor))),
-        ]),
-      );
+  Widget _info(
+    String label,
+    String value, {
+    bool last = false,
+    Color? valueColor,
+  }) => Padding(
+    padding: EdgeInsets.only(bottom: last ? 0 : 14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 118,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(fontWeight: FontWeight.w800, color: valueColor),
+          ),
+        ),
+      ],
+    ),
+  );
 
-  Widget _stat(String label, String value, IconData icon, Color color, Color soft) => B2BSurface(
-        padding: const EdgeInsets.all(13),
-        child: Row(children: [
-          Container(width: 40, height: 40, decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 20)),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))])),
-        ]),
-      );
+  Widget _stat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color soft,
+  ) => B2BSurface(
+    padding: const EdgeInsets.all(13),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: soft,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 String _roleLabel(String? value) {

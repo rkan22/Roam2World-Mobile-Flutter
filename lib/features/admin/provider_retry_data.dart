@@ -15,13 +15,16 @@ class ProviderRetryQueueData {
     return ProviderRetryQueueData(
       items: rawItems is List
           ? rawItems
-              .whereType<Map>()
-              .map((item) => ProviderRetryItem.fromJson(
+                .whereType<Map>()
+                .map(
+                  (item) => ProviderRetryItem.fromJson(
                     Map<String, dynamic>.from(item),
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [],
-      total: int.tryParse((root['total'] ?? root['count'] ?? 0).toString()) ?? 0,
+      total:
+          int.tryParse((root['total'] ?? root['count'] ?? 0).toString()) ?? 0,
       summary: ProviderRetrySummary.fromJson(
         root['summary'] is Map
             ? Map<String, dynamic>.from(root['summary'] as Map)
@@ -91,7 +94,8 @@ class ProviderRetryItem {
   factory ProviderRetryItem.fromJson(Map<String, dynamic> json) =>
       ProviderRetryItem(
         id: _int(json['id']),
-        orderNumber: (json['order_number'] ?? json['order_id'] ?? '').toString(),
+        orderNumber: (json['order_number'] ?? json['order_id'] ?? '')
+            .toString(),
         provider: (json['provider'] ?? '').toString(),
         category: (json['category'] ?? '').toString(),
         status: (json['status'] ?? '').toString(),

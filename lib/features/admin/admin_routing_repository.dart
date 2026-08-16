@@ -30,7 +30,8 @@ class AdminRoutingRule {
   final double? dealerMarkupPercent;
   final double? minProfit;
 
-  factory AdminRoutingRule.fromJson(Map<String, dynamic> json) => AdminRoutingRule(
+  factory AdminRoutingRule.fromJson(Map<String, dynamic> json) =>
+      AdminRoutingRule(
         id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
         category: json['category']?.toString() ?? '',
         provider: json['provider']?.toString() ?? '',
@@ -39,15 +40,22 @@ class AdminRoutingRule {
         isActive: json['is_active'] == true,
         isPrimary: json['is_primary'] == true,
         allowFallback: json['allow_fallback'] == true,
-        markupPercent: double.tryParse((json['markup_percent'] ?? '').toString()),
-        resellerMarkupPercent: double.tryParse((json['reseller_markup_percent'] ?? '').toString()),
-        dealerMarkupPercent: double.tryParse((json['dealer_markup_percent'] ?? '').toString()),
+        markupPercent: double.tryParse(
+          (json['markup_percent'] ?? '').toString(),
+        ),
+        resellerMarkupPercent: double.tryParse(
+          (json['reseller_markup_percent'] ?? '').toString(),
+        ),
+        dealerMarkupPercent: double.tryParse(
+          (json['dealer_markup_percent'] ?? '').toString(),
+        ),
         minProfit: double.tryParse((json['min_profit'] ?? '').toString()),
       );
 }
 
 class AdminRoutingRepository {
-  AdminRoutingRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  AdminRoutingRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -61,7 +69,10 @@ class AdminRoutingRepository {
         if (raw is! List) return const [];
         return raw
             .whereType<Map>()
-            .map((row) => AdminRoutingRule.fromJson(Map<String, dynamic>.from(row)))
+            .map(
+              (row) =>
+                  AdminRoutingRule.fromJson(Map<String, dynamic>.from(row)),
+            )
             .toList(growable: false);
       },
     );

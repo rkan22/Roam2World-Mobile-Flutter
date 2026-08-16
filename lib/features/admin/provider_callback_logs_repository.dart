@@ -32,7 +32,9 @@ class ProviderCallbackLogItem {
       providerOrderId: '${json['provider_order_id'] ?? ''}',
       iccid: '${json['iccid'] ?? ''}',
       status: '${json['status'] ?? ''}',
-      signatureValid: json['signature_valid'] is bool ? json['signature_valid'] as bool : null,
+      signatureValid: json['signature_valid'] is bool
+          ? json['signature_valid'] as bool
+          : null,
       errorMessage: '${json['error_message'] ?? ''}',
       createdAt: DateTime.tryParse('${json['created_at'] ?? ''}'),
     );
@@ -40,16 +42,21 @@ class ProviderCallbackLogItem {
 }
 
 class ProviderCallbackLogsRepository {
-  ProviderCallbackLogsRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  ProviderCallbackLogsRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
-  Future<List<ProviderCallbackLogItem>> fetchLogs({String? provider, String? status}) {
+  Future<List<ProviderCallbackLogItem>> fetchLogs({
+    String? provider,
+    String? status,
+  }) {
     return _apiClient.get<List<ProviderCallbackLogItem>>(
       ApiEndpoints.mobileAdminProviderCallbackLogs,
       queryParameters: {
         'limit': 200,
-        if (provider != null && provider.trim().isNotEmpty) 'provider': provider.trim(),
+        if (provider != null && provider.trim().isNotEmpty)
+          'provider': provider.trim(),
         if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
       parser: (response) {
@@ -57,7 +64,11 @@ class ProviderCallbackLogsRepository {
         final raw = root['data'] is List ? root['data'] as List : const [];
         return raw
             .whereType<Map>()
-            .map((item) => ProviderCallbackLogItem.fromJson(Map<String, dynamic>.from(item)))
+            .map(
+              (item) => ProviderCallbackLogItem.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
             .toList();
       },
     );
@@ -69,7 +80,9 @@ class ProviderCallbackLogsRepository {
       data: {'status': status},
       parser: (response) {
         final root = Map<String, dynamic>.from(response as Map);
-        final data = root['data'] is Map ? Map<String, dynamic>.from(root['data'] as Map) : root;
+        final data = root['data'] is Map
+            ? Map<String, dynamic>.from(root['data'] as Map)
+            : root;
         return ProviderCallbackLogItem.fromJson(data);
       },
     );

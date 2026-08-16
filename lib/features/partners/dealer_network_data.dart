@@ -43,12 +43,16 @@ class DealerSummary {
     final user = json['user'] is Map
         ? Map<String, dynamic>.from(json['user'] as Map)
         : const <String, dynamic>{};
-    final firstName =
-        (user['first_name'] ?? json['first_name'] ?? '').toString().trim();
-    final lastName =
-        (user['last_name'] ?? json['last_name'] ?? '').toString().trim();
-    final fullName =
-        [firstName, lastName].where((part) => part.isNotEmpty).join(' ');
+    final firstName = (user['first_name'] ?? json['first_name'] ?? '')
+        .toString()
+        .trim();
+    final lastName = (user['last_name'] ?? json['last_name'] ?? '')
+        .toString()
+        .trim();
+    final fullName = [
+      firstName,
+      lastName,
+    ].where((part) => part.isNotEmpty).join(' ');
     final explicitStatus = (json['status'] ?? '').toString().toLowerCase();
     final active = json['is_active'] != false;
 
@@ -61,12 +65,12 @@ class DealerSummary {
       name: fullName.isNotEmpty
           ? fullName
           : (json['company_name'] ??
-                  json['business_name'] ??
-                  json['name'] ??
-                  user['email'] ??
-                  json['email'] ??
-                  'Dealer')
-              .toString(),
+                    json['business_name'] ??
+                    json['name'] ??
+                    user['email'] ??
+                    json['email'] ??
+                    'Dealer')
+                .toString(),
       email: (user['email'] ?? json['email'] ?? '').toString(),
       phone:
           '${user['country_code'] ?? json['country_code'] ?? ''}${user['phone_number'] ?? json['phone_number'] ?? ''}'
@@ -126,12 +130,13 @@ class DealerFundingRequest {
     return DealerFundingRequest(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       dealerId:
-          int.tryParse((json['dealer_id'] ?? dealer['id'] ?? 0).toString()) ?? 0,
-      dealerName:
-          (json['dealer_name'] ?? dealer['name'] ?? 'Dealer').toString(),
-      dealerEmail:
-          (json['dealer_email'] ?? dealer['email'] ?? '').toString(),
-      amount: double.tryParse(
+          int.tryParse((json['dealer_id'] ?? dealer['id'] ?? 0).toString()) ??
+          0,
+      dealerName: (json['dealer_name'] ?? dealer['name'] ?? 'Dealer')
+          .toString(),
+      dealerEmail: (json['dealer_email'] ?? dealer['email'] ?? '').toString(),
+      amount:
+          double.tryParse(
             (json['requested_amount'] ?? json['amount'] ?? 0).toString(),
           ) ??
           0,
@@ -164,34 +169,36 @@ class DealerWalletTransfer {
   bool get isCredit => type == 'credit';
 
   factory DealerWalletTransfer.fromJson(Map<String, dynamic> json) {
-    final rawType = (json['transaction_type'] ??
-            json['type'] ??
-            json['direction'] ??
-            '')
-        .toString()
-        .toLowerCase();
-    final amount = double.tryParse(
+    final rawType =
+        (json['transaction_type'] ?? json['type'] ?? json['direction'] ?? '')
+            .toString()
+            .toLowerCase();
+    final amount =
+        double.tryParse(
           (json['amount'] ?? json['transfer_amount'] ?? 0).toString(),
         ) ??
         0;
-    final debit = amount < 0 ||
+    final debit =
+        amount < 0 ||
         rawType.contains('debit') ||
         rawType.contains('deduct') ||
         rawType.contains('refund_to_reseller');
     return DealerWalletTransfer(
-      dealerName: (json['dealer_name'] ??
-              json['user_name'] ??
-              json['email'] ??
-              'Dealer')
-          .toString(),
+      dealerName:
+          (json['dealer_name'] ??
+                  json['user_name'] ??
+                  json['email'] ??
+                  'Dealer')
+              .toString(),
       amount: amount.abs(),
       type: debit ? 'debit' : 'credit',
       status: (json['status'] ?? 'posted').toString(),
       reference: (json['reference'] ?? json['id'] ?? '').toString(),
-      note:
-          (json['note'] ?? json['notes'] ?? json['description'] ?? '').toString(),
+      note: (json['note'] ?? json['notes'] ?? json['description'] ?? '')
+          .toString(),
       createdAt: DateTime.tryParse(
-        (json['created_at'] ?? json['created'] ?? json['date'] ?? '').toString(),
+        (json['created_at'] ?? json['created'] ?? json['date'] ?? '')
+            .toString(),
       ),
     );
   }

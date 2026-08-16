@@ -14,7 +14,10 @@ import 'orders_repository.dart';
 import 'widgets/orders_adaptive_grid.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key});
+  const OrdersScreen({super.key, this.initialOrderId, this.initialOrderNumber});
+
+  final int? initialOrderId;
+  final String? initialOrderNumber;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -28,11 +31,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
   List<MobileOrderSummary> _orders = const [];
   int _selectedTab = 0;
   bool _loading = true;
+  bool _openedInitialOrder = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialOrderNumber?.isNotEmpty == true) {
+      _searchController.text = widget.initialOrderNumber!;
+    } else if (widget.initialOrderId != null) {
+      _searchController.text = widget.initialOrderId.toString();
+    }
     _load();
   }
 
@@ -44,11 +53,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   String? get _status => switch (_selectedTab) {
-        1 => 'completed',
-        2 => 'pending',
-        3 => 'failed',
-        _ => null,
-      };
+    1 => 'completed',
+    2 => 'pending',
+    3 => 'failed',
+    _ => null,
+  };
 
   Future<void> _load() async {
     setState(() {
@@ -62,6 +71,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       );
       if (!mounted) return;
       setState(() => _orders = result.orders);
+      _openInitialOrder(result.orders);
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
@@ -69,6 +79,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _openInitialOrder(List<MobileOrderSummary> orders) {
+    final orderId = widget.initialOrderId;
+    if (_openedInitialOrder || orderId == null) return;
+    final matches = orders.where((order) => order.id == orderId);
+    if (matches.isEmpty) return;
+    _openedInitialOrder = true;
+    final order = matches.first;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.push('/orders/detail', extra: order);
+    });
   }
 
   void _onSearchChanged(String _) {
@@ -152,10 +174,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     for (final order in _orders)
                       _OrderCard(
                         order: order,
-                        onTap: () => context.push(
-                          '/orders/detail',
-                          extra: order,
-                        ),
+                        onTap: () =>
+                            context.push('/orders/detail', extra: order),
                       ),
                   ],
                 ),
@@ -180,10 +200,7 @@ class _OrdersHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Orders',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
+              Text('Orders', style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: B2BSpacing.xxs),
               Text(
                 'Track partner purchases and eSIM delivery status.',
@@ -298,10 +315,7 @@ class _OrderCard extends StatelessWidget {
                   color: scheme.primaryContainer,
                   borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
-                child: Icon(
-                  Icons.sim_card_outlined,
-                  color: scheme.primary,
-                ),
+                child: Icon(Icons.sim_card_outlined, color: scheme.primary),
               ),
               const SizedBox(width: B2BSpacing.sm),
               Expanded(
@@ -342,20 +356,16 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: B2BSpacing.sm),
           Row(
             children: [
-              Icon(
-                Icons.tag_rounded,
-                size: 16,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.tag_rounded, size: 16, color: scheme.onSurfaceVariant),
               const SizedBox(width: B2BSpacing.xs),
               Expanded(
                 child: Text(
                   order.orderNumber.isEmpty
                       ? 'Order ${order.id}'
                       : order.orderNumber,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               Icon(
@@ -366,15 +376,12 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(width: B2BSpacing.xs),
               Text(
                 _formatDate(order.createdAt),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: B2BSpacing.xs),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ],
@@ -410,10 +417,10 @@ class _StatusBadge extends StatelessWidget {
 }
 
 Color _statusColor(String status) => switch (status.toLowerCase()) {
-      'completed' || 'success' => AppColors.success,
-      'failed' || 'cancelled' => AppColors.danger,
-      _ => AppColors.warning,
-    };
+  'completed' || 'success' => AppColors.success,
+  'failed' || 'cancelled' => AppColors.danger,
+  _ => AppColors.warning,
+};
 
 String _titleCase(String value) {
   if (value.isEmpty) return 'Pending';

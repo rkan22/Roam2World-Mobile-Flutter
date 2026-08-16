@@ -7,10 +7,7 @@ import 'dashboard_screen_reference.dart';
 import 'partner_business_dashboard_screen.dart';
 
 class LiveBusinessDashboardScreen extends StatelessWidget {
-  const LiveBusinessDashboardScreen({
-    super.key,
-    required this.role,
-  });
+  const LiveBusinessDashboardScreen({super.key, required this.role});
 
   final AppRole role;
 

@@ -121,8 +121,12 @@ class WalletRepository {
     final path = switch ((isDealerRequest, approve)) {
       (true, true) => ApiEndpoints.mobileDealerWalletRequestApprove(request.id),
       (true, false) => ApiEndpoints.mobileDealerWalletRequestReject(request.id),
-      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(request.id),
-      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(request.id),
+      (false, true) => ApiEndpoints.mobileResellerWalletRequestApprove(
+        request.id,
+      ),
+      (false, false) => ApiEndpoints.mobileResellerWalletRequestReject(
+        request.id,
+      ),
     };
     final result = await _apiClient.post<WalletRequest>(
       path,
@@ -210,10 +214,7 @@ class ProviderAllocationData {
     return ProviderAllocationData(
       walletBalance: double.tryParse('${data['wallet_balance'] ?? 0}') ?? 0,
       allocations: raw.map(
-        (key, value) => MapEntry(
-          key,
-          double.tryParse('$value') ?? 0,
-        ),
+        (key, value) => MapEntry(key, double.tryParse('$value') ?? 0),
       ),
     );
   }

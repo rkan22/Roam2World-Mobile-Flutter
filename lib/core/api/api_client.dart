@@ -9,19 +9,20 @@ import 'api_exception.dart';
 
 class ApiClient {
   ApiClient({Dio? dio, TokenStorage? tokenStorage})
-      : _tokenStorage = tokenStorage ?? TokenStorage(),
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppEnvironment.apiBaseUrl,
-                connectTimeout: AppEnvironment.connectTimeout,
-                receiveTimeout: AppEnvironment.receiveTimeout,
-                headers: const {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json',
-                },
-              ),
-            ) {
+    : _tokenStorage = tokenStorage ?? TokenStorage(),
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: AppEnvironment.apiBaseUrl,
+              connectTimeout: AppEnvironment.connectTimeout,
+              receiveTimeout: AppEnvironment.receiveTimeout,
+              headers: const {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              },
+            ),
+          ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {

@@ -102,10 +102,10 @@ Future<void> showR2WWorkspaceMenu(BuildContext context, AppRole role) async {
                 role == AppRole.dealer
                     ? 'Dealer Workspace'
                     : role == AppRole.reseller
-                        ? 'Reseller Workspace'
-                        : role == AppRole.admin
-                            ? 'Admin Workspace'
-                            : 'Workspace',
+                    ? 'Reseller Workspace'
+                    : role == AppRole.admin
+                    ? 'Admin Workspace'
+                    : 'Workspace',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -211,100 +211,400 @@ Future<void> _confirmAndLogout(BuildContext context) async {
 }
 
 bool _keepsBackHistory(String route) =>
-    route == '/reports' ||
-    route == '/operations' ||
-    route == '/pricing/rules';
+    route == '/reports' || route == '/operations' || route == '/pricing/rules';
 
 List<_NavItem> _itemsFor(AppRole role) {
   if (role == AppRole.client || role == AppRole.publicUser) {
     return const [
       _NavItem('/dashboard', 'Home', Icons.home_outlined, Icons.home_rounded),
-      _NavItem('/esims', 'eSIMs', Icons.sim_card_outlined, Icons.sim_card_rounded),
-      _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
-      _NavItem('/reports', 'Reports', Icons.analytics_outlined, Icons.analytics_rounded),
-      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded, opensWorkspace: true),
+      _NavItem(
+        '/esims',
+        'eSIMs',
+        Icons.sim_card_outlined,
+        Icons.sim_card_rounded,
+      ),
+      _NavItem(
+        '/orders',
+        'Orders',
+        Icons.receipt_long_outlined,
+        Icons.receipt_long_rounded,
+      ),
+      _NavItem(
+        '/reports',
+        'Reports',
+        Icons.analytics_outlined,
+        Icons.analytics_rounded,
+      ),
+      _NavItem(
+        '/profile',
+        'Menu',
+        Icons.grid_view_outlined,
+        Icons.grid_view_rounded,
+        opensWorkspace: true,
+      ),
     ];
   }
   if (role == AppRole.admin) {
     return const [
       _NavItem('/dashboard', 'Home', Icons.home_outlined, Icons.home_rounded),
-      _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
-      _NavItem('/operations', 'Ops', Icons.monitor_heart_outlined, Icons.monitor_heart_rounded),
-      _NavItem('/reports', 'Reports', Icons.analytics_outlined, Icons.analytics_rounded),
-      _NavItem('/profile', 'Menu', Icons.grid_view_outlined, Icons.grid_view_rounded, opensWorkspace: true),
+      _NavItem(
+        '/orders',
+        'Orders',
+        Icons.receipt_long_outlined,
+        Icons.receipt_long_rounded,
+      ),
+      _NavItem(
+        '/operations',
+        'Ops',
+        Icons.monitor_heart_outlined,
+        Icons.monitor_heart_rounded,
+      ),
+      _NavItem(
+        '/reports',
+        'Reports',
+        Icons.analytics_outlined,
+        Icons.analytics_rounded,
+      ),
+      _NavItem(
+        '/profile',
+        'Menu',
+        Icons.grid_view_outlined,
+        Icons.grid_view_rounded,
+        opensWorkspace: true,
+      ),
     ];
   }
   return const [
     _NavItem('/dashboard', 'Home', Icons.home_outlined, Icons.home_rounded),
-    _NavItem('/packages', 'Catalog', Icons.inventory_2_outlined, Icons.inventory_2_rounded),
-    _NavItem('/orders', 'Orders', Icons.receipt_long_outlined, Icons.receipt_long_rounded),
-    _NavItem('/customers', 'Clients', Icons.groups_outlined, Icons.groups_rounded),
-    _NavItem('/profile', 'Profile', Icons.person_outline_rounded, Icons.person_rounded),
+    _NavItem(
+      '/packages',
+      'Catalog',
+      Icons.inventory_2_outlined,
+      Icons.inventory_2_rounded,
+    ),
+    _NavItem(
+      '/orders',
+      'Orders',
+      Icons.receipt_long_outlined,
+      Icons.receipt_long_rounded,
+    ),
+    _NavItem(
+      '/customers',
+      'Clients',
+      Icons.groups_outlined,
+      Icons.groups_rounded,
+    ),
+    _NavItem(
+      '/profile',
+      'Profile',
+      Icons.person_outline_rounded,
+      Icons.person_rounded,
+    ),
   ];
 }
 
 List<_WorkspaceItem> _workspaceItemsFor(AppRole role) {
   if (role == AppRole.reseller) {
     return const [
-      _WorkspaceItem('Clients', '/customers', Icons.groups_outlined, 'Client management'),
-      _WorkspaceItem('Dealers', '/dealers', Icons.people_alt_outlined, 'Dealer management'),
-      _WorkspaceItem('My SIMs & eSIMs', '/esims', Icons.sim_card_outlined, 'SIM & eSIM inventory'),
-      _WorkspaceItem('SIM Converter', '/sim-converter', Icons.swap_horiz_rounded, 'SIM conversion tools'),
-      _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
-      _WorkspaceItem('Dealer Wallet', '/wallet', Icons.wallet_outlined, 'Dealer wallet funding'),
-      _WorkspaceItem('Dealer Pricing', '/dealers/pricing', Icons.percent_rounded, 'Dealer pricing'),
-      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Central pricing and markup rules'),
-      _WorkspaceItem('Operations', '/operations', Icons.dns_outlined, 'Operations center'),
-      _WorkspaceItem('Notifications', '/notifications', Icons.notifications_none_rounded, 'Notification center'),
-      _WorkspaceItem('Reports', '/reports', Icons.analytics_outlined, 'Reports & analytics'),
-      _WorkspaceItem('Profile', '/profile', Icons.person_outline_rounded, 'Profile and workspace preferences'),
+      _WorkspaceItem(
+        'Clients',
+        '/customers',
+        Icons.groups_outlined,
+        'Client management',
+      ),
+      _WorkspaceItem(
+        'Dealers',
+        '/dealers',
+        Icons.people_alt_outlined,
+        'Dealer management',
+      ),
+      _WorkspaceItem(
+        'My SIMs & eSIMs',
+        '/esims',
+        Icons.sim_card_outlined,
+        'SIM & eSIM inventory',
+      ),
+      _WorkspaceItem(
+        'SIM Converter',
+        '/sim-converter',
+        Icons.swap_horiz_rounded,
+        'SIM conversion tools',
+      ),
+      _WorkspaceItem(
+        'Finance Ledger',
+        '/finance',
+        Icons.account_balance_wallet_outlined,
+        'Balance, requests and wallet movements',
+      ),
+      _WorkspaceItem(
+        'Dealer Wallet',
+        '/wallet',
+        Icons.wallet_outlined,
+        'Dealer wallet funding',
+      ),
+      _WorkspaceItem(
+        'Dealer Pricing',
+        '/dealers/pricing',
+        Icons.percent_rounded,
+        'Dealer pricing',
+      ),
+      _WorkspaceItem(
+        'Central Pricing Rules',
+        '/pricing/rules',
+        Icons.rule_folder_outlined,
+        'Central pricing and markup rules',
+      ),
+      _WorkspaceItem(
+        'Operations',
+        '/operations',
+        Icons.dns_outlined,
+        'Operations center',
+      ),
+      _WorkspaceItem(
+        'Notifications',
+        '/notifications',
+        Icons.notifications_none_rounded,
+        'Notification center',
+      ),
+      _WorkspaceItem(
+        'Reports',
+        '/reports',
+        Icons.analytics_outlined,
+        'Reports & analytics',
+      ),
+      _WorkspaceItem(
+        'Profile',
+        '/profile',
+        Icons.person_outline_rounded,
+        'Profile and workspace preferences',
+      ),
     ];
   }
   if (role == AppRole.dealer) {
     return const [
-      _WorkspaceItem('My SIMs & eSIMs', '/esims', Icons.sim_card_outlined, 'SIM & eSIM inventory'),
-      _WorkspaceItem('SIM Converter', '/sim-converter', Icons.swap_horiz_rounded, 'SIM conversion tools'),
-      _WorkspaceItem('Orders', '/orders', Icons.receipt_long_outlined, 'Dealer orders'),
-      _WorkspaceItem('Reports', '/reports', Icons.analytics_outlined, 'Reports & analytics'),
-      _WorkspaceItem('Clients', '/customers', Icons.groups_outlined, 'Dealer clients'),
-      _WorkspaceItem('Customer Pricing', '/pricing/customer', Icons.percent_rounded, 'Customer pricing rules'),
-      _WorkspaceItem('Finance Ledger', '/finance', Icons.account_balance_wallet_outlined, 'Balance, requests and wallet movements'),
-      _WorkspaceItem('Profile', '/profile', Icons.person_outline_rounded, 'Dealer profile'),
+      _WorkspaceItem(
+        'My SIMs & eSIMs',
+        '/esims',
+        Icons.sim_card_outlined,
+        'SIM & eSIM inventory',
+      ),
+      _WorkspaceItem(
+        'SIM Converter',
+        '/sim-converter',
+        Icons.swap_horiz_rounded,
+        'SIM conversion tools',
+      ),
+      _WorkspaceItem(
+        'Orders',
+        '/orders',
+        Icons.receipt_long_outlined,
+        'Dealer orders',
+      ),
+      _WorkspaceItem(
+        'Reports',
+        '/reports',
+        Icons.analytics_outlined,
+        'Reports & analytics',
+      ),
+      _WorkspaceItem(
+        'Clients',
+        '/customers',
+        Icons.groups_outlined,
+        'Dealer clients',
+      ),
+      _WorkspaceItem(
+        'Customer Pricing',
+        '/pricing/customer',
+        Icons.percent_rounded,
+        'Customer pricing rules',
+      ),
+      _WorkspaceItem(
+        'Finance Ledger',
+        '/finance',
+        Icons.account_balance_wallet_outlined,
+        'Balance, requests and wallet movements',
+      ),
+      _WorkspaceItem(
+        'Profile',
+        '/profile',
+        Icons.person_outline_rounded,
+        'Dealer profile',
+      ),
     ];
   }
   if (role == AppRole.admin) {
     return const [
-      _WorkspaceItem('Dashboard', '/dashboard', Icons.dashboard_outlined, 'Admin dashboard'),
-      _WorkspaceItem('Customers & Orders', '/customers', Icons.shopping_cart_outlined, 'Customers and orders'),
-      _WorkspaceItem('Transactions', '/finance', Icons.credit_card_outlined, 'Payments and billing'),
-      _WorkspaceItem('Balance Top-ups', '/wallet', Icons.add_card_rounded, 'Balance top-up management'),
-      _WorkspaceItem('Statements', '/finance', Icons.description_outlined, 'Admin statements'),
-      _WorkspaceItem('Credit Management', '/wallet', Icons.account_balance_wallet_outlined, 'Credit management'),
-      _WorkspaceItem('Resellers', '/admin/resellers', Icons.person_add_alt_1_outlined, 'Reseller management'),
-      _WorkspaceItem('Analytics', '/reports', Icons.trending_up_rounded, 'Reports and analytics'),
-      _WorkspaceItem('Unified Catalog', '/packages', Icons.layers_outlined, 'Unified provider catalog'),
-      _WorkspaceItem('Catalog Gov', '/admin/governance', Icons.map_outlined, 'Catalog governance'),
-      _WorkspaceItem('Smart Routing', '/admin/routing', Icons.alt_route_rounded, 'Smart routing'),
-      _WorkspaceItem('Provider Markups', '/admin/commercial', Icons.percent_rounded, 'Provider markups'),
-      _WorkspaceItem('Central Pricing Rules', '/pricing/rules', Icons.rule_folder_outlined, 'Central pricing and markup rules'),
-      _WorkspaceItem('Profitability', '/finance', Icons.attach_money_rounded, 'Provider profitability'),
-      _WorkspaceItem('Provider Ops', '/operations', Icons.dns_outlined, 'Provider operations'),
-      _WorkspaceItem('Manual Fulfilment', '/admin/manual-fulfillment', Icons.assignment_outlined, 'Manual products and delivery queue'),
-      _WorkspaceItem('Operations', '/operations', Icons.security_rounded, 'Admin operations center'),
-      _WorkspaceItem('API Logs', '/operations', Icons.description_outlined, 'API and webhook logs'),
-      _WorkspaceItem('Failed Orders', '/orders', Icons.warning_amber_rounded, 'Failed orders queue'),
-      _WorkspaceItem('Audit & Access', '/admin/governance', Icons.key_outlined, 'Audit and permissions'),
-      _WorkspaceItem('Notifications', '/notifications', Icons.notifications_none_rounded, 'Admin notification center'),
-      _WorkspaceItem('Alert Rules', '/notifications/rules', Icons.rule_rounded, 'Notification rules'),
-      _WorkspaceItem('WhatsApp', '/admin/whatsapp', Icons.chat_outlined, 'WhatsApp management'),
-      _WorkspaceItem('Settings', '/settings', Icons.settings_outlined, 'Settings'),
+      _WorkspaceItem(
+        'Dashboard',
+        '/dashboard',
+        Icons.dashboard_outlined,
+        'Admin dashboard',
+      ),
+      _WorkspaceItem(
+        'Customers & Orders',
+        '/customers',
+        Icons.shopping_cart_outlined,
+        'Customers and orders',
+      ),
+      _WorkspaceItem(
+        'Transactions',
+        '/finance',
+        Icons.credit_card_outlined,
+        'Payments and billing',
+      ),
+      _WorkspaceItem(
+        'Balance Top-ups',
+        '/wallet',
+        Icons.add_card_rounded,
+        'Balance top-up management',
+      ),
+      _WorkspaceItem(
+        'Statements',
+        '/finance',
+        Icons.description_outlined,
+        'Admin statements',
+      ),
+      _WorkspaceItem(
+        'Credit Management',
+        '/wallet',
+        Icons.account_balance_wallet_outlined,
+        'Credit management',
+      ),
+      _WorkspaceItem(
+        'Resellers',
+        '/admin/resellers',
+        Icons.person_add_alt_1_outlined,
+        'Reseller management',
+      ),
+      _WorkspaceItem(
+        'Analytics',
+        '/reports',
+        Icons.trending_up_rounded,
+        'Reports and analytics',
+      ),
+      _WorkspaceItem(
+        'Unified Catalog',
+        '/packages',
+        Icons.layers_outlined,
+        'Unified provider catalog',
+      ),
+      _WorkspaceItem(
+        'Catalog Gov',
+        '/admin/governance',
+        Icons.map_outlined,
+        'Catalog governance',
+      ),
+      _WorkspaceItem(
+        'Smart Routing',
+        '/admin/routing',
+        Icons.alt_route_rounded,
+        'Smart routing',
+      ),
+      _WorkspaceItem(
+        'Provider Markups',
+        '/admin/commercial',
+        Icons.percent_rounded,
+        'Provider markups',
+      ),
+      _WorkspaceItem(
+        'Central Pricing Rules',
+        '/pricing/rules',
+        Icons.rule_folder_outlined,
+        'Central pricing and markup rules',
+      ),
+      _WorkspaceItem(
+        'Profitability',
+        '/finance',
+        Icons.attach_money_rounded,
+        'Provider profitability',
+      ),
+      _WorkspaceItem(
+        'Provider Ops',
+        '/operations',
+        Icons.dns_outlined,
+        'Provider operations',
+      ),
+      _WorkspaceItem(
+        'Manual Fulfilment',
+        '/admin/manual-fulfillment',
+        Icons.assignment_outlined,
+        'Manual products and delivery queue',
+      ),
+      _WorkspaceItem(
+        'Operations',
+        '/operations',
+        Icons.security_rounded,
+        'Admin operations center',
+      ),
+      _WorkspaceItem(
+        'API Logs',
+        '/operations',
+        Icons.description_outlined,
+        'API and webhook logs',
+      ),
+      _WorkspaceItem(
+        'Failed Orders',
+        '/orders',
+        Icons.warning_amber_rounded,
+        'Failed orders queue',
+      ),
+      _WorkspaceItem(
+        'Audit & Access',
+        '/admin/governance',
+        Icons.key_outlined,
+        'Audit and permissions',
+      ),
+      _WorkspaceItem(
+        'Notifications',
+        '/notifications',
+        Icons.notifications_none_rounded,
+        'Admin notification center',
+      ),
+      _WorkspaceItem(
+        'Alert Rules',
+        '/notifications/rules',
+        Icons.rule_rounded,
+        'Notification rules',
+      ),
+      _WorkspaceItem(
+        'WhatsApp',
+        '/admin/whatsapp',
+        Icons.chat_outlined,
+        'WhatsApp management',
+      ),
+      _WorkspaceItem(
+        'Settings',
+        '/settings',
+        Icons.settings_outlined,
+        'Settings',
+      ),
     ];
   }
   return const [
-    _WorkspaceItem('Profile', '/profile', Icons.person_outline_rounded, 'Profile and account settings'),
-    _WorkspaceItem('Settings', '/settings', Icons.settings_outlined, 'Application settings'),
-    _WorkspaceItem('Notifications', '/notifications', Icons.notifications_none_rounded, 'Notifications'),
-    _WorkspaceItem('Support', '/support', Icons.support_agent_outlined, 'Support'),
+    _WorkspaceItem(
+      'Profile',
+      '/profile',
+      Icons.person_outline_rounded,
+      'Profile and account settings',
+    ),
+    _WorkspaceItem(
+      'Settings',
+      '/settings',
+      Icons.settings_outlined,
+      'Application settings',
+    ),
+    _WorkspaceItem(
+      'Notifications',
+      '/notifications',
+      Icons.notifications_none_rounded,
+      'Notifications',
+    ),
+    _WorkspaceItem(
+      'Support',
+      '/support',
+      Icons.support_agent_outlined,
+      'Support',
+    ),
   ];
 }
 

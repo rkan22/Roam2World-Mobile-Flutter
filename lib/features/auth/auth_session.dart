@@ -51,12 +51,12 @@ class AuthSession {
   }
 
   Map<String, dynamic> toStoredProfile() => {
-        'user_id': userId,
-        'email': email,
-        'role': role,
-        'display_name': displayName,
-        'account': account,
-      };
+    'user_id': userId,
+    'email': email,
+    'role': role,
+    'display_name': displayName,
+    'account': account,
+  };
 
   static Map<String, dynamic> _asMap(Object? value) {
     if (value is Map<String, dynamic>) return value;

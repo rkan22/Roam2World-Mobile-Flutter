@@ -5,21 +5,31 @@ class PackageCatalog {
 
   factory PackageCatalog.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
-    final data = root['data'] is Map ? Map<String, dynamic>.from(root['data']) : root;
-    final raw = data['packages'] ?? data['results'] ?? data['items'] ?? const [];
+    final data = root['data'] is Map
+        ? Map<String, dynamic>.from(root['data'])
+        : root;
+    final raw =
+        data['packages'] ?? data['results'] ?? data['items'] ?? const [];
     final pagination = data['pagination'];
     return PackageCatalog(
       packages: _parseList(raw),
-      hasMore: (pagination is Map && pagination['has_more'] == true) || data['has_more'] == true,
+      hasMore:
+          (pagination is Map && pagination['has_more'] == true) ||
+          data['has_more'] == true,
     );
   }
 
   factory PackageCatalog.fromWorldmoveResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final nested = root['data'];
-    final raw = root['packages'] ??
-        (nested is Map ? nested['packages'] ?? nested['results'] ?? nested['items'] : nested) ??
-        root['results'] ?? root['items'] ?? const [];
+    final raw =
+        root['packages'] ??
+        (nested is Map
+            ? nested['packages'] ?? nested['results'] ?? nested['items']
+            : nested) ??
+        root['results'] ??
+        root['items'] ??
+        const [];
     return PackageCatalog(packages: _parseList(raw), hasMore: false);
   }
 
@@ -28,32 +38,62 @@ class PackageCatalog {
     final raw = root['data'] ?? root['products'] ?? root['results'] ?? const [];
     if (raw is! List) return const PackageCatalog(packages: [], hasMore: false);
     return PackageCatalog(
-      packages: raw.whereType<Map>().map((rawItem) {
-        final item = Map<String, dynamic>.from(rawItem);
-        final coverage = item['coverage_countries'] ?? item['coverageCountries'] ?? const [];
-        return MobilePackage.fromJson({
-          ...item,
-          'id': item['package_id'] ?? item['id'],
-          'provider': 'manual',
-          'display_provider': item['operator_name'] ?? item['operator'],
-          'name': item['product_name'] ?? item['name'],
-          'package_type': item['product_type'] ?? item['package_type'],
-          'destination': item['destination'] ?? (coverage is List && coverage.isNotEmpty ? coverage.join(', ') : 'Global'),
-          'price': item['base_price'] ?? item['price'],
-        });
-      }).toList(growable: false),
+      packages: raw
+          .whereType<Map>()
+          .map((rawItem) {
+            final item = Map<String, dynamic>.from(rawItem);
+            final coverage =
+                item['coverage_countries'] ??
+                item['coverageCountries'] ??
+                const [];
+            return MobilePackage.fromJson({
+              ...item,
+              'id': item['package_id'] ?? item['id'],
+              'provider': 'manual',
+              'display_provider': item['operator_name'] ?? item['operator'],
+              'name': item['product_name'] ?? item['name'],
+              'package_type': item['product_type'] ?? item['package_type'],
+              'destination':
+                  item['destination'] ??
+                  (coverage is List && coverage.isNotEmpty
+                      ? coverage.join(', ')
+                      : 'Global'),
+              'price': item['base_price'] ?? item['price'],
+            });
+          })
+          .toList(growable: false),
       hasMore: false,
     );
   }
 
-  factory PackageCatalog.fromProviderResponse(dynamic response, {required String provider, required String displayProvider}) {
+  factory PackageCatalog.fromProviderResponse(
+    dynamic response, {
+    required String provider,
+    required String displayProvider,
+  }) {
     dynamic value = response;
     for (var i = 0; i < 3 && value is Map; i++) {
-      value = value['data'] ?? value['results'] ?? value['packages'] ?? value['plans'] ?? value['list'] ?? value['items'] ?? const [];
+      value =
+          value['data'] ??
+          value['results'] ??
+          value['packages'] ??
+          value['plans'] ??
+          value['list'] ??
+          value['items'] ??
+          const [];
     }
     return PackageCatalog(
       packages: value is List
-          ? value.whereType<Map>().map((raw) => MobilePackage.fromJson({...Map<String, dynamic>.from(raw), 'provider': provider, 'display_provider': displayProvider})).toList(growable: false)
+          ? value
+                .whereType<Map>()
+                .map(
+                  (raw) => MobilePackage.fromJson({
+                    ...Map<String, dynamic>.from(raw),
+                    'provider': provider,
+                    'display_provider': displayProvider,
+                  }),
+                )
+                .toList(growable: false)
           : const [],
       hasMore: false,
     );
@@ -61,18 +101,45 @@ class PackageCatalog {
 }
 
 List<MobilePackage> _parseList(dynamic raw) => raw is List
-    ? raw.whereType<Map>().map((item) => MobilePackage.fromJson(Map<String, dynamic>.from(item))).toList(growable: false)
+    ? raw
+          .whereType<Map>()
+          .map(
+            (item) => MobilePackage.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false)
     : const [];
 
 class MobilePackage {
   const MobilePackage({
-    required this.id, required this.name, required this.provider, required this.displayProvider,
-    required this.destination, required this.destinationKey, required this.dataLabel, required this.validityLabel,
-    required this.price, required this.currency, required this.packageType, required this.countryCode,
-    required this.isFeatured, this.description = '', this.supportedCountries = const [],
+    required this.id,
+    required this.name,
+    required this.provider,
+    required this.displayProvider,
+    required this.destination,
+    required this.destinationKey,
+    required this.dataLabel,
+    required this.validityLabel,
+    required this.price,
+    required this.currency,
+    required this.packageType,
+    required this.countryCode,
+    required this.isFeatured,
+    this.description = '',
+    this.supportedCountries = const [],
   });
 
-  final String id, name, provider, displayProvider, destination, destinationKey, dataLabel, validityLabel, currency, packageType, countryCode, description;
+  final String id,
+      name,
+      provider,
+      displayProvider,
+      destination,
+      destinationKey,
+      dataLabel,
+      validityLabel,
+      currency,
+      packageType,
+      countryCode,
+      description;
   final double price;
   final bool isFeatured;
   final List<PackageCountry> supportedCountries;
@@ -82,21 +149,77 @@ class MobilePackage {
     final identity = _identity(json);
     final wmCode = _worldmoveCode(json);
     final countries = _countries(json);
-    final first = countries.isNotEmpty ? countries.first : const PackageCountry(name: '', code: '');
-    final data = _first([json['data_quantity'], json['data_gb'], json['data'], json['dataAmount'], json['dataAllowance'], json['data_allowance'], json['capacity'], _dataFromText(identity)]);
-    final validity = _first([json['package_validity'], json['validity_days'], json['validityDays'], json['days'], json['durationDays'], json['validity'], _validityFromText(identity)]);
-    final price = double.tryParse('${_first([json['final_price'], json['finalPrice'], json['price'], json['sale_price'], json['salePrice'], json['reseller_price'], json['resellerPrice'], 0])}') ?? 0;
+    final first = countries.isNotEmpty
+        ? countries.first
+        : const PackageCountry(name: '', code: '');
+    final data = _first([
+      json['data_quantity'],
+      json['data_gb'],
+      json['data'],
+      json['dataAmount'],
+      json['dataAllowance'],
+      json['data_allowance'],
+      json['capacity'],
+      _dataFromText(identity),
+    ]);
+    final validity = _first([
+      json['package_validity'],
+      json['validity_days'],
+      json['validityDays'],
+      json['days'],
+      json['durationDays'],
+      json['validity'],
+      _validityFromText(identity),
+    ]);
+    final price =
+        double.tryParse(
+          '${_first([json['final_price'], json['finalPrice'], json['price'], json['sale_price'], json['salePrice'], json['reseller_price'], json['resellerPrice'], 0])}',
+        ) ??
+        0;
     return MobilePackage(
-      id: provider.toLowerCase() == 'worldmove' && wmCode.isNotEmpty ? wmCode : _text(json, ['id', 'package_id', 'planCode', 'productCode', 'product_code', 'code', 'sku']),
+      id: provider.toLowerCase() == 'worldmove' && wmCode.isNotEmpty
+          ? wmCode
+          : _text(json, [
+              'id',
+              'package_id',
+              'planCode',
+              'productCode',
+              'product_code',
+              'code',
+              'sku',
+            ]),
       name: _name(json, identity, wmCode, data, validity),
       provider: provider,
       displayProvider: _display(json, identity, wmCode),
-      destination: _text(json, ['destination_label', 'coverage_label', 'productRegion', 'destination', 'region']).isNotEmpty ? _text(json, ['destination_label', 'coverage_label', 'productRegion', 'destination', 'region']) : (first.name.isNotEmpty ? first.name : 'Global'),
-      destinationKey: _text(json, ['destination_key']).isNotEmpty ? _text(json, ['destination_key']).toLowerCase() : _destination(json, identity),
-      dataLabel: data == null ? (json['unlimited'] == true ? 'Unlimited' : 'Data') : '${_clean(data)} ${_text(json, ['data_unit']).isNotEmpty ? _text(json, ['data_unit']) : 'GB'}',
-      validityLabel: validity == null ? 'Flexible' : '${_clean(validity)} ${_text(json, ['package_validity_unit']).isNotEmpty ? _text(json, ['package_validity_unit']) : 'Days'}',
+      destination:
+          _text(json, [
+            'destination_label',
+            'coverage_label',
+            'productRegion',
+            'destination',
+            'region',
+          ]).isNotEmpty
+          ? _text(json, [
+              'destination_label',
+              'coverage_label',
+              'productRegion',
+              'destination',
+              'region',
+            ])
+          : (first.name.isNotEmpty ? first.name : 'Global'),
+      destinationKey: _text(json, ['destination_key']).isNotEmpty
+          ? _text(json, ['destination_key']).toLowerCase()
+          : _destination(json, identity),
+      dataLabel: data == null
+          ? (json['unlimited'] == true ? 'Unlimited' : 'Data')
+          : '${_clean(data)} ${_text(json, ['data_unit']).isNotEmpty ? _text(json, ['data_unit']) : 'GB'}',
+      validityLabel: validity == null
+          ? 'Flexible'
+          : '${_clean(validity)} ${_text(json, ['package_validity_unit']).isNotEmpty ? _text(json, ['package_validity_unit']) : 'Days'}',
       price: price,
-      currency: _text(json, ['currency']).isNotEmpty ? _text(json, ['currency']) : 'USD',
+      currency: _text(json, ['currency']).isNotEmpty
+          ? _text(json, ['currency'])
+          : 'USD',
       packageType: _type(json, identity, provider),
       countryCode: first.code,
       isFeatured: json['is_featured'] == true || json['isFeatured'] == true,
@@ -106,18 +229,34 @@ class MobilePackage {
   }
 
   String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
-  num? get dataGb => num.tryParse(RegExp(r'\d+(?:\.\d+)?').firstMatch(dataLabel)?.group(0) ?? '');
-  int? get validityDays => int.tryParse(RegExp(r'\d+').firstMatch(validityLabel)?.group(0) ?? '');
+  num? get dataGb => num.tryParse(
+    RegExp(r'\d+(?:\.\d+)?').firstMatch(dataLabel)?.group(0) ?? '',
+  );
+  int? get validityDays =>
+      int.tryParse(RegExp(r'\d+').firstMatch(validityLabel)?.group(0) ?? '');
 
   MobilePackage withPrice(double value) => MobilePackage(
-    id: id, name: name, provider: provider, displayProvider: displayProvider,
-    destination: destination, destinationKey: destinationKey, dataLabel: dataLabel, validityLabel: validityLabel,
-    price: value, currency: currency, packageType: packageType, countryCode: countryCode, isFeatured: isFeatured,
-    description: description, supportedCountries: supportedCountries,
+    id: id,
+    name: name,
+    provider: provider,
+    displayProvider: displayProvider,
+    destination: destination,
+    destinationKey: destinationKey,
+    dataLabel: dataLabel,
+    validityLabel: validityLabel,
+    price: value,
+    currency: currency,
+    packageType: packageType,
+    countryCode: countryCode,
+    isFeatured: isFeatured,
+    description: description,
+    supportedCountries: supportedCountries,
   );
 
   String get operatorKey {
-    final p = provider.toLowerCase(), label = displayProvider.toLowerCase(), code = id.toUpperCase();
+    final p = provider.toLowerCase(),
+        label = displayProvider.toLowerCase(),
+        code = id.toUpperCase();
     if (p == 'worldmove') {
       if (code.startsWith('WM-EU-B-')) return 'kpn';
       if (code.startsWith('WM-TR-')) return 'turkey';
@@ -134,36 +273,57 @@ class MobilePackage {
 
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
-    if (label.contains('orange') && label.contains('europe')) return 'worldmove';
-    if (label.contains('orange') && label.contains('world')) return 'orange-world';
-    if (label.contains('orange') && label.contains('balkan')) return 'orange-balkans';
+    if (label.contains('orange') && label.contains('europe'))
+      return 'worldmove';
+    if (label.contains('orange') && label.contains('world'))
+      return 'orange-world';
+    if (label.contains('orange') && label.contains('balkan'))
+      return 'orange-balkans';
     if (label.contains('vodafone')) return 'vodafone';
     if (label.contains('big data')) return 'flexnet';
     if (label.contains('balkan')) return 'orange-balkans';
     return p;
   }
 
-  static String _name(Map<String, dynamic> j, String identity, String wmCode, dynamic data, dynamic validity) {
+  static String _name(
+    Map<String, dynamic> j,
+    String identity,
+    String wmCode,
+    dynamic data,
+    dynamic validity,
+  ) {
     final p = _text(j, ['provider']).toLowerCase();
-    final rawName = _text(j, ['name', 'package_name', 'productName', 'product_name', 'planName', 'title']);
-    final fallbackName = _simplifyRawName(rawName.isEmpty ? 'Package' : rawName);
+    final rawName = _text(j, [
+      'name',
+      'package_name',
+      'productName',
+      'product_name',
+      'planName',
+      'title',
+    ]);
+    final fallbackName = _simplifyRawName(
+      rawName.isEmpty ? 'Package' : rawName,
+    );
     final dataText = _displayData(data);
     final validityText = _displayValidity(validity);
-    final suffix = [dataText, validityText].where((value) => value.isNotEmpty).join(' ');
+    final suffix = [
+      dataText,
+      validityText,
+    ].where((value) => value.isNotEmpty).join(' ');
 
     if (p == 'worldmove') {
       final code = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
       final operator = code.startsWith('WM-EU-B-')
           ? 'KPN Europe'
           : code.startsWith('WM-TR-')
-              ? 'Turkey'
-              : code.startsWith('WM-E-J1-WLD-')
-                  ? 'Orange World'
-                  : code.startsWith('WM-E-J1-VDFES-')
-                      ? 'Vodafone'
-                      : code.startsWith('WM-E-J1-O-')
-                          ? 'Orange Europe'
-                          : 'Worldmove';
+          ? 'Turkey'
+          : code.startsWith('WM-E-J1-WLD-')
+          ? 'Orange World'
+          : code.startsWith('WM-E-J1-VDFES-')
+          ? 'Vodafone'
+          : code.startsWith('WM-E-J1-O-')
+          ? 'Orange Europe'
+          : 'Worldmove';
       return suffix.isEmpty ? fallbackName : '$operator $suffix';
     }
     if (p == 'tgt') {
@@ -178,7 +338,11 @@ class MobilePackage {
     return fallbackName.isEmpty ? 'Package' : fallbackName;
   }
 
-  static String _display(Map<String, dynamic> j, String identity, String wmCode) {
+  static String _display(
+    Map<String, dynamic> j,
+    String identity,
+    String wmCode,
+  ) {
     if (_text(j, ['provider']).toLowerCase() == 'worldmove') {
       final c = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
       if (c.startsWith('WM-EU-B-')) return 'KPN Europe';
@@ -188,23 +352,48 @@ class MobilePackage {
       if (c.startsWith('WM-E-J1-O-')) return 'Orange Europe';
       return 'Worldmove';
     }
-    final value = _text(j, ['display_provider', 'provider_label', 'operator_name', 'provider']);
+    final value = _text(j, [
+      'display_provider',
+      'provider_label',
+      'operator_name',
+      'provider',
+    ]);
     return value.isEmpty ? 'Roam2World' : value;
   }
 
   static String _destination(Map<String, dynamic> j, String text) {
-    final n = '${j['productRegion'] ?? ''} ${j['destination'] ?? ''} $text'.toLowerCase();
-    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye')) return 'turkey';
-    if (n.contains('wm-e-j1-wld-') || n.contains('global') || n.contains('world')) return 'global';
-    if (n.contains('wm-eu-b-') || n.contains('wm-e-j1-') || n.contains('europe')) return 'europe';
+    final n = '${j['productRegion'] ?? ''} ${j['destination'] ?? ''} $text'
+        .toLowerCase();
+    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye'))
+      return 'turkey';
+    if (n.contains('wm-e-j1-wld-') ||
+        n.contains('global') ||
+        n.contains('world'))
+      return 'global';
+    if (n.contains('wm-eu-b-') ||
+        n.contains('wm-e-j1-') ||
+        n.contains('europe'))
+      return 'europe';
     return '';
   }
 
-  static String _type(Map<String, dynamic> j, String identity, String provider) {
-    final value = _text(j, ['package_type', 'packageType', 'product_type']).toLowerCase();
+  static String _type(
+    Map<String, dynamic> j,
+    String identity,
+    String provider,
+  ) {
+    final value = _text(j, [
+      'package_type',
+      'packageType',
+      'product_type',
+    ]).toLowerCase();
     final code = identity.toUpperCase();
-    if (j['is_esim'] == false || value == 'sim' || value == 'simcard' || value == 'physical_sim' ||
-        (provider.toLowerCase() == 'worldmove' && code.startsWith('WM-EU-B-')) ||
+    if (j['is_esim'] == false ||
+        value == 'sim' ||
+        value == 'simcard' ||
+        value == 'physical_sim' ||
+        (provider.toLowerCase() == 'worldmove' &&
+            code.startsWith('WM-EU-B-')) ||
         (provider.toLowerCase() == 'tgt' && code.contains('E-185-SC-'))) {
       return 'simcard';
     }
@@ -232,7 +421,9 @@ class MobilePackage {
       for (final item in _flattenCoverage(value)) {
         final country = _countryFromCoverage(item);
         if (country == null) continue;
-        final key = country.code.isNotEmpty ? country.code : country.name.toLowerCase();
+        final key = country.code.isNotEmpty
+            ? country.code
+            : country.name.toLowerCase();
         if (seen.add(key)) result.add(country);
       }
     }
@@ -257,7 +448,13 @@ class MobilePackage {
   }
 
   static String _description(Map<String, dynamic> j) {
-    for (final key in const ['description', 'package_description', 'plan_description', 'product_description', 'short_description']) {
+    for (final key in const [
+      'description',
+      'package_description',
+      'plan_description',
+      'product_description',
+      'short_description',
+    ]) {
       final text = j[key]?.toString().trim() ?? '';
       if (text.isNotEmpty) return text;
     }
@@ -273,7 +470,8 @@ class PackageCountry {
 String _displayData(dynamic value) {
   if (value == null) return '';
   final text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) return '';
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text))
+    return '';
   final numeric = num.tryParse(text);
   return numeric == null ? text : '${_clean(numeric)}GB';
 }
@@ -281,7 +479,8 @@ String _displayData(dynamic value) {
 String _displayValidity(dynamic value) {
   if (value == null) return '';
   var text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) return '';
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text))
+    return '';
   final numeric = num.tryParse(text);
   if (numeric != null) return '${_clean(numeric)} Days';
   text = text.replaceAll(RegExp(r'\bD\b', caseSensitive: false), 'Days');
@@ -290,10 +489,19 @@ String _displayValidity(dynamic value) {
 
 String _simplifyRawName(String value) {
   var text = value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  text = text.replaceFirst(RegExp(r'^\s*[\[【]?(?:eSIM|Sim|SIM)[\]】]?\s*', caseSensitive: false), '');
-  text = text.replaceAll(RegExp(r'\([^)]*countries?[^)]*\)', caseSensitive: false), '');
+  text = text.replaceFirst(
+    RegExp(r'^\s*[\[【]?(?:eSIM|Sim|SIM)[\]】]?\s*', caseSensitive: false),
+    '',
+  );
+  text = text.replaceAll(
+    RegExp(r'\([^)]*countries?[^)]*\)', caseSensitive: false),
+    '',
+  );
   text = text.replaceAll(RegExp(r'\(e0?1\)', caseSensitive: false), '');
-  text = text.replaceAll(RegExp(r'\busage\s+package\b', caseSensitive: false), '');
+  text = text.replaceAll(
+    RegExp(r'\busage\s+package\b', caseSensitive: false),
+    '',
+  );
   text = text.replaceAll(RegExp(r'\s*\/\s*'), ' ');
   text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
   return text;
@@ -322,11 +530,21 @@ Iterable<dynamic> _flattenCoverage(dynamic value) sync* {
 PackageCountry? _countryFromCoverage(dynamic item) {
   if (item is Map) {
     final m = Map<String, dynamic>.from(item);
-    final rawCode = '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'.trim().toUpperCase();
-    final rawName = '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? rawCode}'.trim();
+    final rawCode =
+        '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'
+            .trim()
+            .toUpperCase();
+    final rawName =
+        '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? rawCode}'
+            .trim();
     final code = rawCode.isNotEmpty ? rawCode : _countryCode(rawName);
     if (code.isEmpty && rawName.isEmpty) return null;
-    return PackageCountry(name: rawName.isEmpty || rawName.length == 2 ? _countryName(code) : rawName, code: code);
+    return PackageCountry(
+      name: rawName.isEmpty || rawName.length == 2
+          ? _countryName(code)
+          : rawName,
+      code: code,
+    );
   }
 
   final text = '$item'.trim();
@@ -392,13 +610,36 @@ String _countryCode(String name) {
       '';
 }
 
-String _worldmoveCode(Map<String, dynamic> j) => _text(j, ['wmproductId', 'wmproduct_id', 'wmProductId', 'productCode', 'product_code', 'code', 'sku', 'id']).toUpperCase();
+String _worldmoveCode(Map<String, dynamic> j) => _text(j, [
+  'wmproductId',
+  'wmproduct_id',
+  'wmProductId',
+  'productCode',
+  'product_code',
+  'code',
+  'sku',
+  'id',
+]).toUpperCase();
 
 String _identity(Map<String, dynamic> j) => [
-  j['id'], j['wmproductId'], j['wmproduct_id'], j['wmProductId'], j['package_id'],
-  j['planCode'], j['productCode'], j['product_code'], j['code'], j['sku'],
-  j['name'], j['package_name'], j['productName'], j['product_name'], j['planName'],
-  j['productRegion'], j['operator_name'], j['operator'],
+  j['id'],
+  j['wmproductId'],
+  j['wmproduct_id'],
+  j['wmProductId'],
+  j['package_id'],
+  j['planCode'],
+  j['productCode'],
+  j['product_code'],
+  j['code'],
+  j['sku'],
+  j['name'],
+  j['package_name'],
+  j['productName'],
+  j['product_name'],
+  j['planName'],
+  j['productRegion'],
+  j['operator_name'],
+  j['operator'],
 ].where((v) => v != null && '$v'.trim().isNotEmpty).join(' ');
 
 String _text(Map<String, dynamic> j, List<String> keys) {
@@ -423,7 +664,10 @@ String _clean(dynamic v) {
 }
 
 num? _dataFromText(String text) {
-  final match = RegExp(r'(\d+(?:\.\d+)?)\s*GB', caseSensitive: false).firstMatch(text);
+  final match = RegExp(
+    r'(\d+(?:\.\d+)?)\s*GB',
+    caseSensitive: false,
+  ).firstMatch(text);
   if (match != null) return num.tryParse(match.group(1)!);
   const fallbacks = {
     'WM-E-J1-VDFES-M': 25,
@@ -439,7 +683,10 @@ num? _dataFromText(String text) {
 }
 
 int? _validityFromText(String text) {
-  final match = RegExp(r'(\d+)\s*(?:D|DAY|DAYS)(?:\b|/)', caseSensitive: false).firstMatch(text);
+  final match = RegExp(
+    r'(\d+)\s*(?:D|DAY|DAYS)(?:\b|/)',
+    caseSensitive: false,
+  ).firstMatch(text);
   if (match != null) return int.tryParse(match.group(1)!);
   if (text.toUpperCase().contains('WM-E-J1-VDFES-')) return 30;
   return null;
@@ -491,4 +738,5 @@ String _countryName(String code) =>
       'AE': 'United Arab Emirates',
       'SA': 'Saudi Arabia',
       'EU': 'Europe',
-    }[code] ?? code;
+    }[code] ??
+    code;

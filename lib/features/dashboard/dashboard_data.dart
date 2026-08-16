@@ -148,8 +148,12 @@ class DashboardData {
   factory DashboardData.fromResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
-    final metrics = _map(data['metrics'] ?? data['statistics'] ?? data['stats']);
-    final sales = _map(data['sales'] ?? data['sales_overview'] ?? metrics['sales']);
+    final metrics = _map(
+      data['metrics'] ?? data['statistics'] ?? data['stats'],
+    );
+    final sales = _map(
+      data['sales'] ?? data['sales_overview'] ?? metrics['sales'],
+    );
     final esims = _map(data['esims'] ?? data['esim_stats'] ?? metrics['esims']);
     final wallet = _map(data['wallet']);
     final ordersMap = _map(data['orders']);
@@ -160,7 +164,9 @@ class DashboardData {
       data['current_balance'],
     ]);
     final orderItems =
-        ordersMap['recent'] as List? ?? data['recent_orders'] as List? ?? const [];
+        ordersMap['recent'] as List? ??
+        data['recent_orders'] as List? ??
+        const [];
     final revenue = _first([
       sales['revenue'],
       data['total_sales'],
@@ -174,41 +180,53 @@ class DashboardData {
     return DashboardData(
       role: data['role']?.toString() ?? '',
       balance: _toDouble(balanceValue),
-      currency: _first([wallet['currency'], data['currency']])?.toString() ?? 'USD',
-      todaySales: _toDouble(_first([
-        data['today_sales'],
-        data['todaySales'],
-        sales['today_sales'],
-        sales['todaySales'],
-      ])),
+      currency:
+          _first([wallet['currency'], data['currency']])?.toString() ?? 'USD',
+      todaySales: _toDouble(
+        _first([
+          data['today_sales'],
+          data['todaySales'],
+          sales['today_sales'],
+          sales['todaySales'],
+        ]),
+      ),
       monthlySales: _toDouble(revenue),
-      totalEsimCount: _toInt(_first([
-        esims['total'],
-        data['total_esim_count'],
-        data['total_esims'],
-        data['totalEsims'],
-        metrics['total_esims'],
-        esims['total_esims'],
-      ])),
-      activeEsimCount: _toInt(_first([
-        esims['active'],
-        data['active_esim_count'],
-        data['active_esims'],
-        data['activeEsims'],
-        metrics['active_esims'],
-        esims['active_esims'],
-      ])),
-      expiredEsimCount: _toInt(_first([
-        esims['expired'],
-        data['expired_esim_count'],
-        data['expired_esims'],
-        data['expiredEsims'],
-        metrics['expired_esims'],
-        esims['expired_esims'],
-      ])),
+      totalEsimCount: _toInt(
+        _first([
+          esims['total'],
+          data['total_esim_count'],
+          data['total_esims'],
+          data['totalEsims'],
+          metrics['total_esims'],
+          esims['total_esims'],
+        ]),
+      ),
+      activeEsimCount: _toInt(
+        _first([
+          esims['active'],
+          data['active_esim_count'],
+          data['active_esims'],
+          data['activeEsims'],
+          metrics['active_esims'],
+          esims['active_esims'],
+        ]),
+      ),
+      expiredEsimCount: _toInt(
+        _first([
+          esims['expired'],
+          data['expired_esim_count'],
+          data['expired_esims'],
+          data['expiredEsims'],
+          metrics['expired_esims'],
+          esims['expired_esims'],
+        ]),
+      ),
       recentOrders: orderItems
           .whereType<Map>()
-          .map((item) => DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false),
       period: data['period']?.toString() ?? '30d',
       grossProfit: _toDouble(sales['gross_profit']),
@@ -235,15 +253,21 @@ class DashboardData {
     return DashboardData(
       role: 'Admin',
       balance: 0,
-      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD').toString(),
+      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD')
+          .toString(),
       todaySales: 0,
-      monthlySales: _toDouble(salesOverview['total_sales'] ?? revenue['total_sales']),
+      monthlySales: _toDouble(
+        salesOverview['total_sales'] ?? revenue['total_sales'],
+      ),
       totalEsimCount: 0,
       activeEsimCount: 0,
       expiredEsimCount: 0,
       recentOrders: orders
           .whereType<Map>()
-          .map((item) => DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false),
       period: salesOverview['period']?.toString() ?? 'this_month',
       totalOrders: _toInt(ordersMap['total']),
@@ -260,7 +284,8 @@ class DashboardData {
   }
 }
 
-double _toDouble(dynamic value) => double.tryParse(value?.toString() ?? '') ?? 0;
+double _toDouble(dynamic value) =>
+    double.tryParse(value?.toString() ?? '') ?? 0;
 int _toInt(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
 Map<String, dynamic> _map(dynamic value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};

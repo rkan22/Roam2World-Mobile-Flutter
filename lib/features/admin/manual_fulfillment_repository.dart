@@ -43,7 +43,11 @@ class ManualProductItem {
         operatorName: '${json['operator_name'] ?? ''}',
         type: '${json['product_type'] ?? ''}',
         currency: '${json['currency'] ?? 'USD'}',
-        providerCost: double.tryParse('${json['provider_cost'] ?? json['base_price'] ?? 0}') ?? 0,
+        providerCost:
+            double.tryParse(
+              '${json['provider_cost'] ?? json['base_price'] ?? 0}',
+            ) ??
+            0,
         active: json['is_active'] == true,
         availableStock: json['available_stock'] == null
             ? null
@@ -102,27 +106,28 @@ class ManualTaskItem {
   final String supplierReference;
   final String errorMessage;
 
-  bool get isFinished => const {'completed', 'qr_ready', 'cancelled'}.contains(status);
+  bool get isFinished =>
+      const {'completed', 'qr_ready', 'cancelled'}.contains(status);
 
   factory ManualTaskItem.fromJson(Map<String, dynamic> json) => ManualTaskItem(
-        taskId: '${json['task_id'] ?? ''}',
-        status: '${json['status'] ?? ''}',
-        productName: '${json['product_name'] ?? ''}',
-        productType: '${json['product_type'] ?? ''}',
-        orderNumber: '${json['order_number'] ?? ''}',
-        customerName: '${json['customer_name'] ?? ''}',
-        customerEmail: '${json['customer_email'] ?? ''}',
-        iccid: '${json['iccid'] ?? ''}',
-        fulfillmentPartner: '${json['fulfillment_partner'] ?? ''}',
-        canSendToFlexnet: json['can_send_to_flexnet'] == true,
-        supplierReference: '${json['supplier_reference'] ?? ''}',
-        errorMessage: '${json['error_message'] ?? ''}',
-      );
+    taskId: '${json['task_id'] ?? ''}',
+    status: '${json['status'] ?? ''}',
+    productName: '${json['product_name'] ?? ''}',
+    productType: '${json['product_type'] ?? ''}',
+    orderNumber: '${json['order_number'] ?? ''}',
+    customerName: '${json['customer_name'] ?? ''}',
+    customerEmail: '${json['customer_email'] ?? ''}',
+    iccid: '${json['iccid'] ?? ''}',
+    fulfillmentPartner: '${json['fulfillment_partner'] ?? ''}',
+    canSendToFlexnet: json['can_send_to_flexnet'] == true,
+    supplierReference: '${json['supplier_reference'] ?? ''}',
+    errorMessage: '${json['error_message'] ?? ''}',
+  );
 }
 
 class ManualFulfillmentRepository {
   ManualFulfillmentRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -145,12 +150,12 @@ class ManualFulfillmentRepository {
     final inventoryRoot = results[1];
     final tasksRoot = results[2];
     return ManualFulfillmentWorkspaceData(
-      products: _list(productsRoot['data'])
-          .map(ManualProductItem.fromJson)
-          .toList(),
-      inventory: _list(inventoryRoot['data'])
-          .map(ManualInventoryItem.fromJson)
-          .toList(),
+      products: _list(
+        productsRoot['data'],
+      ).map(ManualProductItem.fromJson).toList(),
+      inventory: _list(
+        inventoryRoot['data'],
+      ).map(ManualInventoryItem.fromJson).toList(),
       tasks: _list(tasksRoot['data']).map(ManualTaskItem.fromJson).toList(),
       availableBlankStock:
           int.tryParse('${inventoryRoot['available_blank_stock'] ?? 0}') ?? 0,
@@ -165,35 +170,29 @@ class ManualFulfillmentRepository {
     );
   }
 
-  Future<void> sendToFlexnet(String taskId) => _taskAction(
-        ApiEndpoints.manualAdminSendToFlexnet(taskId),
-        const {},
-      );
+  Future<void> sendToFlexnet(String taskId) =>
+      _taskAction(ApiEndpoints.manualAdminSendToFlexnet(taskId), const {});
 
   Future<void> assignQr(
     String taskId, {
     required String code,
     String supplierReference = '',
-  }) =>
-      _taskAction(ApiEndpoints.manualAdminAssignQr(taskId), {
-        'qr_code': code,
-        if (supplierReference.trim().isNotEmpty)
-          'supplier_reference': supplierReference.trim(),
-      });
+  }) => _taskAction(ApiEndpoints.manualAdminAssignQr(taskId), {
+    'qr_code': code,
+    if (supplierReference.trim().isNotEmpty)
+      'supplier_reference': supplierReference.trim(),
+  });
 
-  Future<void> activateSim(
-    String taskId, {
-    String activationReference = '',
-  }) =>
+  Future<void> activateSim(String taskId, {String activationReference = ''}) =>
       _taskAction(ApiEndpoints.manualAdminActivateSim(taskId), {
         if (activationReference.trim().isNotEmpty)
           'activation_reference': activationReference.trim(),
       });
 
-  Future<void> cancelTask(String taskId, {String reason = ''}) =>
-      _taskAction(ApiEndpoints.manualAdminCancelTask(taskId), {
-        if (reason.trim().isNotEmpty) 'reason': reason.trim(),
-      });
+  Future<void> cancelTask(String taskId, {String reason = ''}) => _taskAction(
+    ApiEndpoints.manualAdminCancelTask(taskId),
+    {if (reason.trim().isNotEmpty) 'reason': reason.trim()},
+  );
 
   Future<void> _taskAction(String path, Map<String, dynamic> data) async {
     await _apiClient.post<Map<String, dynamic>>(

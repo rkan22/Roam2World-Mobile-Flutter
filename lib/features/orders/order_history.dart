@@ -15,15 +15,20 @@ class OrderHistory {
         data['orders'] ?? data['results'] ?? data['items'] ?? const [];
     final orders = rawOrders is List
         ? rawOrders
-            .whereType<Map>()
-            .map((item) => MobileOrderSummary.fromJson(
+              .whereType<Map>()
+              .map(
+                (item) => MobileOrderSummary.fromJson(
                   Map<String, dynamic>.from(item),
-                ))
-            .toList()
+                ),
+              )
+              .toList()
         : const <MobileOrderSummary>[];
     return OrderHistory(
       orders: orders,
-      count: int.tryParse((data['count'] ?? data['total'] ?? orders.length).toString()) ??
+      count:
+          int.tryParse(
+            (data['count'] ?? data['total'] ?? orders.length).toString(),
+          ) ??
           orders.length,
     );
   }
@@ -53,16 +58,19 @@ class MobileOrderSummary {
   final int? esimId;
 
   factory MobileOrderSummary.fromJson(Map<String, dynamic> json) {
-    final rawAmount = json['total_amount'] ?? json['price'] ?? json['amount'] ?? 0;
+    final rawAmount =
+        json['total_amount'] ?? json['price'] ?? json['amount'] ?? 0;
     final rawDate = json['created_at'] ?? json['created'] ?? json['order_date'];
-    final rawPackageName = json['package_name']?.toString() ??
+    final rawPackageName =
+        json['package_name']?.toString() ??
         json['product_name']?.toString() ??
         'eSIM package';
     return MobileOrderSummary(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       orderNumber: json['order_number']?.toString() ?? '',
       packageName: simplifyOrderPackageName(rawPackageName),
-      customerName: json['customer_name']?.toString() ??
+      customerName:
+          json['customer_name']?.toString() ??
           json['delivery_recipient_name']?.toString() ??
           '',
       status: json['status']?.toString() ?? 'pending',
@@ -74,16 +82,16 @@ class MobileOrderSummary {
   }
 
   MobileOrderSummary withCustomerName(String value) => MobileOrderSummary(
-        id: id,
-        orderNumber: orderNumber,
-        packageName: packageName,
-        customerName: value,
-        status: status,
-        amount: amount,
-        currency: currency,
-        createdAt: createdAt,
-        esimId: esimId,
-      );
+    id: id,
+    orderNumber: orderNumber,
+    packageName: packageName,
+    customerName: value,
+    status: status,
+    amount: amount,
+    currency: currency,
+    createdAt: createdAt,
+    esimId: esimId,
+  );
 
   String get formattedAmount => '$currency ${amount.toStringAsFixed(2)}';
 }

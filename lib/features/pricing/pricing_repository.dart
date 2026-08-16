@@ -19,7 +19,7 @@ class PricingWorkspaceData {
 
 class PricingRepository {
   PricingRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -28,12 +28,17 @@ class PricingRepository {
       '/api/v1/pricing-rules/',
       parser: pricingRulesFromResponse,
     );
-    final dealersFuture =
-        DealerNetworkRepository(apiClient: _apiClient).fetchNetwork();
-    final packagesFuture =
-        PackagesRepository(apiClient: _apiClient).fetchPackages();
-    final results =
-        await Future.wait([rulesFuture, dealersFuture, packagesFuture]);
+    final dealersFuture = DealerNetworkRepository(
+      apiClient: _apiClient,
+    ).fetchNetwork();
+    final packagesFuture = PackagesRepository(
+      apiClient: _apiClient,
+    ).fetchPackages();
+    final results = await Future.wait([
+      rulesFuture,
+      dealersFuture,
+      packagesFuture,
+    ]);
     return PricingWorkspaceData(
       rules: results[0] as List<PricingRule>,
       dealers: (results[1] as DealerNetworkData).dealers,
@@ -106,16 +111,10 @@ class PricingRepository {
     );
   }
 
-  Future<PricingRule> updateRule(
-    PricingRule rule, {
-    required double markup,
-  }) {
+  Future<PricingRule> updateRule(PricingRule rule, {required double markup}) {
     return _apiClient.patch<PricingRule>(
       '/api/v1/pricing-rules/${rule.id}/',
-      data: {
-        'markup_percentage': markup,
-        'target_role': 'dealer',
-      },
+      data: {'markup_percentage': markup, 'target_role': 'dealer'},
       parser: _parseRule,
     );
   }

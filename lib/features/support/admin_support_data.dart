@@ -33,11 +33,13 @@ class AdminSupportData {
     final rawTickets = data['tickets'];
     final tickets = rawTickets is List
         ? rawTickets
-            .whereType<Map>()
-            .map((item) => AdminSupportTicket.fromJson(
+              .whereType<Map>()
+              .map(
+                (item) => AdminSupportTicket.fromJson(
                   Map<String, dynamic>.from(item),
-                ))
-            .toList(growable: false)
+                ),
+              )
+              .toList(growable: false)
         : const <AdminSupportTicket>[];
 
     return AdminSupportData(

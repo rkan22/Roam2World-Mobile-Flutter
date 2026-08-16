@@ -24,10 +24,7 @@ String simplifyOrderPackageName(String value) {
   }
 
   final simplified = raw
-      .replaceFirst(
-        RegExp(r'^\s*\[(?:e)?sim\]\s*', caseSensitive: false),
-        '',
-      )
+      .replaceFirst(RegExp(r'^\s*\[(?:e)?sim\]\s*', caseSensitive: false), '')
       .replaceAll(
         RegExp(r'\((?:e0?\d+|[^)]*countries[^)]*)\)', caseSensitive: false),
         '',

@@ -23,19 +23,21 @@ class CustomerDirectory {
     final raw = data['clients'] ?? data['results'] ?? data['items'] ?? const [];
     final customers = raw is List
         ? raw
-            .whereType<Map>()
-            .map(
-              (item) => CustomerDirectoryItem.fromJson(
-                Map<String, dynamic>.from(item),
-              ),
-            )
-            .where((item) => item.name.isNotEmpty)
-            .toList(growable: false)
+              .whereType<Map>()
+              .map(
+                (item) => CustomerDirectoryItem.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .where((item) => item.name.isNotEmpty)
+              .toList(growable: false)
         : const <CustomerDirectoryItem>[];
     return CustomerDirectory(
       customers: customers,
       count:
-          int.tryParse('${data['count'] ?? data['total'] ?? customers.length}') ??
+          int.tryParse(
+            '${data['count'] ?? data['total'] ?? customers.length}',
+          ) ??
           customers.length,
     );
   }
@@ -77,20 +79,23 @@ class CustomerDirectoryItem {
         : const <String, dynamic>{};
     final first = '${json['first_name'] ?? user['first_name'] ?? ''}'.trim();
     final last = '${json['last_name'] ?? user['last_name'] ?? ''}'.trim();
-    final fullName = '${json['full_name'] ?? json['name'] ?? json['company_name'] ?? '$first $last'}'.trim();
+    final fullName =
+        '${json['full_name'] ?? json['name'] ?? json['company_name'] ?? '$first $last'}'
+            .trim();
     final rawActive = json['is_active'];
 
     return CustomerDirectoryItem(
       id: int.tryParse('${json['id'] ?? ''}'),
       name: fullName,
       email: '${json['email'] ?? user['email'] ?? ''}'.trim(),
-      phoneNumber: '${json['phone_number'] ?? user['phone_number'] ?? ''}'.trim(),
+      phoneNumber: '${json['phone_number'] ?? user['phone_number'] ?? ''}'
+          .trim(),
       status: '${json['status'] ?? ''}'.trim().toLowerCase(),
       isActive: rawActive is bool
           ? rawActive
           : rawActive == null
-              ? null
-              : rawActive.toString().toLowerCase() == 'true',
+          ? null
+          : rawActive.toString().toLowerCase() == 'true',
       currentPlan: '${json['current_plan'] ?? ''}'.trim(),
       totalOrders: _toInt(stats['total_orders'] ?? json['total_orders']),
       totalSpent: _toDouble(stats['total_spent'] ?? json['total_spent']),

@@ -50,7 +50,9 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
       _error = null;
     });
     try {
-      final page = await _repository.fetchHistory(search: _searchController.text);
+      final page = await _repository.fetchHistory(
+        search: _searchController.text,
+      );
       if (!mounted) return;
       setState(() {
         _items = page.items;
@@ -91,55 +93,107 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _dialogRow('ICCID', usage.iccid.isEmpty ? item.iccid : usage.iccid),
-              _dialogRow('Remaining', usage.remainingGb == null ? 'Not reported' : '${usage.remainingGb!.toStringAsFixed(2)} GB'),
-              _dialogRow('Status', usage.status.isEmpty ? 'Not reported' : usage.status),
-              _dialogRow('Profile', usage.profileStatus.isEmpty ? 'Not reported' : usage.profileStatus),
+              _dialogRow(
+                'ICCID',
+                usage.iccid.isEmpty ? item.iccid : usage.iccid,
+              ),
+              _dialogRow(
+                'Remaining',
+                usage.remainingGb == null
+                    ? 'Not reported'
+                    : '${usage.remainingGb!.toStringAsFixed(2)} GB',
+              ),
+              _dialogRow(
+                'Status',
+                usage.status.isEmpty ? 'Not reported' : usage.status,
+              ),
+              _dialogRow(
+                'Profile',
+                usage.profileStatus.isEmpty
+                    ? 'Not reported'
+                    : usage.profileStatus,
+              ),
               if (usage.orderNo.isNotEmpty) _dialogRow('Order', usage.orderNo),
             ],
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
         ),
       );
     } on ApiException catch (error) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Live TGT usage could not be checked.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Live TGT usage could not be checked.')),
+      );
     }
   }
 
   Widget _dialogRow(String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(width: 78, child: Text(label, style: const TextStyle(color: AppColors.textSecondary))),
-            Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w800))),
-          ],
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 78,
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
         ),
-      );
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('eSIM History'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.md, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.md,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('Lifecycle history', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Lifecycle history',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
-            Text('$_totalCount backend records across purchased and provisioned eSIMs.', style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              '$_totalCount backend records across purchased and provisioned eSIMs.',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: B2BSpacing.lg),
             TextField(
               controller: _searchController,
@@ -158,7 +212,8 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
               const ContentEmptyState(
                 icon: Icons.history_rounded,
                 title: 'No lifecycle records',
-                message: 'The backend returned no eSIM history records for this account.',
+                message:
+                    'The backend returned no eSIM history records for this account.',
               )
             else
               ..._items.map(_historyCard),
@@ -169,8 +224,12 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
   }
 
   Widget _historyCard(EsimHistoryItem item) {
-    final provider = item.displayProvider.isEmpty ? item.provider : item.displayProvider;
-    final customer = item.customerName.isEmpty ? item.customerPhone : item.customerName;
+    final provider = item.displayProvider.isEmpty
+        ? item.provider
+        : item.displayProvider;
+    final customer = item.customerName.isEmpty
+        ? item.customerPhone
+        : item.customerName;
     return Padding(
       padding: const EdgeInsets.only(bottom: B2BSpacing.sm),
       child: B2BSurface(
@@ -185,18 +244,38 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
-                Text(item.status, style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w800)),
+                Text(
+                  item.status,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: B2BSpacing.xs),
-            if (customer.isNotEmpty) Text(customer, style: const TextStyle(color: AppColors.textSecondary)),
-            if (provider.isNotEmpty) Text(provider, style: const TextStyle(color: AppColors.textSecondary)),
+            if (customer.isNotEmpty)
+              Text(
+                customer,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            if (provider.isNotEmpty)
+              Text(
+                provider,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             const SizedBox(height: B2BSpacing.sm),
             if (item.iccid.isNotEmpty) _infoRow('ICCID', item.iccid),
-            if (item.orderNumber.isNotEmpty) _infoRow('Order', item.orderNumber),
+            if (item.orderNumber.isNotEmpty)
+              _infoRow('Order', item.orderNumber),
             if (item.dataGb != null) _infoRow('Plan data', '${item.dataGb} GB'),
-            if (item.remainingGb != null) _infoRow('Recorded remaining', '${item.remainingGb!.toStringAsFixed(2)} GB'),
-            if (item.validityDays != null) _infoRow('Validity', '${item.validityDays} days'),
+            if (item.remainingGb != null)
+              _infoRow(
+                'Recorded remaining',
+                '${item.remainingGb!.toStringAsFixed(2)} GB',
+              ),
+            if (item.validityDays != null)
+              _infoRow('Validity', '${item.validityDays} days'),
             if (item.supportsTgtGbCheck) ...[
               const SizedBox(height: B2BSpacing.md),
               OutlinedButton.icon(
@@ -212,12 +291,24 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
   }
 
   Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Row(
-          children: [
-            SizedBox(width: 122, child: Text(label, style: const TextStyle(color: AppColors.textSecondary))),
-            Expanded(child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800))),
-          ],
+    padding: const EdgeInsets.only(top: 6),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 122,
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
         ),
-      );
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    ),
+  );
 }

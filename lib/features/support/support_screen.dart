@@ -28,16 +28,31 @@ class _SupportScreenState extends State<SupportScreen> {
   Map<String, dynamic>? _systemHealth;
 
   static const _topics = <_SupportTopic>[
-    _SupportTopic(Icons.qr_code_2_rounded, 'eSIM installation',
-        'QR codes, manual setup and activation'),
-    _SupportTopic(Icons.shopping_bag_outlined, 'Orders and delivery',
-        'Order status, delivery and provisioning'),
-    _SupportTopic(Icons.account_balance_wallet_outlined, 'Wallet and payments',
-        'Top-ups, balances and transactions'),
-    _SupportTopic(Icons.signal_cellular_alt_rounded, 'Coverage and usage',
-        'Networks, roaming and data availability'),
-    _SupportTopic(Icons.people_outline_rounded, 'Customers',
-        'Customer assignments and B2B sales flow'),
+    _SupportTopic(
+      Icons.qr_code_2_rounded,
+      'eSIM installation',
+      'QR codes, manual setup and activation',
+    ),
+    _SupportTopic(
+      Icons.shopping_bag_outlined,
+      'Orders and delivery',
+      'Order status, delivery and provisioning',
+    ),
+    _SupportTopic(
+      Icons.account_balance_wallet_outlined,
+      'Wallet and payments',
+      'Top-ups, balances and transactions',
+    ),
+    _SupportTopic(
+      Icons.signal_cellular_alt_rounded,
+      'Coverage and usage',
+      'Networks, roaming and data availability',
+    ),
+    _SupportTopic(
+      Icons.people_outline_rounded,
+      'Customers',
+      'Customer assignments and B2B sales flow',
+    ),
   ];
 
   @override
@@ -49,7 +64,9 @@ class _SupportScreenState extends State<SupportScreen> {
 
   Future<void> _loadAdminContext() async {
     final profile = await _tokenStorage.readProfile();
-    final role = parseAppRole((profile?['role'] ?? profile?['user_role'])?.toString());
+    final role = parseAppRole(
+      (profile?['role'] ?? profile?['user_role'])?.toString(),
+    );
     if (!mounted) return;
     setState(() => _isAdmin = role == AppRole.admin);
     if (role == AppRole.admin) {
@@ -91,9 +108,11 @@ class _SupportScreenState extends State<SupportScreen> {
     final query = searchController.text.trim().toLowerCase();
     if (query.isEmpty) return _topics;
     return _topics
-        .where((topic) =>
-            topic.title.toLowerCase().contains(query) ||
-            topic.subtitle.toLowerCase().contains(query))
+        .where(
+          (topic) =>
+              topic.title.toLowerCase().contains(query) ||
+              topic.subtitle.toLowerCase().contains(query),
+        )
         .toList(growable: false);
   }
 
@@ -130,11 +149,15 @@ class _SupportScreenState extends State<SupportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Support center',
-                            style: Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          'Support center',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                         const SizedBox(height: B2BSpacing.xxs),
-                        Text('Help & Support',
-                            style: Theme.of(context).textTheme.headlineMedium),
+                        Text(
+                          'Help & Support',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
                       ],
                     ),
                   ),
@@ -156,8 +179,11 @@ class _SupportScreenState extends State<SupportScreen> {
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.support_agent_rounded,
-                        color: Colors.white, size: 34),
+                    Icon(
+                      Icons.support_agent_rounded,
+                      color: Colors.white,
+                      size: 34,
+                    ),
                     SizedBox(height: B2BSpacing.md),
                     Text(
                       'How can we help?',
@@ -201,11 +227,15 @@ class _SupportScreenState extends State<SupportScreen> {
               const SizedBox(height: B2BSpacing.xl),
               Row(
                 children: [
-                  Text('Popular topics',
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Popular topics',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const Spacer(),
-                  Text('${topics.length} topics',
-                      style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    '${topics.length} topics',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ],
               ),
               const SizedBox(height: B2BSpacing.sm),
@@ -213,15 +243,18 @@ class _SupportScreenState extends State<SupportScreen> {
                 padding: EdgeInsets.zero,
                 child: topics.isEmpty
                     ? const Padding(
-                        padding:
-                            EdgeInsets.symmetric(vertical: B2BSpacing.xl),
-                        child: Center(child: Text('No matching support topics')),
+                        padding: EdgeInsets.symmetric(vertical: B2BSpacing.xl),
+                        child: Center(
+                          child: Text('No matching support topics'),
+                        ),
                       )
                     : Column(
                         children: [
-                          for (var index = 0;
-                              index < topics.length;
-                              index++) ...[
+                          for (
+                            var index = 0;
+                            index < topics.length;
+                            index++
+                          ) ...[
                             _SupportTile(
                               topic: topics[index],
                               onTap: () => _showTopic(topics[index]),
@@ -240,8 +273,10 @@ class _SupportScreenState extends State<SupportScreen> {
                 child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.verified_user_outlined,
-                        color: AppColors.primary),
+                    Icon(
+                      Icons.verified_user_outlined,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(width: B2BSpacing.sm),
                     Expanded(
                       child: Text(
@@ -293,26 +328,37 @@ class _SupportScreenState extends State<SupportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Admin support queue', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Admin support queue',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: B2BSpacing.sm),
         Row(
           children: [
-            Expanded(child: _AdminStat(label: 'Open', value: data.openCount)),
+            Expanded(
+              child: _AdminStat(label: 'Open', value: data.openCount),
+            ),
             const SizedBox(width: B2BSpacing.sm),
             Expanded(
-                child: _AdminStat(
-                    label: 'In progress', value: data.inProgressCount)),
+              child: _AdminStat(
+                label: 'In progress',
+                value: data.inProgressCount,
+              ),
+            ),
             const SizedBox(width: B2BSpacing.sm),
             Expanded(
-                child: _AdminStat(label: 'Resolved', value: data.resolvedCount)),
+              child: _AdminStat(label: 'Resolved', value: data.resolvedCount),
+            ),
           ],
         ),
         const SizedBox(height: B2BSpacing.sm),
         B2BSurface(
           child: Row(
             children: [
-              const Icon(Icons.monitor_heart_outlined,
-                  color: AppColors.primary),
+              const Icon(
+                Icons.monitor_heart_outlined,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: B2BSpacing.sm),
               Expanded(
                 child: Text(
@@ -333,9 +379,11 @@ class _SupportScreenState extends State<SupportScreen> {
                 )
               : Column(
                   children: [
-                    for (var index = 0;
-                        index < data.tickets.take(8).length;
-                        index++) ...[
+                    for (
+                      var index = 0;
+                      index < data.tickets.take(8).length;
+                      index++
+                    ) ...[
                       _AdminTicketTile(ticket: data.tickets[index]),
                       if (index != data.tickets.take(8).length - 1)
                         const Divider(height: 1),
@@ -365,8 +413,10 @@ class _SupportScreenState extends State<SupportScreen> {
             children: [
               Text(topic.title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: B2BSpacing.xs),
-              Text(topic.subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                topic.subtitle,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: B2BSpacing.lg),
               const Text(
                 'Ticket creation is not exposed by the verified mobile backend endpoint yet. Existing admin tickets are shown in the support queue above.',
@@ -394,25 +444,27 @@ class _SupportTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: B2BSpacing.md,
-          vertical: B2BSpacing.xxs,
-        ),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            borderRadius: BorderRadius.circular(B2BRadius.sm),
-          ),
-          child: Icon(topic.icon, color: AppColors.primary, size: 21),
-        ),
-        title: Text(topic.title,
-            style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(topic.subtitle),
-        trailing: const Icon(Icons.chevron_right_rounded),
-      );
+    onTap: onTap,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: B2BSpacing.md,
+      vertical: B2BSpacing.xxs,
+    ),
+    leading: Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(B2BRadius.sm),
+      ),
+      child: Icon(topic.icon, color: AppColors.primary, size: 21),
+    ),
+    title: Text(
+      topic.title,
+      style: const TextStyle(fontWeight: FontWeight.w800),
+    ),
+    subtitle: Text(topic.subtitle),
+    trailing: const Icon(Icons.chevron_right_rounded),
+  );
 }
 
 class _AdminStat extends StatelessWidget {
@@ -423,17 +475,16 @@ class _AdminStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        padding: const EdgeInsets.all(B2BSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$value',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 2),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      );
+    padding: const EdgeInsets.all(B2BSpacing.sm),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('$value', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 2),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  );
 }
 
 class _AdminTicketTile extends StatelessWidget {
@@ -446,8 +497,8 @@ class _AdminTicketTile extends StatelessWidget {
     final owner = ticket.clientName.isNotEmpty
         ? ticket.clientName
         : ticket.clientEmail.isNotEmpty
-            ? ticket.clientEmail
-            : 'Client';
+        ? ticket.clientEmail
+        : 'Client';
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: B2BSpacing.md,
@@ -457,7 +508,9 @@ class _AdminTicketTile extends StatelessWidget {
         child: Icon(Icons.confirmation_number_outlined),
       ),
       title: Text(
-        ticket.subject.isEmpty ? 'Support ticket #${ticket.id}' : ticket.subject,
+        ticket.subject.isEmpty
+            ? 'Support ticket #${ticket.id}'
+            : ticket.subject,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w800),

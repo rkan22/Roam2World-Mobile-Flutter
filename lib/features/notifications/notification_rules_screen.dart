@@ -14,7 +14,8 @@ class NotificationRulesScreen extends StatefulWidget {
   const NotificationRulesScreen({super.key});
 
   @override
-  State<NotificationRulesScreen> createState() => _NotificationRulesScreenState();
+  State<NotificationRulesScreen> createState() =>
+      _NotificationRulesScreenState();
 }
 
 class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
@@ -42,7 +43,8 @@ class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Notification rules could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Notification rules could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -60,7 +62,9 @@ class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
       await _load();
     } on ApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -78,24 +82,49 @@ class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
   @override
   Widget build(BuildContext context) {
     final enabled = _rules.where((rule) => rule.enabled).length;
-    final high = _rules.where((rule) => rule.enabled && (rule.severity == 'high' || rule.severity == 'critical')).length;
+    final high = _rules
+        .where(
+          (rule) =>
+              rule.enabled &&
+              (rule.severity == 'high' || rule.severity == 'critical'),
+        )
+        .length;
     final channels = _rules.expand((rule) => rule.channels).toSet().length;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: context.pop, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: context.pop,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Notification Rules'),
-        actions: [IconButton(onPressed: _loading ? null : _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(
+            onPressed: _loading ? null : _load,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.sm, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.sm,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('Operations alerts', style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              'Operations alerts',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
-            Text('Notification Rules', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Notification Rules',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Control which operational events require attention and how they are delivered.',
@@ -110,26 +139,51 @@ class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
               const ContentEmptyState(
                 icon: Icons.notifications_off_outlined,
                 title: 'No server-backed rules available',
-                message: 'The notification rule service returned no configurable rules.',
+                message:
+                    'The notification rule service returned no configurable rules.',
               )
             else ...[
-              Row(children: [
-                Expanded(child: B2BMetricCard(label: 'Enabled', value: '$enabled', icon: Icons.check_circle_outline_rounded)),
-                const SizedBox(width: B2BSpacing.sm),
-                Expanded(child: B2BMetricCard(label: 'High priority', value: '$high', icon: Icons.warning_amber_rounded)),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'Enabled',
+                      value: '$enabled',
+                      icon: Icons.check_circle_outline_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: B2BSpacing.sm),
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'High priority',
+                      value: '$high',
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: B2BSpacing.sm),
-              B2BMetricCard(label: 'Delivery channels', value: '$channels', icon: Icons.alternate_email_rounded),
+              B2BMetricCard(
+                label: 'Delivery channels',
+                value: '$channels',
+                icon: Icons.alternate_email_rounded,
+              ),
               const SizedBox(height: B2BSpacing.lg),
               for (var index = 0; index < _rules.length; index++) ...[
-                _RuleCard(rule: _rules[index], onChanged: (rule) => _replace(index, rule)),
+                _RuleCard(
+                  rule: _rules[index],
+                  onChanged: (rule) => _replace(index, rule),
+                ),
                 const SizedBox(height: B2BSpacing.sm),
               ],
               const SizedBox(height: B2BSpacing.md),
               FilledButton.icon(
                 onPressed: _saving ? null : _save,
                 icon: _saving
-                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.save_outlined),
                 label: Text(_saving ? 'Saving...' : 'Save rules'),
               ),
@@ -160,29 +214,51 @@ class _RuleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(rule.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-                  if (rule.description.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(rule.description, style: const TextStyle(color: AppColors.textSecondary)),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rule.name,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    if (rule.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        rule.description,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Switch(value: rule.enabled, onChanged: (value) => onChanged(rule.copyWith(enabled: value))),
-          ]),
+              Switch(
+                value: rule.enabled,
+                onChanged: (value) => onChanged(rule.copyWith(enabled: value)),
+              ),
+            ],
+          ),
           const SizedBox(height: B2BSpacing.sm),
           Wrap(
             spacing: B2BSpacing.xs,
             runSpacing: B2BSpacing.xs,
             children: [
-              Chip(avatar: Icon(Icons.flag_outlined, size: 16, color: severityColor), label: Text(rule.severity.toUpperCase())),
+              Chip(
+                avatar: Icon(
+                  Icons.flag_outlined,
+                  size: 16,
+                  color: severityColor,
+                ),
+                label: Text(rule.severity.toUpperCase()),
+              ),
               if (rule.unit.isNotEmpty)
-                Chip(label: Text('${rule.threshold.toStringAsFixed(rule.threshold % 1 == 0 ? 0 : 1)} ${rule.unit}')),
+                Chip(
+                  label: Text(
+                    '${rule.threshold.toStringAsFixed(rule.threshold % 1 == 0 ? 0 : 1)} ${rule.unit}',
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: B2BSpacing.sm),
@@ -209,9 +285,9 @@ class _RuleCard extends StatelessWidget {
   }
 
   static String _label(String value) => switch (value) {
-        'in_app' => 'In-app',
-        'email' => 'Email',
-        'sms' => 'SMS',
-        _ => value,
-      };
+    'in_app' => 'In-app',
+    'email' => 'Email',
+    'sms' => 'SMS',
+    _ => value,
+  };
 }

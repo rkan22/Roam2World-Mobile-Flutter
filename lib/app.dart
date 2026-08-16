@@ -9,10 +9,7 @@ import 'shared/widgets/adaptive_app_frame.dart';
 class Roam2WorldApp extends StatefulWidget {
   final String initialLocation;
 
-  const Roam2WorldApp({
-    super.key,
-    this.initialLocation = AppRoutes.onboarding,
-  });
+  const Roam2WorldApp({super.key, this.initialLocation = AppRoutes.onboarding});
 
   @override
   State<Roam2WorldApp> createState() => _Roam2WorldAppState();
@@ -47,9 +44,8 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeMode,
-          builder: (context, child) => AdaptiveAppFrame(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          builder: (context, child) =>
+              AdaptiveAppFrame(child: child ?? const SizedBox.shrink()),
           routerConfig: router,
         );
       },

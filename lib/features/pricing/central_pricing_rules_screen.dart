@@ -76,11 +76,16 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
     try {
       final rules = await _repository.fetchRules();
       if (!mounted) return;
-      setState(() => _rules = rules.where((rule) => rule.provider != 'esimcard').toList());
+      setState(
+        () => _rules = rules
+            .where((rule) => rule.provider != 'esimcard')
+            .toList(),
+      );
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Pricing rules could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Pricing rules could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -157,7 +162,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
     try {
       await _repository.deleteRule(rule.id);
       if (!mounted) return;
-      setState(() => _rules = _rules.where((item) => item.id != rule.id).toList());
+      setState(
+        () => _rules = _rules.where((item) => item.id != rule.id).toList(),
+      );
       _showMessage('Pricing rule deleted.');
     } on ApiException catch (error) {
       if (mounted) _showMessage(error.message);
@@ -194,7 +201,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -256,9 +265,17 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                     initialValue: _provider,
                     decoration: const InputDecoration(labelText: 'Operator'),
                     items: _providers.entries
-                        .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
                         .toList(),
-                    onChanged: _saving ? null : (value) => setState(() => _provider = value ?? _provider),
+                    onChanged: _saving
+                        ? null
+                        : (value) =>
+                              setState(() => _provider = value ?? _provider),
                   ),
                   const SizedBox(height: B2BSpacing.sm),
                   TextField(
@@ -272,11 +289,22 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                   const SizedBox(height: B2BSpacing.sm),
                   DropdownButtonFormField<String>(
                     initialValue: _targetRole,
-                    decoration: const InputDecoration(labelText: 'Pricing layer'),
+                    decoration: const InputDecoration(
+                      labelText: 'Pricing layer',
+                    ),
                     items: _roles.entries
-                        .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
                         .toList(),
-                    onChanged: _saving ? null : (value) => setState(() => _targetRole = value ?? _targetRole),
+                    onChanged: _saving
+                        ? null
+                        : (value) => setState(
+                            () => _targetRole = value ?? _targetRole,
+                          ),
                   ),
                   const SizedBox(height: B2BSpacing.sm),
                   Row(
@@ -285,8 +313,12 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                         child: TextField(
                           controller: _markupController,
                           enabled: !_saving,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Markup %'),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Markup %',
+                          ),
                         ),
                       ),
                       const SizedBox(width: B2BSpacing.sm),
@@ -295,7 +327,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                           controller: _priorityController,
                           enabled: !_saving,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Priority'),
+                          decoration: const InputDecoration(
+                            labelText: 'Priority',
+                          ),
                         ),
                       ),
                     ],
@@ -307,8 +341,12 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                         child: TextField(
                           controller: _minMarkupController,
                           enabled: !_saving,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Min markup %'),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Min markup %',
+                          ),
                         ),
                       ),
                       const SizedBox(width: B2BSpacing.sm),
@@ -316,8 +354,12 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                         child: TextField(
                           controller: _maxMarkupController,
                           enabled: !_saving,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Max markup %'),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Max markup %',
+                          ),
                         ),
                       ),
                     ],
@@ -330,7 +372,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                           controller: _resellerController,
                           enabled: !_saving,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Reseller ID (optional)'),
+                          decoration: const InputDecoration(
+                            labelText: 'Reseller ID (optional)',
+                          ),
                         ),
                       ),
                       const SizedBox(width: B2BSpacing.sm),
@@ -339,7 +383,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                           controller: _dealerController,
                           enabled: !_saving,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Dealer ID (optional)'),
+                          decoration: const InputDecoration(
+                            labelText: 'Dealer ID (optional)',
+                          ),
                         ),
                       ),
                     ],
@@ -349,7 +395,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Active rule'),
                     value: _active,
-                    onChanged: _saving ? null : (value) => setState(() => _active = value),
+                    onChanged: _saving
+                        ? null
+                        : (value) => setState(() => _active = value),
                   ),
                   const SizedBox(height: B2BSpacing.xs),
                   SizedBox(
@@ -370,7 +418,10 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
               ),
             ),
             const SizedBox(height: B2BSpacing.lg),
-            Text('Price preview', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Price preview',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: B2BSpacing.sm),
             B2BSurface(
               child: Column(
@@ -378,7 +429,9 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                 children: [
                   TextField(
                     controller: _previewPriceController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Provider cost',
                       prefixText: 'USD ',
@@ -405,9 +458,18 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                       spacing: B2BSpacing.sm,
                       runSpacing: B2BSpacing.sm,
                       children: [
-                        _PreviewChip(label: 'Admin', value: _preview!.afterAdmin),
-                        _PreviewChip(label: 'Reseller', value: _preview!.afterReseller),
-                        _PreviewChip(label: 'Final', value: _preview!.finalCustomerPrice),
+                        _PreviewChip(
+                          label: 'Admin',
+                          value: _preview!.afterAdmin,
+                        ),
+                        _PreviewChip(
+                          label: 'Reseller',
+                          value: _preview!.afterReseller,
+                        ),
+                        _PreviewChip(
+                          label: 'Final',
+                          value: _preview!.finalCustomerPrice,
+                        ),
                       ],
                     ),
                   ],
@@ -415,7 +477,10 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
               ),
             ),
             const SizedBox(height: B2BSpacing.lg),
-            Text('Effective rules', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Effective rules',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: B2BSpacing.sm),
             if (_loading)
               const Center(
@@ -430,7 +495,10 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                   children: [
                     Text(_error!, textAlign: TextAlign.center),
                     const SizedBox(height: B2BSpacing.sm),
-                    OutlinedButton(onPressed: _load, child: const Text('Retry')),
+                    OutlinedButton(
+                      onPressed: _load,
+                      child: const Text('Retry'),
+                    ),
                   ],
                 ),
               )
@@ -460,7 +528,11 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value, required this.icon});
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
@@ -468,24 +540,33 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        child: Row(
+    child: Row(
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: B2BSpacing.sm),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: B2BSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-              ],
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
           ],
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _RuleCard extends StatelessWidget {
-  const _RuleCard({required this.rule, required this.operatorLabel, required this.onDelete});
+  const _RuleCard({
+    required this.rule,
+    required this.operatorLabel,
+    required this.onDelete,
+  });
 
   final _PricingRule rule;
   final String operatorLabel;
@@ -493,51 +574,54 @@ class _RuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    operatorLabel,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: rule.isActive
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(B2BRadius.pill),
-                  ),
-                  child: Text(rule.isActive ? 'Active' : 'Inactive'),
-                ),
-                IconButton(
-                  onPressed: onDelete,
-                  tooltip: 'Delete rule',
-                  icon: const Icon(Icons.delete_outline_rounded),
-                ),
-              ],
+            Expanded(
+              child: Text(
+                operatorLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
             ),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(rule.packageId.isEmpty ? 'All packages' : rule.packageId),
-            const SizedBox(height: B2BSpacing.sm),
-            Wrap(
-              spacing: B2BSpacing.sm,
-              runSpacing: B2BSpacing.xs,
-              children: [
-                _MetaChip('Layer', rule.targetRole),
-                _MetaChip('Markup', '${rule.markup.toStringAsFixed(2)}%'),
-                _MetaChip('Priority', '${rule.priority}'),
-                if (rule.resellerId != null) _MetaChip('Reseller', '${rule.resellerId}'),
-                if (rule.dealerId != null) _MetaChip('Dealer', '${rule.dealerId}'),
-              ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: rule.isActive
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(B2BRadius.pill),
+              ),
+              child: Text(rule.isActive ? 'Active' : 'Inactive'),
+            ),
+            IconButton(
+              onPressed: onDelete,
+              tooltip: 'Delete rule',
+              icon: const Icon(Icons.delete_outline_rounded),
             ),
           ],
         ),
-      );
+        const SizedBox(height: B2BSpacing.xs),
+        Text(rule.packageId.isEmpty ? 'All packages' : rule.packageId),
+        const SizedBox(height: B2BSpacing.sm),
+        Wrap(
+          spacing: B2BSpacing.sm,
+          runSpacing: B2BSpacing.xs,
+          children: [
+            _MetaChip('Layer', rule.targetRole),
+            _MetaChip('Markup', '${rule.markup.toStringAsFixed(2)}%'),
+            _MetaChip('Priority', '${rule.priority}'),
+            if (rule.resellerId != null)
+              _MetaChip('Reseller', '${rule.resellerId}'),
+            if (rule.dealerId != null) _MetaChip('Dealer', '${rule.dealerId}'),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class _MetaChip extends StatelessWidget {
@@ -547,13 +631,13 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(B2BRadius.pill),
-        ),
-        child: Text('$label: $value', style: Theme.of(context).textTheme.bodySmall),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      borderRadius: BorderRadius.circular(B2BRadius.pill),
+    ),
+    child: Text('$label: $value', style: Theme.of(context).textTheme.bodySmall),
+  );
 }
 
 class _PreviewChip extends StatelessWidget {
@@ -563,13 +647,16 @@ class _PreviewChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(B2BRadius.md),
-        ),
-        child: Text('$label: ${value ?? 'Hidden'}', style: const TextStyle(fontWeight: FontWeight.w800)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      borderRadius: BorderRadius.circular(B2BRadius.md),
+    ),
+    child: Text(
+      '$label: ${value ?? 'Hidden'}',
+      style: const TextStyle(fontWeight: FontWeight.w800),
+    ),
+  );
 }
 
 class _PricingRule {
@@ -596,48 +683,59 @@ class _PricingRule {
   final int? dealerId;
 
   factory _PricingRule.fromJson(Map<String, dynamic> json) => _PricingRule(
-        id: int.tryParse('${json['id'] ?? 0}') ?? 0,
-        provider: '${json['provider'] ?? ''}',
-        packageId: '${json['package_id'] ?? ''}',
-        targetRole: '${json['target_role'] ?? ''}',
-        markup: double.tryParse('${json['markup_percentage'] ?? 0}') ?? 0,
-        priority: int.tryParse('${json['priority'] ?? 0}') ?? 0,
-        isActive: json['is_active'] == true,
-        resellerId: int.tryParse('${json['reseller'] ?? ''}'),
-        dealerId: int.tryParse('${json['dealer'] ?? ''}'),
-      );
+    id: int.tryParse('${json['id'] ?? 0}') ?? 0,
+    provider: '${json['provider'] ?? ''}',
+    packageId: '${json['package_id'] ?? ''}',
+    targetRole: '${json['target_role'] ?? ''}',
+    markup: double.tryParse('${json['markup_percentage'] ?? 0}') ?? 0,
+    priority: int.tryParse('${json['priority'] ?? 0}') ?? 0,
+    isActive: json['is_active'] == true,
+    resellerId: int.tryParse('${json['reseller'] ?? ''}'),
+    dealerId: int.tryParse('${json['dealer'] ?? ''}'),
+  );
 }
 
 class _PricePreview {
-  const _PricePreview({this.afterAdmin, this.afterReseller, this.finalCustomerPrice});
+  const _PricePreview({
+    this.afterAdmin,
+    this.afterReseller,
+    this.finalCustomerPrice,
+  });
   final String? afterAdmin;
   final String? afterReseller;
   final String? finalCustomerPrice;
 
   factory _PricePreview.fromJson(Map<String, dynamic> json) => _PricePreview(
-        afterAdmin: json['after_admin']?.toString(),
-        afterReseller: json['after_reseller']?.toString(),
-        finalCustomerPrice: json['final_customer_price']?.toString(),
-      );
+    afterAdmin: json['after_admin']?.toString(),
+    afterReseller: json['after_reseller']?.toString(),
+    finalCustomerPrice: json['final_customer_price']?.toString(),
+  );
 }
 
 class _PricingRulesRepository {
-  _PricingRulesRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  _PricingRulesRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
   final ApiClient _apiClient;
 
   Future<List<_PricingRule>> fetchRules() {
     return _apiClient.get<List<_PricingRule>>(
       ApiEndpoints.pricingRules,
       parser: (response) {
-        final root = response is Map ? Map<String, dynamic>.from(response) : <String, dynamic>{};
+        final root = response is Map
+            ? Map<String, dynamic>.from(response)
+            : <String, dynamic>{};
         final dynamic raw = response is List
             ? response
             : root['results'] ?? root['data'] ?? const [];
-        final list = raw is Map ? raw['results'] ?? raw['data'] ?? const [] : raw;
+        final list = raw is Map
+            ? raw['results'] ?? raw['data'] ?? const []
+            : raw;
         if (list is! List) return const [];
         return list
             .whereType<Map>()
-            .map((item) => _PricingRule.fromJson(Map<String, dynamic>.from(item)))
+            .map(
+              (item) => _PricingRule.fromJson(Map<String, dynamic>.from(item)),
+            )
             .toList(growable: false);
       },
     );
@@ -673,7 +771,8 @@ class _PricingRulesRepository {
     );
   }
 
-  Future<void> deleteRule(int id) => _apiClient.delete(ApiEndpoints.pricingRuleDetail(id));
+  Future<void> deleteRule(int id) =>
+      _apiClient.delete(ApiEndpoints.pricingRuleDetail(id));
 
   Future<_PricePreview> preview({
     required String provider,

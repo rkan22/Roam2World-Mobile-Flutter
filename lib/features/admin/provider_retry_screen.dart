@@ -41,7 +41,8 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
       );
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Provider retry queue could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Provider retry queue could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -55,10 +56,7 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
     context.go('/dashboard');
   }
 
-  Future<void> _runAction(
-    ProviderRetryItem item,
-    String action,
-  ) async {
+  Future<void> _runAction(ProviderRetryItem item, String action) async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
@@ -84,9 +82,9 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Action failed: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Action failed: $error')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -104,7 +102,10 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
         ),
         title: const Text('Provider Retry Queue'),
         actions: [
-          IconButton(onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh_rounded)),
+          IconButton(
+            onPressed: _busy ? null : _load,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -118,7 +119,10 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
             B2BSpacing.xxl,
           ),
           children: [
-            Text('Provider recovery', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Provider recovery',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Live failed-provider queue with server-backed retry, scheduling, resolve and cancel actions.',
@@ -153,24 +157,48 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
   }
 
   Widget _summary(ProviderRetrySummary summary) => Column(
+    children: [
+      Row(
         children: [
-          Row(
-            children: [
-              Expanded(child: B2BMetricCard(label: 'Pending', value: '${summary.pending}', icon: Icons.schedule_rounded)),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(child: B2BMetricCard(label: 'Retrying', value: '${summary.retrying}', icon: Icons.sync_rounded)),
-            ],
+          Expanded(
+            child: B2BMetricCard(
+              label: 'Pending',
+              value: '${summary.pending}',
+              icon: Icons.schedule_rounded,
+            ),
           ),
-          const SizedBox(height: B2BSpacing.sm),
-          Row(
-            children: [
-              Expanded(child: B2BMetricCard(label: 'Failed', value: '${summary.failed}', icon: Icons.error_outline_rounded)),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(child: B2BMetricCard(label: 'Due now', value: '${summary.dueNow}', icon: Icons.bolt_rounded)),
-            ],
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: B2BMetricCard(
+              label: 'Retrying',
+              value: '${summary.retrying}',
+              icon: Icons.sync_rounded,
+            ),
           ),
         ],
-      );
+      ),
+      const SizedBox(height: B2BSpacing.sm),
+      Row(
+        children: [
+          Expanded(
+            child: B2BMetricCard(
+              label: 'Failed',
+              value: '${summary.failed}',
+              icon: Icons.error_outline_rounded,
+            ),
+          ),
+          const SizedBox(width: B2BSpacing.sm),
+          Expanded(
+            child: B2BMetricCard(
+              label: 'Due now',
+              value: '${summary.dueNow}',
+              icon: Icons.bolt_rounded,
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
 
   Widget _filters() {
     const values = <String, String>{
@@ -225,7 +253,9 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
             children: [
               Expanded(
                 child: Text(
-                  item.orderNumber.isEmpty ? 'Retry #${item.id}' : item.orderNumber,
+                  item.orderNumber.isEmpty
+                      ? 'Retry #${item.id}'
+                      : item.orderNumber,
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
@@ -240,7 +270,10 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
           ],
           if (item.lastError.isNotEmpty) ...[
             const SizedBox(height: B2BSpacing.xs),
-            Text(item.lastError, style: const TextStyle(color: AppColors.danger)),
+            Text(
+              item.lastError,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ],
           const SizedBox(height: B2BSpacing.md),
           Wrap(
@@ -277,14 +310,14 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
   }
 
   Widget _pill(String text, Color color) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(B2BRadius.pill),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(B2BRadius.pill),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+    ),
+  );
 }

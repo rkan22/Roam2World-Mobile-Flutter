@@ -38,7 +38,8 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
       final data = await _repository.fetch(liveCheck: liveCheck);
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Provider health could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Provider health could not be loaded.');
     } finally {
       if (mounted) {
         setState(() {
@@ -78,17 +79,33 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
     final data = _data;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Provider Health'),
-        actions: [IconButton(onPressed: () => _load(), icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(
+            onPressed: () => _load(),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.md, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.md,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('Provider operations', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Provider operations',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Live provider configuration, route availability and recent backend health state.',
@@ -98,9 +115,17 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
             FilledButton.icon(
               onPressed: _liveChecking ? null : () => _load(liveCheck: true),
               icon: _liveChecking
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.monitor_heart_outlined),
-              label: Text(_liveChecking ? 'Running live checks...' : 'Run live provider checks'),
+              label: Text(
+                _liveChecking
+                    ? 'Running live checks...'
+                    : 'Run live provider checks',
+              ),
             ),
             const SizedBox(height: B2BSpacing.lg),
             if (_loading && data == null)
@@ -116,18 +141,23 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
                 const ContentEmptyState(
                   icon: Icons.hub_outlined,
                   title: 'No providers',
-                  message: 'The provider health endpoint returned no provider records.',
+                  message:
+                      'The provider health endpoint returned no provider records.',
                 )
               else
                 ...data.providers.map(_providerCard),
               const SizedBox(height: B2BSpacing.xl),
-              Text('Route health', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Route health',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: B2BSpacing.sm),
               if (data.routes.isEmpty)
                 const ContentEmptyState(
                   icon: Icons.route_outlined,
                   title: 'No route data',
-                  message: 'The backend returned no provider route health records.',
+                  message:
+                      'The backend returned no provider route health records.',
                 )
               else
                 ...data.routes.map(_routeCard),
@@ -143,25 +173,64 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Expanded(child: B2BMetricCard(label: 'Online', value: '${summary.online}', icon: Icons.check_circle_outline_rounded)),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(child: B2BMetricCard(label: 'Degraded', value: '${summary.degraded}', icon: Icons.warning_amber_rounded)),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Online',
+                value: '${summary.online}',
+                icon: Icons.check_circle_outline_rounded,
+              ),
+            ),
+            const SizedBox(width: B2BSpacing.sm),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Degraded',
+                value: '${summary.degraded}',
+                icon: Icons.warning_amber_rounded,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: B2BSpacing.sm),
-        Row(children: [
-          Expanded(child: B2BMetricCard(label: 'Routable', value: '${summary.routableCategories}', icon: Icons.route_outlined)),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(child: B2BMetricCard(label: 'Unroutable', value: '${summary.unroutableCategories}', icon: Icons.block_outlined)),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Routable',
+                value: '${summary.routableCategories}',
+                icon: Icons.route_outlined,
+              ),
+            ),
+            const SizedBox(width: B2BSpacing.sm),
+            Expanded(
+              child: B2BMetricCard(
+                label: 'Unroutable',
+                value: '${summary.unroutableCategories}',
+                icon: Icons.block_outlined,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: B2BSpacing.sm),
         B2BSurface(
           child: Row(
             children: [
-              Icon(Icons.health_and_safety_outlined, color: _statusColor(data.healthStatus)),
+              Icon(
+                Icons.health_and_safety_outlined,
+                color: _statusColor(data.healthStatus),
+              ),
               const SizedBox(width: B2BSpacing.sm),
-              Expanded(child: Text('Overall health: ${data.healthStatus}', style: const TextStyle(fontWeight: FontWeight.w900))),
-              Text('${summary.categoriesUsingFallback} fallback', style: const TextStyle(color: AppColors.textSecondary)),
+              Expanded(
+                child: Text(
+                  'Overall health: ${data.healthStatus}',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Text(
+                '${summary.categoriesUsingFallback} fallback',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             ],
           ),
         ),
@@ -183,15 +252,34 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Expanded(child: Text(item.displayName, style: const TextStyle(fontWeight: FontWeight.w900))),
-              Text(item.status, style: TextStyle(color: _statusColor(item.status), fontWeight: FontWeight.w800)),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.displayName,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Text(
+                  item.status,
+                  style: TextStyle(
+                    color: _statusColor(item.status),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: B2BSpacing.xs),
-            Text(details, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              details,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
             if (item.supports.isNotEmpty) ...[
               const SizedBox(height: B2BSpacing.xs),
-              Text(item.supports.join(' · '), style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                item.supports.join(' · '),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
             if (item.error.isNotEmpty) ...[
               const SizedBox(height: B2BSpacing.xs),
@@ -204,23 +292,46 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
   }
 
   Widget _routeCard(ProviderRouteHealthItem item) {
-    final fallback = item.fallbackProviders.isEmpty ? 'No fallback' : 'Fallback: ${item.fallbackProviders.join(', ')}';
+    final fallback = item.fallbackProviders.isEmpty
+        ? 'No fallback'
+        : 'Fallback: ${item.fallbackProviders.join(', ')}';
     return Padding(
       padding: const EdgeInsets.only(bottom: B2BSpacing.sm),
       child: B2BSurface(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Expanded(child: Text(item.displayName, style: const TextStyle(fontWeight: FontWeight.w900))),
-              Text(item.healthStatus, style: TextStyle(color: _statusColor(item.healthStatus), fontWeight: FontWeight.w800)),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.displayName,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Text(
+                  item.healthStatus,
+                  style: TextStyle(
+                    color: _statusColor(item.healthStatus),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: B2BSpacing.xs),
-            Text('Primary: ${item.primaryProvider}${item.primaryOnline ? ' · online' : ' · unavailable'}'),
-            Text(fallback, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              'Primary: ${item.primaryProvider}${item.primaryOnline ? ' · online' : ' · unavailable'}',
+            ),
+            Text(
+              fallback,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
             if (item.actionRequired.isNotEmpty) ...[
               const SizedBox(height: B2BSpacing.xs),
-              Text(item.actionRequired.join(' '), style: const TextStyle(color: AppColors.warning)),
+              Text(
+                item.actionRequired.join(' '),
+                style: const TextStyle(color: AppColors.warning),
+              ),
             ],
           ],
         ),

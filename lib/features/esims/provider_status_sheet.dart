@@ -20,7 +20,8 @@ class ProviderStatusSheet extends StatelessWidget {
           break;
         }
       }
-      if (found && current != null && '$current'.trim().isNotEmpty) return current;
+      if (found && current != null && '$current'.trim().isNotEmpty)
+        return current;
     }
     return null;
   }
@@ -57,21 +58,27 @@ class ProviderStatusSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final status = _text(_read([
-      ['usage', 'status'],
-      ['status'],
-      ['raw', 'data', 'status'],
-    ]), fallback: 'Unknown');
+    final status = _text(
+      _read([
+        ['usage', 'status'],
+        ['status'],
+        ['raw', 'data', 'status'],
+      ]),
+      fallback: 'Unknown',
+    );
     final normalizedStatus = status.toLowerCase();
-    final active = normalizedStatus.contains('active') &&
+    final active =
+        normalizedStatus.contains('active') &&
         !normalizedStatus.contains('notactive');
     final statusColor = active ? AppColors.success : AppColors.danger;
 
-    final iccid = _text(_read([
-      ['iccid'],
-      ['usage', 'iccid'],
-      ['raw', 'data', 'iccid'],
-    ]));
+    final iccid = _text(
+      _read([
+        ['iccid'],
+        ['usage', 'iccid'],
+        ['raw', 'data', 'iccid'],
+      ]),
+    );
     final total = _read([
       ['usage', 'total_mb'],
       ['raw', 'data', 'dataTotal'],
@@ -87,16 +94,20 @@ class ProviderStatusSheet extends StatelessWidget {
       ['raw', 'data', 'dataResidual'],
       ['data', 'remaining_mb'],
     ]);
-    final profileStatus = _text(_read([
-      ['usage', 'profile_status'],
-      ['profile_status'],
-      ['raw', 'data', 'profile_status'],
-    ]));
-    final providerMessage = _text(_read([
-      ['raw', 'msg'],
-      ['message'],
-      ['msg'],
-    ]));
+    final profileStatus = _text(
+      _read([
+        ['usage', 'profile_status'],
+        ['profile_status'],
+        ['raw', 'data', 'profile_status'],
+      ]),
+    );
+    final providerMessage = _text(
+      _read([
+        ['raw', 'msg'],
+        ['message'],
+        ['msg'],
+      ]),
+    );
     final startDate = _read([
       ['usage', 'start_date'],
       ['start_date'],
@@ -287,30 +298,28 @@ class _Surface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(B2BRadius.lg),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(B2BRadius.lg),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null) ...[
+          Text(
+            title!,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null) ...[
-              Text(
-                title!,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            child,
-          ],
-        ),
-      );
+          const SizedBox(height: 12),
+        ],
+        child,
+      ],
+    ),
+  );
 }
 
 class _UsageCard extends StatelessWidget {
@@ -326,35 +335,35 @@ class _UsageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(14),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+    decoration: BoxDecoration(
+      color: AppColors.primarySoft,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 20),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.primaryDark,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.primaryDark,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _RowItem extends StatelessWidget {
@@ -374,49 +383,45 @@ class _RowItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: AppColors.border),
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    decoration: BoxDecoration(
+      border: last
+          ? null
+          : const Border(bottom: BorderSide(color: AppColors.border)),
+    ),
+    child: Row(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 19),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: singleLine
+              ? FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                )
+              : Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 19),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: singleLine
-                  ? FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      value,
-                      textAlign: TextAlign.right,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-            ),
-          ],
-        ),
-      );
+      ],
+    ),
+  );
 }

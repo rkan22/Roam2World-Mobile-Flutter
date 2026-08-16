@@ -89,20 +89,20 @@ class ApiEndpoints {
   static const String mobileEsimcardTopupCheckout =
       '/api/v1/mobile/b2b/esimcard/topup-checkout/';
   static const String mobileSmartHealth = '/api/v1/mobile/smart/health/';
-  static const String mobileSmartCategories = '/api/v1/mobile/smart/categories/';
+  static const String mobileSmartCategories =
+      '/api/v1/mobile/smart/categories/';
   static const String mobileSmartPackages = '/api/v1/mobile/smart/packages/';
-  static const String mobileSmartCreateOrder = '/api/v1/mobile/smart/orders/create/';
+  static const String mobileSmartCreateOrder =
+      '/api/v1/mobile/smart/orders/create/';
   static const String mobileSmartCheckout = '/api/v1/mobile/smart/checkout/';
   static const String mobileSmartOrders = '/api/v1/mobile/smart/orders/';
   static String mobileSmartOrderDetail(Object orderId) =>
       '/api/v1/mobile/smart/orders/$orderId/';
-  static const String mobileSmartUsageCheck = '/api/v1/mobile/smart/usage-check/';
-  static const String mobileSimPackages =
-      '/api/v1/mobile/packages/';
-  static const String mobileSimOrders =
-      '/api/v1/mobile/orders/';
-  static const String mobileSimOrderHistory =
-      '/api/v1/mobile/orders/';
+  static const String mobileSmartUsageCheck =
+      '/api/v1/mobile/smart/usage-check/';
+  static const String mobileSimPackages = '/api/v1/mobile/packages/';
+  static const String mobileSimOrders = '/api/v1/mobile/orders/';
+  static const String mobileSimOrderHistory = '/api/v1/mobile/orders/';
   static const String mobileSmartWalletStatus =
       '/api/v1/mobile/smart/wallet/status/';
   static const String mobileSmartWalletChargeOrder =

@@ -22,9 +22,12 @@ class SimCardPackage {
   factory SimCardPackage.fromJson(Map<String, dynamic> json) {
     final rawPrice = json['price'] ?? json['reseller_price'] ?? 0;
     return SimCardPackage(
-      id: (json['productId'] ?? json['id'] ?? json['package_id'] ?? '').toString(),
-      name: (json['name'] ?? json['title'] ?? json['productName'] ?? 'SIM Card').toString(),
-      destination: (json['destination'] ?? json['productRegion'] ?? 'Global').toString(),
+      id: (json['productId'] ?? json['id'] ?? json['package_id'] ?? '')
+          .toString(),
+      name: (json['name'] ?? json['title'] ?? json['productName'] ?? 'SIM Card')
+          .toString(),
+      destination: (json['destination'] ?? json['productRegion'] ?? 'Global')
+          .toString(),
       price: double.tryParse(rawPrice.toString()) ?? 0,
       currency: (json['currency'] ?? 'USD').toString(),
       minimumQuantity: int.tryParse((json['min_qty'] ?? 1).toString()) ?? 1,
@@ -45,9 +48,12 @@ class SimCardCatalog {
     final raw = root['packages'] ?? root['data'] ?? const [];
     final packages = raw is List
         ? raw
-            .whereType<Map>()
-            .map((item) => SimCardPackage.fromJson(Map<String, dynamic>.from(item)))
-            .toList(growable: false)
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    SimCardPackage.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList(growable: false)
         : const <SimCardPackage>[];
     return SimCardCatalog(
       packages: packages,
@@ -85,8 +91,10 @@ class SimCardOrder {
       id: (json['id'] ?? '').toString(),
       orderNumber: (json['order_number'] ?? '').toString(),
       status: (json['status'] ?? 'pending').toString(),
-      productName: (json['product_name'] ?? json['name'] ?? 'SIM Card').toString(),
-      quantity: int.tryParse((json['qty'] ?? json['quantity'] ?? 1).toString()) ?? 1,
+      productName: (json['product_name'] ?? json['name'] ?? 'SIM Card')
+          .toString(),
+      quantity:
+          int.tryParse((json['qty'] ?? json['quantity'] ?? 1).toString()) ?? 1,
       totalAmount: double.tryParse(rawAmount.toString()) ?? 0,
       currency: (json['currency'] ?? 'USD').toString(),
       providerOrderId: json['provider_order_id']?.toString(),

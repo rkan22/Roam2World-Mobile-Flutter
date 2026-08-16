@@ -9,7 +9,8 @@ class DealerPerformanceScreen extends StatefulWidget {
   const DealerPerformanceScreen({super.key});
 
   @override
-  State<DealerPerformanceScreen> createState() => _DealerPerformanceScreenState();
+  State<DealerPerformanceScreen> createState() =>
+      _DealerPerformanceScreenState();
 }
 
 class _DealerPerformanceScreenState extends State<DealerPerformanceScreen> {
@@ -36,7 +37,8 @@ class _DealerPerformanceScreenState extends State<DealerPerformanceScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Dealer performance could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Dealer performance could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -50,15 +52,25 @@ class _DealerPerformanceScreenState extends State<DealerPerformanceScreen> {
   @override
   Widget build(BuildContext context) {
     final completed = _orders.where(_completed).toList(growable: false);
-    final revenue = completed.fold<double>(0, (sum, order) => sum + order.amount);
+    final revenue = completed.fold<double>(
+      0,
+      (sum, order) => sum + order.amount,
+    );
     final average = completed.isEmpty ? 0 : revenue / completed.length;
-    final successRate = _orders.isEmpty ? 0 : completed.length / _orders.length * 100;
+    final successRate = _orders.isEmpty
+        ? 0
+        : completed.length / _orders.length * 100;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: const Text('Dealer Performance'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -66,7 +78,10 @@ class _DealerPerformanceScreenState extends State<DealerPerformanceScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (_loading && _orders.isEmpty)
-              const Padding(padding: EdgeInsets.all(48), child: Center(child: CircularProgressIndicator()))
+              const Padding(
+                padding: EdgeInsets.all(48),
+                child: Center(child: CircularProgressIndicator()),
+              )
             else if (_error != null && _orders.isEmpty)
               _ErrorCard(message: _error!, onRetry: _load)
             else ...[
@@ -78,27 +93,69 @@ class _DealerPerformanceScreenState extends State<DealerPerformanceScreen> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.45,
                 children: [
-                  _Metric(label: 'Orders', value: '${_orders.length}', icon: Icons.receipt_long),
-                  _Metric(label: 'Completed', value: '${completed.length}', icon: Icons.task_alt),
-                  _Metric(label: 'Revenue', value: completed.isEmpty ? '—' : '${completed.first.currency} ${revenue.toStringAsFixed(2)}', icon: Icons.payments),
-                  _Metric(label: 'Success rate', value: '${successRate.toStringAsFixed(1)}%', icon: Icons.trending_up),
+                  _Metric(
+                    label: 'Orders',
+                    value: '${_orders.length}',
+                    icon: Icons.receipt_long,
+                  ),
+                  _Metric(
+                    label: 'Completed',
+                    value: '${completed.length}',
+                    icon: Icons.task_alt,
+                  ),
+                  _Metric(
+                    label: 'Revenue',
+                    value: completed.isEmpty
+                        ? '—'
+                        : '${completed.first.currency} ${revenue.toStringAsFixed(2)}',
+                    icon: Icons.payments,
+                  ),
+                  _Metric(
+                    label: 'Success rate',
+                    value: '${successRate.toStringAsFixed(1)}%',
+                    icon: Icons.trending_up,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              _Metric(label: 'Average completed order', value: completed.isEmpty ? '—' : '${completed.first.currency} ${average.toStringAsFixed(2)}', icon: Icons.calculate),
+              _Metric(
+                label: 'Average completed order',
+                value: completed.isEmpty
+                    ? '—'
+                    : '${completed.first.currency} ${average.toStringAsFixed(2)}',
+                icon: Icons.calculate,
+              ),
               const SizedBox(height: 24),
-              Text('Recent orders', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Recent orders',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               if (_orders.isEmpty)
-                const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No dealer orders found.')))
+                const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text('No dealer orders found.'),
+                  ),
+                )
               else
-                ..._orders.take(20).map((order) => Card(
-                      child: ListTile(
-                        title: Text(order.orderNumber.isEmpty ? 'Order #${order.id}' : order.orderNumber),
-                        subtitle: Text('${order.customerName.isEmpty ? order.packageName : order.customerName} • ${order.status}'),
-                        trailing: Text(order.formattedAmount),
+                ..._orders
+                    .take(20)
+                    .map(
+                      (order) => Card(
+                        child: ListTile(
+                          title: Text(
+                            order.orderNumber.isEmpty
+                                ? 'Order #${order.id}'
+                                : order.orderNumber,
+                          ),
+                          subtitle: Text(
+                            '${order.customerName.isEmpty ? order.packageName : order.customerName} • ${order.status}',
+                          ),
+                          trailing: Text(order.formattedAmount),
+                        ),
                       ),
-                    )),
+                    ),
             ],
           ],
         ),
@@ -115,16 +172,26 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icon),
-            const Spacer(),
-            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ]),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon),
+          const Spacer(),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ErrorCard extends StatelessWidget {
@@ -132,5 +199,16 @@ class _ErrorCard extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [Text(message), const SizedBox(height: 12), FilledButton(onPressed: onRetry, child: const Text('Retry'))])));
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Text(message),
+          const SizedBox(height: 12),
+          FilledButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    ),
+  );
 }

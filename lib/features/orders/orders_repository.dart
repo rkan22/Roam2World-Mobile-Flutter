@@ -25,7 +25,8 @@ class OrdersRepository {
 
     final query = <String, dynamic>{};
     if (status != null && status.isNotEmpty) query['status'] = status;
-    if (search != null && search.trim().isNotEmpty) query['search'] = search.trim();
+    if (search != null && search.trim().isNotEmpty)
+      query['search'] = search.trim();
 
     final history = await _apiClient.get<OrderHistory>(
       isAdmin ? ApiEndpoints.mobileAdminOrders : ApiEndpoints.mobileOrders,
@@ -38,14 +39,19 @@ class OrdersRepository {
 
     final normalizedStatus = status?.trim().toLowerCase() ?? '';
     final normalizedSearch = search?.trim().toLowerCase() ?? '';
-    final filtered = enrichedHistory.orders.where((order) {
-      final statusMatches = normalizedStatus.isEmpty || order.status.toLowerCase() == normalizedStatus;
-      final searchMatches = normalizedSearch.isEmpty ||
-          order.orderNumber.toLowerCase().contains(normalizedSearch) ||
-          order.packageName.toLowerCase().contains(normalizedSearch) ||
-          order.customerName.toLowerCase().contains(normalizedSearch);
-      return statusMatches && searchMatches;
-    }).toList(growable: false);
+    final filtered = enrichedHistory.orders
+        .where((order) {
+          final statusMatches =
+              normalizedStatus.isEmpty ||
+              order.status.toLowerCase() == normalizedStatus;
+          final searchMatches =
+              normalizedSearch.isEmpty ||
+              order.orderNumber.toLowerCase().contains(normalizedSearch) ||
+              order.packageName.toLowerCase().contains(normalizedSearch) ||
+              order.customerName.toLowerCase().contains(normalizedSearch);
+          return statusMatches && searchMatches;
+        })
+        .toList(growable: false);
 
     return OrderHistory(orders: filtered, count: filtered.length);
   }
@@ -65,9 +71,16 @@ class OrdersRepository {
           return EsimHistoryPage(
             items: raw
                 .whereType<Map>()
-                .map((item) => EsimHistoryItem.fromJson(Map<String, dynamic>.from(item)))
+                .map(
+                  (item) =>
+                      EsimHistoryItem.fromJson(Map<String, dynamic>.from(item)),
+                )
                 .toList(),
-            totalCount: int.tryParse('${root['total_count'] ?? root['count'] ?? raw.length}') ?? raw.length,
+            totalCount:
+                int.tryParse(
+                  '${root['total_count'] ?? root['count'] ?? raw.length}',
+                ) ??
+                raw.length,
             hasMore: root['has_more'] == true,
           );
         },
@@ -83,13 +96,16 @@ class OrdersRepository {
         if (orderNumber.isNotEmpty) byOrderNumber[orderNumber] = name;
       }
 
-      final orders = history.orders.map((order) {
-        if (order.customerName.trim().isNotEmpty) return order;
-        final byId = order.esimId == null ? null : byEsimId[order.esimId!];
-        final byNumber = byOrderNumber[order.orderNumber.trim().toLowerCase()];
-        final name = (byId ?? byNumber ?? '').trim();
-        return name.isEmpty ? order : order.withCustomerName(name);
-      }).toList(growable: false);
+      final orders = history.orders
+          .map((order) {
+            if (order.customerName.trim().isNotEmpty) return order;
+            final byId = order.esimId == null ? null : byEsimId[order.esimId!];
+            final byNumber =
+                byOrderNumber[order.orderNumber.trim().toLowerCase()];
+            final name = (byId ?? byNumber ?? '').trim();
+            return name.isEmpty ? order : order.withCustomerName(name);
+          })
+          .toList(growable: false);
 
       return OrderHistory(orders: orders, count: history.count);
     } catch (_) {
@@ -128,19 +144,25 @@ class OrdersRepository {
       imei: imei,
       simNumber: normalizedSim,
     );
-    final clientOrderId = _checkoutClientOrderIds.putIfAbsent(key, _newClientOrderId);
+    final clientOrderId = _checkoutClientOrderIds.putIfAbsent(
+      key,
+      _newClientOrderId,
+    );
 
     try {
       final result = await _apiClient.post<MobileOrderResult>(
         '/api/v1/mobile/b2b/checkout/',
         data: {
-          'category': package.packageType.isNotEmpty ? package.packageType : package.destinationKey,
+          'category': package.packageType.isNotEmpty
+              ? package.packageType
+              : package.destinationKey,
           'package_id': package.id,
           'quantity': 1,
           'customer_first_name': firstName.trim(),
           'customer_last_name': lastName.trim(),
           'customer_phone': phone.trim(),
-          if (email != null && email.trim().isNotEmpty) 'customer_email': email.trim(),
+          if (email != null && email.trim().isNotEmpty)
+            'customer_email': email.trim(),
           'client_order_id': clientOrderId,
           if (normalizedSim.isNotEmpty) 'sim_iccid': normalizedSim,
         },
@@ -208,7 +230,8 @@ class OrdersRepository {
 
   String _normalizedSimIdentifier(MobilePackage package, String raw) {
     if (raw.trim().isEmpty) return '';
-    if (package.provider.toLowerCase() == 'tgt' && package.packageType.toLowerCase() == 'simcard') {
+    if (package.provider.toLowerCase() == 'tgt' &&
+        package.packageType.toLowerCase() == 'simcard') {
       return raw
           .replaceAll(RegExp(r'[\s-]'), '')
           .toUpperCase()
@@ -219,7 +242,10 @@ class OrdersRepository {
 
   String _newClientOrderId() {
     final random = Random.secure();
-    final suffix = List.generate(12, (_) => random.nextInt(16).toRadixString(16)).join();
+    final suffix = List.generate(
+      12,
+      (_) => random.nextInt(16).toRadixString(16),
+    ).join();
     return 'mobile-${DateTime.now().microsecondsSinceEpoch}-$suffix';
   }
 }

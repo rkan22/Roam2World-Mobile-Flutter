@@ -82,7 +82,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               const SizedBox(height: B2BSpacing.lg),
               if (_loading && _dashboard == null)
-                const ContentLoadingState(label: 'Preparing business reports...')
+                const ContentLoadingState(
+                  label: 'Preparing business reports...',
+                )
               else if (_error != null && _dashboard == null)
                 ContentErrorState(
                   message: _error!,
@@ -98,9 +100,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   List<Widget> _content(DashboardData data) {
-    final completed = _orders.where((order) => _isCompleted(order.status)).toList(growable: false);
-    final completedRevenue = completed.fold<double>(0, (sum, order) => sum + order.amount);
-    final averageOrder = completed.isEmpty ? 0 : completedRevenue / completed.length;
+    final completed = _orders
+        .where((order) => _isCompleted(order.status))
+        .toList(growable: false);
+    final completedRevenue = completed.fold<double>(
+      0,
+      (sum, order) => sum + order.amount,
+    );
+    final averageOrder = completed.isEmpty
+        ? 0
+        : completedRevenue / completed.length;
     final daily = _dailyRevenue(completed);
     final packages = _topPackages(completed);
 
@@ -173,7 +182,10 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Reports', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Reports',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: B2BSpacing.xxs),
               Text(
                 'Live B2B sales intelligence',
@@ -225,7 +237,10 @@ class _ReportHero extends StatelessWidget {
                   color: Colors.white.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
-                child: const Icon(Icons.analytics_outlined, color: Colors.white),
+                child: const Icon(
+                  Icons.analytics_outlined,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: B2BSpacing.md),
               const Expanded(
@@ -263,7 +278,10 @@ class _ReportHero extends StatelessWidget {
           const SizedBox(height: B2BSpacing.xs),
           const Text(
             'Monthly sales volume',
-            style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: B2BSpacing.lg),
           Row(
@@ -306,13 +324,19 @@ class _HeroStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
           const SizedBox(height: 5),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -345,7 +369,12 @@ class _RevenuePanel extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: daily
-                      .map((item) => Text(item.label, style: Theme.of(context).textTheme.bodySmall))
+                      .map(
+                        (item) => Text(
+                          item.label,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -373,7 +402,10 @@ class _PackagesPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(title: 'Top packages', caption: '$completedOrders completed orders'),
+        _SectionTitle(
+          title: 'Top packages',
+          caption: '$completedOrders completed orders',
+        ),
         const SizedBox(height: B2BSpacing.md),
         B2BSurface(
           child: packages.isEmpty
@@ -388,7 +420,8 @@ class _PackagesPanel extends StatelessWidget {
                         rank: index + 1,
                         name: packages[index].name,
                         orders: packages[index].orders,
-                        revenue: '$currency ${packages[index].revenue.toStringAsFixed(2)}',
+                        revenue:
+                            '$currency ${packages[index].revenue.toStringAsFixed(2)}',
                       ),
                       if (index != packages.length - 1)
                         const Divider(height: B2BSpacing.xl),
@@ -415,20 +448,38 @@ class _PortfolioCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('eSIM portfolio', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'eSIM portfolio',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const Spacer(),
               const Text(
                 'Live status',
-                style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
           const SizedBox(height: B2BSpacing.lg),
           Row(
             children: [
-              Expanded(child: _PortfolioValue(label: 'Active', value: '$active', color: AppColors.success)),
+              Expanded(
+                child: _PortfolioValue(
+                  label: 'Active',
+                  value: '$active',
+                  color: AppColors.success,
+                ),
+              ),
               const SizedBox(width: B2BSpacing.md),
-              Expanded(child: _PortfolioValue(label: 'Expired', value: '$expired', color: AppColors.warning)),
+              Expanded(
+                child: _PortfolioValue(
+                  label: 'Expired',
+                  value: '$expired',
+                  color: AppColors.warning,
+                ),
+              ),
             ],
           ),
         ],
@@ -445,11 +496,20 @@ bool _isCompleted(String status) {
 List<_DailyRevenue> _dailyRevenue(List<MobileOrderSummary> orders) {
   final now = DateTime.now();
   return List.generate(7, (index) {
-    final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - index));
-    final amount = orders.where((order) {
-      final date = order.createdAt?.toLocal();
-      return date != null && date.year == day.year && date.month == day.month && date.day == day.day;
-    }).fold<double>(0, (sum, order) => sum + order.amount);
+    final day = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: 6 - index));
+    final amount = orders
+        .where((order) {
+          final date = order.createdAt?.toLocal();
+          return date != null &&
+              date.year == day.year &&
+              date.month == day.month &&
+              date.day == day.day;
+        })
+        .fold<double>(0, (sum, order) => sum + order.amount);
     return _DailyRevenue(label: '${day.day}', amount: amount);
   });
 }
@@ -457,7 +517,9 @@ List<_DailyRevenue> _dailyRevenue(List<MobileOrderSummary> orders) {
 List<_PackagePerformance> _topPackages(List<MobileOrderSummary> orders) {
   final grouped = <String, _PackagePerformance>{};
   for (final order in orders) {
-    final key = order.packageName.trim().isEmpty ? 'eSIM package' : order.packageName.trim();
+    final key = order.packageName.trim().isEmpty
+        ? 'eSIM package'
+        : order.packageName.trim();
     final current = grouped[key];
     grouped[key] = _PackagePerformance(
       name: key,
@@ -465,7 +527,8 @@ List<_PackagePerformance> _topPackages(List<MobileOrderSummary> orders) {
       revenue: (current?.revenue ?? 0) + order.amount,
     );
   }
-  final items = grouped.values.toList()..sort((a, b) => b.revenue.compareTo(a.revenue));
+  final items = grouped.values.toList()
+    ..sort((a, b) => b.revenue.compareTo(a.revenue));
   return items.take(5).toList(growable: false);
 }
 
@@ -477,11 +540,13 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
-          Text(caption, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      ),
+      Text(caption, style: Theme.of(context).textTheme.bodySmall),
+    ],
+  );
 }
 
 class _PackageRow extends StatelessWidget {
@@ -507,7 +572,10 @@ class _PackageRow extends StatelessWidget {
           backgroundColor: scheme.primaryContainer,
           child: Text(
             '$rank',
-            style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              color: scheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const SizedBox(width: B2BSpacing.md),
@@ -522,7 +590,10 @@ class _PackageRow extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 3),
-              Text('$orders orders', style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                '$orders orders',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),
@@ -533,7 +604,11 @@ class _PackageRow extends StatelessWidget {
 }
 
 class _PortfolioValue extends StatelessWidget {
-  const _PortfolioValue({required this.label, required this.value, required this.color});
+  const _PortfolioValue({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final String value;
@@ -541,26 +616,26 @@ class _PortfolioValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(B2BSpacing.md),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(B2BRadius.md),
+    padding: const EdgeInsets.all(B2BSpacing.md),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(B2BRadius.md),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(value, style: Theme.of(context).textTheme.headlineMedium),
-          ],
-        ),
-      );
+        const SizedBox(height: B2BSpacing.xs),
+        Text(value, style: Theme.of(context).textTheme.headlineMedium),
+      ],
+    ),
+  );
 }
 
 class _RevenueChartPainter extends CustomPainter {
@@ -581,7 +656,8 @@ class _RevenueChartPainter extends CustomPainter {
     final path = Path();
     for (var i = 0; i < values.length; i++) {
       final x = values.length == 1 ? 0.0 : size.width * i / (values.length - 1);
-      final y = (size.height - 50) - ((size.height - 70) * values[i] / maxValue);
+      final y =
+          (size.height - 50) - ((size.height - 70) * values[i] / maxValue);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -611,7 +687,11 @@ class _DailyRevenue {
 }
 
 class _PackagePerformance {
-  const _PackagePerformance({required this.name, required this.orders, required this.revenue});
+  const _PackagePerformance({
+    required this.name,
+    required this.orders,
+    required this.revenue,
+  });
 
   final String name;
   final int orders;

@@ -35,13 +35,25 @@ class MobileOrderResult {
         : data;
     final customerFirst = data['customer_first_name']?.toString() ?? '';
     final customerLast = data['customer_last_name']?.toString() ?? '';
-    final rawAmount = order['total_amount'] ?? data['total_amount'] ?? data['price'] ?? 0;
+    final rawAmount =
+        order['total_amount'] ?? data['total_amount'] ?? data['price'] ?? 0;
 
     return MobileOrderResult(
       orderId: (order['id'] ?? data['order_id'] ?? '').toString(),
-      orderNumber: (order['order_number'] ?? data['order_number'] ?? '').toString(),
-      status: (order['status'] ?? data['order_status'] ?? data['status'] ?? 'completed').toString(),
-      packageName: (order['product_name'] ?? data['package_name'] ?? data['name'] ?? 'eSIM package').toString(),
+      orderNumber: (order['order_number'] ?? data['order_number'] ?? '')
+          .toString(),
+      status:
+          (order['status'] ??
+                  data['order_status'] ??
+                  data['status'] ??
+                  'completed')
+              .toString(),
+      packageName:
+          (order['product_name'] ??
+                  data['package_name'] ??
+                  data['name'] ??
+                  'eSIM package')
+              .toString(),
       totalAmount: double.tryParse(rawAmount.toString()) ?? 0,
       currency: (data['currency'] ?? order['currency'] ?? 'USD').toString(),
       customerName: '$customerFirst $customerLast'.trim(),

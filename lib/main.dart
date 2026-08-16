@@ -27,8 +27,8 @@ Future<void> main() async {
   final initialLocation = accessToken != null && accessToken.isNotEmpty
       ? AppRoutes.dashboard
       : completedOnboarding
-          ? AppRoutes.login
-          : AppRoutes.onboarding;
+      ? AppRoutes.login
+      : AppRoutes.onboarding;
 
   runApp(Roam2WorldApp(initialLocation: initialLocation));
 }

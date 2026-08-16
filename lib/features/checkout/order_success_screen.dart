@@ -13,7 +13,8 @@ class OrderSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasInstall = result.installAvailable ||
+    final hasInstall =
+        result.installAvailable ||
         (result.qrCode?.isNotEmpty ?? false) ||
         (result.activationCode?.isNotEmpty ?? false);
 
@@ -67,10 +68,7 @@ class OrderSuccessScreen extends StatelessWidget {
                         ? 'Your eSIM is ready. Installation details are available now.'
                         : 'Your order is confirmed. Installation details will appear after provisioning.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      height: 1.45,
-                    ),
+                    style: const TextStyle(color: Colors.white70, height: 1.45),
                   ),
                 ],
               ),
@@ -197,7 +195,8 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final normalized = status.toLowerCase();
-    final color = normalized.contains('complete') || normalized.contains('success')
+    final color =
+        normalized.contains('complete') || normalized.contains('success')
         ? AppColors.success
         : AppColors.warning;
     return Container(
@@ -233,34 +232,31 @@ class _SuccessRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const Spacer(),
-            Flexible(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: emphasized ? 17 : 14,
-                  fontWeight: FontWeight.w900,
-                ),
+    padding: const EdgeInsets.symmetric(vertical: 13),
+    decoration: BoxDecoration(
+      border: last
+          ? null
+          : Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
             ),
-          ],
+    ),
+    child: Row(
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        const Spacer(),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: emphasized ? 17 : 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }

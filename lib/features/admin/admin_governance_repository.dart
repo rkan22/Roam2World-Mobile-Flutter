@@ -2,7 +2,7 @@ import '../../core/api/api_client.dart';
 
 class AdminGovernanceRepository {
   AdminGovernanceRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -23,26 +23,23 @@ class AdminGovernanceRepository {
     );
   }
 
-  Future<Map<String, dynamic>> saveRolePermissions(Map<String, dynamic> value) =>
-      _save(rolePermissionsPath, value);
+  Future<Map<String, dynamic>> saveRolePermissions(
+    Map<String, dynamic> value,
+  ) => _save(rolePermissionsPath, value);
 
-  Future<Map<String, dynamic>> saveAccountGovernance(Map<String, dynamic> value) =>
-      _save(accountGovernancePath, value);
+  Future<Map<String, dynamic>> saveAccountGovernance(
+    Map<String, dynamic> value,
+  ) => _save(accountGovernancePath, value);
 
-  Future<Map<String, dynamic>> saveCatalogGovernance(Map<String, dynamic> value) =>
-      _save(catalogGovernancePath, value);
+  Future<Map<String, dynamic>> saveCatalogGovernance(
+    Map<String, dynamic> value,
+  ) => _save(catalogGovernancePath, value);
 
   Future<Map<String, dynamic>> _get(String path) {
-    return _apiClient.get<Map<String, dynamic>>(
-      path,
-      parser: _parseData,
-    );
+    return _apiClient.get<Map<String, dynamic>>(path, parser: _parseData);
   }
 
-  Future<Map<String, dynamic>> _save(
-    String path,
-    Map<String, dynamic> value,
-  ) {
+  Future<Map<String, dynamic>> _save(String path, Map<String, dynamic> value) {
     return _apiClient.post<Map<String, dynamic>>(
       path,
       data: value,

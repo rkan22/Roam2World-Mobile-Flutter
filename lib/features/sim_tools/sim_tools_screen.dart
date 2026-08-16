@@ -14,25 +14,29 @@ class SimToolsScreen extends StatelessWidget {
     final tools = [
       _SimTool(
         title: 'My SIMs & eSIMs',
-        description: 'View installed eSIMs, activation details and lifecycle actions.',
+        description:
+            'View installed eSIMs, activation details and lifecycle actions.',
         icon: Icons.sim_card_outlined,
         route: AppRoutes.esims,
       ),
       _SimTool(
         title: 'eSIM History',
-        description: 'Review lifecycle records and live TGT usage where supported.',
+        description:
+            'Review lifecycle records and live TGT usage where supported.',
         icon: Icons.history_rounded,
         route: AppRoutes.esimHistory,
       ),
       _SimTool(
         title: 'SIM Converter',
-        description: 'Convert eligible SIM profiles and continue with the LPA flow.',
+        description:
+            'Convert eligible SIM profiles and continue with the LPA flow.',
         icon: Icons.sync_alt_rounded,
         route: AppRoutes.simConverter,
       ),
       _SimTool(
         title: 'TGT Bulk Operations',
-        description: 'Run supported TGT bulk actions for reseller and dealer accounts.',
+        description:
+            'Run supported TGT bulk actions for reseller and dealer accounts.',
         icon: Icons.playlist_add_check_circle_outlined,
         route: AppRoutes.tgtBulkOperations,
       ),
@@ -54,14 +58,24 @@ class SimToolsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('SIM Tools'),
         leading: IconButton(
-          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.dashboard),
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go(AppRoutes.dashboard),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.md, B2BSpacing.lg, B2BSpacing.xxl),
+        padding: const EdgeInsets.fromLTRB(
+          B2BSpacing.lg,
+          B2BSpacing.md,
+          B2BSpacing.lg,
+          B2BSpacing.xxl,
+        ),
         children: [
-          Text('SIM operations', style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            'SIM operations',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: B2BSpacing.xs),
           const Text(
             'One place for the SIM and eSIM workflows already available in the mobile backend integration.',
@@ -72,7 +86,10 @@ class SimToolsScreen extends StatelessWidget {
             B2BSurface(
               padding: EdgeInsets.zero,
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
                 leading: Container(
                   width: 46,
                   height: 46,
@@ -82,7 +99,10 @@ class SimToolsScreen extends StatelessWidget {
                   ),
                   child: Icon(tool.icon, color: AppColors.primary),
                 ),
-                title: Text(tool.title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                title: Text(
+                  tool.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(tool.description),
@@ -100,7 +120,12 @@ class SimToolsScreen extends StatelessWidget {
 }
 
 class _SimTool {
-  const _SimTool({required this.title, required this.description, required this.icon, required this.route});
+  const _SimTool({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.route,
+  });
 
   final String title;
   final String description;

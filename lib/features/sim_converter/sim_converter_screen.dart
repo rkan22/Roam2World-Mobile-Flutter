@@ -52,7 +52,8 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'SIM converter history could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'SIM converter history could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -72,7 +73,8 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _parseError = error.message);
     } catch (_) {
-      if (mounted) setState(() => _parseError = 'Activation code could not be parsed.');
+      if (mounted)
+        setState(() => _parseError = 'Activation code could not be parsed.');
     } finally {
       if (mounted) setState(() => _parsing = false);
     }
@@ -102,21 +104,36 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final conversions = _workspace?.conversions ?? const <SimConversionSummary>[];
-    final canProgram = _parseResult?.valid == true && _activationCode.text.trim().isNotEmpty;
+    final conversions =
+        _workspace?.conversions ?? const <SimConversionSummary>[];
+    final canProgram =
+        _parseResult?.valid == true && _activationCode.text.trim().isNotEmpty;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('SIM Converter'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.xs, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.xs,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('Profile inspection', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Profile inspection',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Validate an eSIM activation code and review server-recorded conversion history.',
@@ -127,7 +144,10 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Activation code parser', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  const Text(
+                    'Activation code parser',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
                   const SizedBox(height: B2BSpacing.sm),
                   TextField(
                     controller: _activationCode,
@@ -136,20 +156,33 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: 'LPA:1\$... or provider activation code',
-                      suffixIcon: IconButton(onPressed: _paste, tooltip: 'Paste', icon: const Icon(Icons.content_paste_rounded)),
+                      suffixIcon: IconButton(
+                        onPressed: _paste,
+                        tooltip: 'Paste',
+                        icon: const Icon(Icons.content_paste_rounded),
+                      ),
                     ),
                   ),
                   const SizedBox(height: B2BSpacing.md),
                   ElevatedButton.icon(
                     onPressed: _parsing ? null : _parse,
                     icon: _parsing
-                        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Icon(Icons.qr_code_scanner_rounded),
                     label: Text(_parsing ? 'Parsing...' : 'Validate code'),
                   ),
                   if (_parseError != null) ...[
                     const SizedBox(height: B2BSpacing.md),
-                    Text(_parseError!, style: const TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700)),
+                    Text(
+                      _parseError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                   if (_parseResult != null) ...[
                     const SizedBox(height: B2BSpacing.lg),
@@ -164,11 +197,24 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
               ),
             ),
             const SizedBox(height: B2BSpacing.xl),
-            Row(children: [
-              Expanded(child: Text('Conversion history', style: Theme.of(context).textTheme.titleLarge)),
-              if (_workspace != null)
-                Text('${_workspace!.total} total', style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-            ]),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Conversion history',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                if (_workspace != null)
+                  Text(
+                    '${_workspace!.total} total',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: B2BSpacing.md),
             if (_loading && _workspace == null)
               const ContentLoadingState(label: 'Loading conversion history...')
@@ -183,32 +229,54 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
             else
               for (final item in conversions) ...[
                 B2BSurface(
-                  child: Row(children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(B2BRadius.sm)),
-                      child: const Icon(Icons.sim_card_rounded, color: AppColors.primary),
-                    ),
-                    const SizedBox(width: B2BSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.profileName.isNotEmpty ? item.profileName : 'Conversion ${item.id}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          if (item.iccid.isNotEmpty)
-                            Text(item.iccid, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
-                        ],
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(B2BRadius.sm),
+                        ),
+                        child: const Icon(
+                          Icons.sim_card_rounded,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: B2BSpacing.sm),
-                    Text(item.status, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  ]),
+                      const SizedBox(width: B2BSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.profileName.isNotEmpty
+                                  ? item.profileName
+                                  : 'Conversion ${item.id}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            if (item.iccid.isNotEmpty)
+                              Text(
+                                item.iccid,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: B2BSpacing.sm),
+                      Text(
+                        item.status,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: B2BSpacing.sm),
               ],
@@ -218,7 +286,10 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded, color: AppColors.textSecondary),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                   SizedBox(width: B2BSpacing.sm),
                   Expanded(
                     child: Text(
@@ -259,26 +330,53 @@ class _ParseResultCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(B2BSpacing.md),
       decoration: BoxDecoration(
-        color: (result.valid ? AppColors.success : AppColors.warning).withValues(alpha: .08),
+        color: (result.valid ? AppColors.success : AppColors.warning)
+            .withValues(alpha: .08),
         borderRadius: BorderRadius.circular(B2BRadius.md),
-        border: Border.all(color: (result.valid ? AppColors.success : AppColors.warning).withValues(alpha: .25)),
+        border: Border.all(
+          color: (result.valid ? AppColors.success : AppColors.warning)
+              .withValues(alpha: .25),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Icon(result.valid ? Icons.verified_rounded : Icons.warning_amber_rounded, color: result.valid ? AppColors.success : AppColors.warning),
-            const SizedBox(width: B2BSpacing.sm),
-            Expanded(child: Text(result.valid ? 'Valid activation data' : 'Activation data needs review', style: const TextStyle(fontWeight: FontWeight.w900))),
-          ]),
+          Row(
+            children: [
+              Icon(
+                result.valid
+                    ? Icons.verified_rounded
+                    : Icons.warning_amber_rounded,
+                color: result.valid ? AppColors.success : AppColors.warning,
+              ),
+              const SizedBox(width: B2BSpacing.sm),
+              Expanded(
+                child: Text(
+                  result.valid
+                      ? 'Valid activation data'
+                      : 'Activation data needs review',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
           if (result.message.isNotEmpty) ...[
             const SizedBox(height: B2BSpacing.sm),
             Text(result.message),
           ],
           for (final row in rows) ...[
             const SizedBox(height: B2BSpacing.sm),
-            Text(row.$1, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            SelectableText(row.$2, style: const TextStyle(fontWeight: FontWeight.w800)),
+            Text(
+              row.$1,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+            SelectableText(
+              row.$2,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ],
           if (canProgram) ...[
             const SizedBox(height: B2BSpacing.lg),
@@ -287,9 +385,16 @@ class _ParseResultCard extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: openingLpaManager ? null : onProgram,
                 icon: openingLpaManager
-                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.sim_card_download_rounded),
-                label: Text(openingLpaManager ? 'Opening Roam2World eSIM Manager...' : 'Program with Roam2World eSIM Manager'),
+                label: Text(
+                  openingLpaManager
+                      ? 'Opening Roam2World eSIM Manager...'
+                      : 'Program with Roam2World eSIM Manager',
+                ),
               ),
             ),
           ],

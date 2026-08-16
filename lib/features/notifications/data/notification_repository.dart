@@ -2,9 +2,8 @@ import '../notification_data.dart';
 import '../notifications_repository.dart';
 
 class NotificationRepository {
-  NotificationRepository({
-    NotificationsRepository? repository,
-  }) : _repository = repository ?? NotificationsRepository();
+  NotificationRepository({NotificationsRepository? repository})
+    : _repository = repository ?? NotificationsRepository();
 
   final NotificationsRepository _repository;
 

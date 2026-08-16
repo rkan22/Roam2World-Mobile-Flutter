@@ -60,17 +60,22 @@ class MobileNotificationItem {
 }
 
 List<MobileNotificationItem> parseMobileNotifications(dynamic payload) {
-  final root = payload is Map ? Map<String, dynamic>.from(payload) : const <String, dynamic>{};
+  final root = payload is Map
+      ? Map<String, dynamic>.from(payload)
+      : const <String, dynamic>{};
   final data = root['data'];
   final raw = data is List
       ? data
       : data is Map && data['notifications'] is List
-          ? data['notifications'] as List
-          : root['notifications'] is List
-              ? root['notifications'] as List
-              : const [];
+      ? data['notifications'] as List
+      : root['notifications'] is List
+      ? root['notifications'] as List
+      : const [];
   return raw
       .whereType<Map>()
-      .map((item) => MobileNotificationItem.fromJson(Map<String, dynamic>.from(item)))
+      .map(
+        (item) =>
+            MobileNotificationItem.fromJson(Map<String, dynamic>.from(item)),
+      )
       .toList();
 }

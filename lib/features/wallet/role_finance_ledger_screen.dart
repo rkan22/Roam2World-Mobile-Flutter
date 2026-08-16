@@ -20,7 +20,8 @@ class RoleFinanceLedgerScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
   @override
-  State<RoleFinanceLedgerScreen> createState() => _RoleFinanceLedgerScreenState();
+  State<RoleFinanceLedgerScreen> createState() =>
+      _RoleFinanceLedgerScreenState();
 }
 
 class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
@@ -67,7 +68,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     try {
       final profile = await _authRepository.readStoredProfile();
       final role = parseAppRole(profile?.role);
-      if (role == AppRole.admin || role == AppRole.client || role == AppRole.publicUser) {
+      if (role == AppRole.admin ||
+          role == AppRole.client ||
+          role == AppRole.publicUser) {
         if (!mounted) return;
         setState(() {
           _role = role;
@@ -95,7 +98,8 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Finance ledger could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Finance ledger could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -114,7 +118,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   Map<String, double>? _currentAllocations() {
     final values = <String, double>{};
     for (final key in _providers.keys) {
-      final value = double.tryParse(_allocationControllers[key]?.text.trim() ?? '');
+      final value = double.tryParse(
+        _allocationControllers[key]?.text.trim() ?? '',
+      );
       if (value == null || value < 0) return null;
       values[key] = value;
     }
@@ -130,7 +136,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     }
     final total = values.values.fold<double>(0, (sum, value) => sum + value);
     if (total > wallet.availableAmount + .001) {
-      _message('Provider allocations cannot exceed the available wallet balance.');
+      _message(
+        'Provider allocations cannot exceed the available wallet balance.',
+      );
       return;
     }
 
@@ -178,11 +186,16 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Request balance', style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  'Request balance',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: B2BSpacing.md),
                 TextFormField(
                   controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Amount',
                     prefixText: '${wallet.currency} ',
@@ -198,11 +211,16 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                 TextFormField(
                   controller: noteController,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Note (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Note (optional)',
+                  ),
                 ),
                 if (submitError != null) ...[
                   const SizedBox(height: B2BSpacing.sm),
-                  Text(submitError!, style: const TextStyle(color: AppColors.danger)),
+                  Text(
+                    submitError!,
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
                 ],
                 const SizedBox(height: B2BSpacing.lg),
                 SizedBox(
@@ -211,14 +229,17 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                     onPressed: submitting
                         ? null
                         : () async {
-                            if (!(formKey.currentState?.validate() ?? false)) return;
+                            if (!(formKey.currentState?.validate() ?? false))
+                              return;
                             setSheetState(() {
                               submitting = true;
                               submitError = null;
                             });
                             try {
                               await _repository.createTopUpRequest(
-                                amount: double.parse(amountController.text.trim()),
+                                amount: double.parse(
+                                  amountController.text.trim(),
+                                ),
                                 currency: wallet.currency,
                                 note: noteController.text,
                               );
@@ -252,10 +273,8 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
-  String _money(double value, String currency) => NumberFormat.currency(
-        name: currency,
-        symbol: '$currency ',
-      ).format(value);
+  String _money(double value, String currency) =>
+      NumberFormat.currency(name: currency, symbol: '$currency ').format(value);
 
   void _goBack() {
     if (context.canPop()) {
@@ -268,7 +287,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   @override
   Widget build(BuildContext context) {
     final role = _role;
-    if (role == AppRole.admin || role == AppRole.client || role == AppRole.publicUser) {
+    if (role == AppRole.admin ||
+        role == AppRole.client ||
+        role == AppRole.publicUser) {
       return const WalletScreen();
     }
 
@@ -310,7 +331,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
               _WalletHero(
                 wallet: _wallet!,
                 money: _money,
-                onRequestBalance: _wallet!.canRequestTopUp ? _showTopUpRequest : null,
+                onRequestBalance: _wallet!.canRequestTopUp
+                    ? _showTopUpRequest
+                    : null,
               ),
               const SizedBox(height: B2BSpacing.lg),
               _providerAllocationSection(_wallet!, _allocation),
@@ -330,7 +353,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     ProviderAllocationData? allocation,
   ) {
     final values = _currentAllocations() ?? const <String, double>{};
-    final allocated = values.values.fold<double>(0, (sum, value) => sum + value);
+    final allocated = values.values.fold<double>(
+      0,
+      (sum, value) => sum + value,
+    );
     final available = (wallet.availableAmount - allocated)
         .clamp(0.0, double.infinity)
         .toDouble();
@@ -342,7 +368,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Provider distribution', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Provider distribution',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 4),
         Text(
           'Split funds already available in your wallet into provider credit limits.',
@@ -357,9 +386,19 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                 spacing: B2BSpacing.md,
                 runSpacing: B2BSpacing.xs,
                 children: [
-                  _SummaryValue(label: 'Wallet', value: _money(wallet.availableAmount, wallet.currency)),
-                  _SummaryValue(label: 'Allocated', value: _money(allocated, wallet.currency), danger: invalid),
-                  _SummaryValue(label: 'Available', value: _money(available, wallet.currency)),
+                  _SummaryValue(
+                    label: 'Wallet',
+                    value: _money(wallet.availableAmount, wallet.currency),
+                  ),
+                  _SummaryValue(
+                    label: 'Allocated',
+                    value: _money(allocated, wallet.currency),
+                    danger: invalid,
+                  ),
+                  _SummaryValue(
+                    label: 'Available',
+                    value: _money(available, wallet.currency),
+                  ),
                 ],
               ),
               const SizedBox(height: B2BSpacing.md),
@@ -369,7 +408,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(entry.value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                      child: Text(
+                        entry.value,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
                     ),
                     const SizedBox(width: B2BSpacing.sm),
                     SizedBox(
@@ -377,10 +419,14 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                       child: TextField(
                         controller: _allocationControllers[entry.key],
                         enabled: !_savingAllocation && allocation != null,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         textAlign: TextAlign.right,
                         onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(prefixText: '${wallet.currency} '),
+                        decoration: InputDecoration(
+                          prefixText: '${wallet.currency} ',
+                        ),
                       ),
                     ),
                   ],
@@ -392,7 +438,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
               if (invalid)
                 const Text(
                   'Allocated provider credit is higher than the wallet balance.',
-                  style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: AppColors.danger,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               SizedBox(
                 width: double.infinity,
@@ -406,7 +455,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save_outlined),
-                  label: Text(_savingAllocation ? 'Saving...' : 'Save provider credits'),
+                  label: Text(
+                    _savingAllocation ? 'Saving...' : 'Save provider credits',
+                  ),
                 ),
               ),
             ],
@@ -423,7 +474,12 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: Text('Funding requests', style: Theme.of(context).textTheme.titleLarge)),
+            Expanded(
+              child: Text(
+                'Funding requests',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
             if (wallet.canRequestTopUp)
               TextButton.icon(
                 onPressed: _showTopUpRequest,
@@ -450,7 +506,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                           _money(request.amount, request.currency),
                           style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
-                        Text(request.status, style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          request.status,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -467,7 +526,10 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recent transactions', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Recent transactions',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: B2BSpacing.sm),
         if (wallet.transactions.isEmpty)
           const B2BSurface(child: Text('No wallet transactions yet.'))
@@ -484,7 +546,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                       transaction.isCredit
                           ? Icons.south_west_rounded
                           : Icons.north_east_rounded,
-                      color: transaction.isCredit ? AppColors.success : AppColors.danger,
+                      color: transaction.isCredit
+                          ? AppColors.success
+                          : AppColors.danger,
                     ),
                   ),
                   const SizedBox(width: B2BSpacing.sm),
@@ -504,7 +568,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                         Text(
                           transaction.createdAt == null
                               ? transaction.status
-                              : DateFormat('dd MMM yyyy, HH:mm').format(transaction.createdAt!.toLocal()),
+                              : DateFormat(
+                                  'dd MMM yyyy, HH:mm',
+                                ).format(transaction.createdAt!.toLocal()),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -515,7 +581,9 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                     '${transaction.isCredit ? '+' : '-'}${_money(transaction.displayAmount, transaction.currency)}',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: transaction.isCredit ? AppColors.success : AppColors.danger,
+                      color: transaction.isCredit
+                          ? AppColors.success
+                          : AppColors.danger,
                     ),
                   ),
                 ],
@@ -529,7 +597,11 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
 }
 
 class _WalletHero extends StatelessWidget {
-  const _WalletHero({required this.wallet, required this.money, this.onRequestBalance});
+  const _WalletHero({
+    required this.wallet,
+    required this.money,
+    this.onRequestBalance,
+  });
 
   final WalletData wallet;
   final String Function(double, String) money;
@@ -537,52 +609,56 @@ class _WalletHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(B2BSpacing.xl),
-        decoration: BoxDecoration(
-          color: const Color(0xFF020817),
-          borderRadius: BorderRadius.circular(B2BRadius.xl),
+    padding: const EdgeInsets.all(B2BSpacing.xl),
+    decoration: BoxDecoration(
+      color: const Color(0xFF020817),
+      borderRadius: BorderRadius.circular(B2BRadius.xl),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'AVAILABLE WALLET BALANCE',
+          style: TextStyle(
+            color: Colors.white60,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: .8,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'AVAILABLE WALLET BALANCE',
-              style: TextStyle(
-                color: Colors.white60,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: .8,
-              ),
-            ),
-            const SizedBox(height: B2BSpacing.xs),
-            Text(
-              money(wallet.availableAmount, wallet.currency),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: B2BSpacing.sm),
-            const Text(
-              'Available funds can be distributed across approved providers.',
-              style: TextStyle(color: Colors.white70),
-            ),
-            if (onRequestBalance != null) ...[
-              const SizedBox(height: B2BSpacing.lg),
-              FilledButton.icon(
-                onPressed: onRequestBalance,
-                icon: const Icon(Icons.add_card_rounded),
-                label: const Text('Request balance'),
-              ),
-            ],
-          ],
+        const SizedBox(height: B2BSpacing.xs),
+        Text(
+          money(wallet.availableAmount, wallet.currency),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-      );
+        const SizedBox(height: B2BSpacing.sm),
+        const Text(
+          'Available funds can be distributed across approved providers.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        if (onRequestBalance != null) ...[
+          const SizedBox(height: B2BSpacing.lg),
+          FilledButton.icon(
+            onPressed: onRequestBalance,
+            icon: const Icon(Icons.add_card_rounded),
+            label: const Text('Request balance'),
+          ),
+        ],
+      ],
+    ),
+  );
 }
 
 class _SummaryValue extends StatelessWidget {
-  const _SummaryValue({required this.label, required this.value, this.danger = false});
+  const _SummaryValue({
+    required this.label,
+    required this.value,
+    this.danger = false,
+  });
 
   final String label;
   final String value;
@@ -590,17 +666,17 @@ class _SummaryValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: danger ? AppColors.danger : null,
-            ),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 2),
+      Text(
+        value,
+        style: TextStyle(
+          fontWeight: FontWeight.w900,
+          color: danger ? AppColors.danger : null,
+        ),
+      ),
+    ],
+  );
 }

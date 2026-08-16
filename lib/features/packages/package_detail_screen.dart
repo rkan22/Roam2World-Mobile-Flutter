@@ -35,10 +35,7 @@ class PackageDetailScreen extends StatelessWidget {
               'Continue to checkout  •  ${package.formattedPrice}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
           ),
         ),
@@ -137,7 +134,8 @@ class PackageDetailScreen extends StatelessWidget {
                   const _InfoRow(
                     icon: Icons.bolt_rounded,
                     title: 'Activation',
-                    body: 'QR and activation details appear after provisioning.',
+                    body:
+                        'QR and activation details appear after provisioning.',
                     tone: Color(0xFF475569),
                     soft: Color(0xFFF1F5F9),
                   ),
@@ -272,7 +270,10 @@ class _PlanSummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(999),
@@ -386,7 +387,10 @@ class _MetricsCard extends StatelessWidget {
 }
 
 class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({required this.child, this.padding = const EdgeInsets.all(18)});
+  const _SurfaceCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+  });
 
   final Widget child;
   final EdgeInsets padding;
@@ -400,7 +404,9 @@ class _SurfaceCard extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
         border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+        boxShadow: theme.brightness == Brightness.light
+            ? B2BShadows.card
+            : null,
       ),
       child: child,
     );
@@ -412,10 +418,10 @@ class _MetricDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: 1,
-        height: 62,
-        color: Theme.of(context).colorScheme.outlineVariant,
-      );
+    width: 1,
+    height: 62,
+    color: Theme.of(context).colorScheme.outlineVariant,
+  );
 }
 
 class _PlanMetric extends StatelessWidget {
@@ -435,37 +441,37 @@ class _PlanMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: soft,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: Icon(icon, size: 18, color: tone),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-        ],
-      );
+    children: [
+      Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: soft,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Icon(icon, size: 18, color: tone),
+      ),
+      const SizedBox(height: 7),
+      Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        value,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    ],
+  );
 }
 
 class _InfoRow extends StatelessWidget {
@@ -485,45 +491,45 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 42,
-              width: 42,
-              decoration: BoxDecoration(
-                color: soft,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(icon, color: tone, size: 21),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w900,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    body,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.all(16),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 42,
+          width: 42,
+          decoration: BoxDecoration(
+            color: soft,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(icon, color: tone, size: 21),
         ),
-      );
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                body,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _SupportedCountriesRow extends StatelessWidget {
@@ -563,9 +569,9 @@ class _SupportedCountriesRow extends StatelessWidget {
                 Text(
                   'Supported countries',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 9),
                 Wrap(

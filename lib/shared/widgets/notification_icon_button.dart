@@ -3,16 +3,12 @@ import 'package:flutter/material.dart';
 import '../../features/notifications/notifications_repository.dart';
 
 class NotificationIconButton extends StatefulWidget {
-  const NotificationIconButton({
-    super.key,
-    required this.onTap,
-  });
+  const NotificationIconButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
   @override
-  State<NotificationIconButton> createState() =>
-      _NotificationIconButtonState();
+  State<NotificationIconButton> createState() => _NotificationIconButtonState();
 }
 
 class _NotificationIconButtonState extends State<NotificationIconButton> {
@@ -52,10 +48,7 @@ class _NotificationIconButtonState extends State<NotificationIconButton> {
               right: -5,
               top: -5,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 1,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(10),

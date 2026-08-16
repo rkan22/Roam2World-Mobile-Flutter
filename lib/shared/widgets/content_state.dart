@@ -45,7 +45,8 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
         )!;
         return LayoutBuilder(
           builder: (context, constraints) {
-            final compact = constraints.hasBoundedHeight && constraints.maxHeight < 620;
+            final compact =
+                constraints.hasBoundedHeight && constraints.maxHeight < 620;
             final heroHeight = compact ? 112.0 : 156.0;
             final tileHeight = compact ? 82.0 : 108.0;
             final rowHeight = compact ? 64.0 : 86.0;
@@ -70,11 +71,17 @@ class _ContentLoadingStateState extends State<ContentLoadingState>
                   Row(
                     children: [
                       Expanded(
-                        child: _SkeletonBlock(height: tileHeight, color: shimmer),
+                        child: _SkeletonBlock(
+                          height: tileHeight,
+                          color: shimmer,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _SkeletonBlock(height: tileHeight, color: shimmer),
+                        child: _SkeletonBlock(
+                          height: tileHeight,
+                          color: shimmer,
+                        ),
                       ),
                     ],
                   ),
@@ -125,7 +132,9 @@ class _SkeletonBlock extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
       ),
     );
@@ -150,13 +159,13 @@ class ContentEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _StateCard(
-        icon: icon,
-        iconColor: Theme.of(context).colorScheme.primary,
-        title: title,
-        message: message,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+    icon: icon,
+    iconColor: Theme.of(context).colorScheme.primary,
+    title: title,
+    message: message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 }
 
 class ContentErrorState extends StatelessWidget {
@@ -173,13 +182,13 @@ class ContentErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _StateCard(
-        icon: Icons.error_outline_rounded,
-        iconColor: AppColors.danger,
-        title: title,
-        message: message,
-        actionLabel: onRetry == null ? null : 'Try again',
-        onAction: onRetry,
-      );
+    icon: Icons.error_outline_rounded,
+    iconColor: AppColors.danger,
+    title: title,
+    message: message,
+    actionLabel: onRetry == null ? null : 'Try again',
+    onAction: onRetry,
+  );
 }
 
 class _StateCard extends StatelessWidget {
@@ -213,7 +222,9 @@ class _StateCard extends StatelessWidget {
           color: scheme.surface,
           borderRadius: BorderRadius.circular(B2BRadius.xl),
           border: Border.all(color: scheme.outlineVariant),
-          boxShadow: theme.brightness == Brightness.light ? B2BShadows.card : null,
+          boxShadow: theme.brightness == Brightness.light
+              ? B2BShadows.card
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -228,7 +239,11 @@ class _StateCard extends StatelessWidget {
               child: Icon(icon, size: 31, color: iconColor),
             ),
             const SizedBox(height: 18),
-            Text(title, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               message,

@@ -4,7 +4,7 @@ import 'notification_rules.dart';
 
 class NotificationRulesRepository {
   NotificationRulesRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
@@ -19,17 +19,17 @@ class NotificationRulesRepository {
         final rows = data is List
             ? data
             : data is Map
-                ? (data['results'] ?? data['rules'] ?? const [])
-                : const [];
+            ? (data['results'] ?? data['rules'] ?? const [])
+            : const [];
         return rows is List
             ? rows
-                .whereType<Map>()
-                .map(
-                  (item) => NotificationRule.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ),
-                )
-                .toList(growable: false)
+                  .whereType<Map>()
+                  .map(
+                    (item) => NotificationRule.fromJson(
+                      Map<String, dynamic>.from(item),
+                    ),
+                  )
+                  .toList(growable: false)
             : const <NotificationRule>[];
       },
     );

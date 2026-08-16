@@ -64,20 +64,22 @@ class _CustomersScreenState extends State<CustomersScreen> {
   List<CustomerDirectoryItem> get _visibleCustomers {
     final customers = _directory?.customers ?? const <CustomerDirectoryItem>[];
     final query = _searchController.text.trim().toLowerCase();
-    return customers.where((customer) {
-      final matchesFilter = switch (_filter) {
-        _CustomerFilter.all => true,
-        _CustomerFilter.active => _statusOf(customer) == 'active',
-        _CustomerFilter.pending => _statusOf(customer) == 'pending',
-        _CustomerFilter.inactive => _statusOf(customer) == 'inactive',
-      };
-      if (!matchesFilter) return false;
-      if (query.isEmpty) return true;
-      return customer.name.toLowerCase().contains(query) ||
-          customer.email.toLowerCase().contains(query) ||
-          customer.phoneNumber.toLowerCase().contains(query) ||
-          customer.currentPlan.toLowerCase().contains(query);
-    }).toList(growable: false);
+    return customers
+        .where((customer) {
+          final matchesFilter = switch (_filter) {
+            _CustomerFilter.all => true,
+            _CustomerFilter.active => _statusOf(customer) == 'active',
+            _CustomerFilter.pending => _statusOf(customer) == 'pending',
+            _CustomerFilter.inactive => _statusOf(customer) == 'inactive',
+          };
+          if (!matchesFilter) return false;
+          if (query.isEmpty) return true;
+          return customer.name.toLowerCase().contains(query) ||
+              customer.email.toLowerCase().contains(query) ||
+              customer.phoneNumber.toLowerCase().contains(query) ||
+              customer.currentPlan.toLowerCase().contains(query);
+        })
+        .toList(growable: false);
   }
 
   void _handleBack() {
@@ -91,9 +93,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     final customers = _directory?.customers ?? const <CustomerDirectoryItem>[];
-    final activeClients = customers.where((item) => _statusOf(item) == 'active').length;
-    final pendingClients = customers.where((item) => _statusOf(item) == 'pending').length;
-    final activeEsims = customers.fold<int>(0, (sum, item) => sum + item.activeEsims);
+    final activeClients = customers
+        .where((item) => _statusOf(item) == 'active')
+        .length;
+    final pendingClients = customers
+        .where((item) => _statusOf(item) == 'pending')
+        .length;
+    final activeEsims = customers.fold<int>(
+      0,
+      (sum, item) => sum + item.activeEsims,
+    );
     final visible = _visibleCustomers;
 
     return Scaffold(
@@ -134,7 +143,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
               else if (visible.isEmpty)
                 ContentEmptyState(
                   icon: Icons.groups_outlined,
-                  title: customers.isEmpty ? 'No customers yet' : 'No matching customers',
+                  title: customers.isEmpty
+                      ? 'No customers yet'
+                      : 'No matching customers',
                   message: customers.isEmpty
                       ? 'No customer records were returned for this account.'
                       : 'Try another search or status filter.',
@@ -152,14 +163,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     Expanded(
                       child: Text(
                         '${visible.length} customer${visible.length == 1 ? '' : 's'}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                     ),
                     TextButton.icon(
                       onPressed: () => context.go('/packages'),
-                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                      icon: const Icon(
+                        Icons.add_shopping_cart_rounded,
+                        size: 18,
+                      ),
                       label: const Text('New order'),
                     ),
                   ],
@@ -195,17 +208,30 @@ class _CustomersScreenState extends State<CustomersScreen> {
               Text(
                 customer.name,
                 style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 16),
               _DetailRow(label: 'Email', value: _orDash(customer.email)),
               _DetailRow(label: 'Phone', value: _orDash(customer.phoneNumber)),
               _DetailRow(label: 'Status', value: _statusOf(customer)),
-              _DetailRow(label: 'Current plan', value: _orDash(customer.currentPlan)),
-              _DetailRow(label: 'Total orders', value: '${customer.totalOrders}'),
-              _DetailRow(label: 'Total spend', value: _money(customer.totalSpent)),
-              _DetailRow(label: 'eSIM / SIM', value: '${customer.activeEsims} active · ${customer.totalEsims} total'),
+              _DetailRow(
+                label: 'Current plan',
+                value: _orDash(customer.currentPlan),
+              ),
+              _DetailRow(
+                label: 'Total orders',
+                value: '${customer.totalOrders}',
+              ),
+              _DetailRow(
+                label: 'Total spend',
+                value: _money(customer.totalSpent),
+              ),
+              _DetailRow(
+                label: 'eSIM / SIM',
+                value:
+                    '${customer.activeEsims} active · ${customer.totalEsims} total',
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -234,38 +260,38 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          IconButton.filledTonal(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          const SizedBox(width: B2BSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Customers',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                Text(
-                  'Client plans, eSIM activity and spend.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
+    children: [
+      IconButton.filledTonal(
+        onPressed: onBack,
+        icon: const Icon(Icons.arrow_back_rounded),
+      ),
+      const SizedBox(width: B2BSpacing.sm),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Customers',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w900),
             ),
-          ),
-          IconButton(
-            onPressed: onRefresh,
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
-      );
+            Text(
+              'Client plans, eSIM activity and spend.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+      IconButton(
+        onPressed: onRefresh,
+        tooltip: 'Refresh',
+        icon: const Icon(Icons.refresh_rounded),
+      ),
+    ],
+  );
 }
 
 class _KpiGrid extends StatelessWidget {
@@ -283,43 +309,43 @@ class _KpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: B2BSpacing.sm,
-        crossAxisSpacing: B2BSpacing.sm,
-        childAspectRatio: 2.25,
-        children: [
-          _KpiCard(
-            label: 'Total clients',
-            value: '$totalClients',
-            icon: Icons.groups_outlined,
-            color: const Color(0xFF2563EB),
-            soft: const Color(0xFFEFF6FF),
-          ),
-          _KpiCard(
-            label: 'Active clients',
-            value: '$activeClients',
-            icon: Icons.person_outline_rounded,
-            color: AppColors.success,
-            soft: AppColors.successSoft,
-          ),
-          _KpiCard(
-            label: 'Active eSIM / SIM',
-            value: '$activeEsims',
-            icon: Icons.sim_card_outlined,
-            color: AppColors.violet,
-            soft: const Color(0xFFF3EEFF),
-          ),
-          _KpiCard(
-            label: 'Pending activation',
-            value: '$pendingClients',
-            icon: Icons.pending_actions_outlined,
-            color: AppColors.orange,
-            soft: const Color(0xFFFFF2E8),
-          ),
-        ],
-      );
+    crossAxisCount: 2,
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    mainAxisSpacing: B2BSpacing.sm,
+    crossAxisSpacing: B2BSpacing.sm,
+    childAspectRatio: 2.25,
+    children: [
+      _KpiCard(
+        label: 'Total clients',
+        value: '$totalClients',
+        icon: Icons.groups_outlined,
+        color: const Color(0xFF2563EB),
+        soft: const Color(0xFFEFF6FF),
+      ),
+      _KpiCard(
+        label: 'Active clients',
+        value: '$activeClients',
+        icon: Icons.person_outline_rounded,
+        color: AppColors.success,
+        soft: AppColors.successSoft,
+      ),
+      _KpiCard(
+        label: 'Active eSIM / SIM',
+        value: '$activeEsims',
+        icon: Icons.sim_card_outlined,
+        color: AppColors.violet,
+        soft: const Color(0xFFF3EEFF),
+      ),
+      _KpiCard(
+        label: 'Pending activation',
+        value: '$pendingClients',
+        icon: Icons.pending_actions_outlined,
+        color: AppColors.orange,
+        soft: const Color(0xFFFFF2E8),
+      ),
+    ],
+  );
 }
 
 class _KpiCard extends StatelessWidget {
@@ -339,45 +365,48 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: soft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 20, color: color),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.all(12),
+    child: Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: soft,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: color),
         ),
-      );
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _SearchField extends StatelessWidget {
@@ -386,18 +415,18 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: 'Search name, email, phone or plan',
-          prefixIcon: const Icon(Icons.search_rounded),
-          suffixIcon: controller.text.isEmpty
-              ? null
-              : IconButton(
-                  onPressed: controller.clear,
-                  icon: const Icon(Icons.close_rounded),
-                ),
-        ),
-      );
+    controller: controller,
+    decoration: InputDecoration(
+      hintText: 'Search name, email, phone or plan',
+      prefixIcon: const Icon(Icons.search_rounded),
+      suffixIcon: controller.text.isEmpty
+          ? null
+          : IconButton(
+              onPressed: controller.clear,
+              icon: const Icon(Icons.close_rounded),
+            ),
+    ),
+  );
 }
 
 class _FilterBar extends StatelessWidget {
@@ -408,20 +437,20 @@ class _FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final filter in _CustomerFilter.values) ...[
-              ChoiceChip(
-                label: Text(filter.label),
-                selected: selected == filter,
-                onSelected: (_) => onChanged(filter),
-              ),
-              const SizedBox(width: 8),
-            ],
-          ],
-        ),
-      );
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (final filter in _CustomerFilter.values) ...[
+          ChoiceChip(
+            label: Text(filter.label),
+            selected: selected == filter,
+            onSelected: (_) => onChanged(filter),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ],
+    ),
+  );
 }
 
 class _CustomerCard extends StatelessWidget {
@@ -483,18 +512,27 @@ class _CustomerCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     if (customer.email.isNotEmpty)
-                      _ContactLine(icon: Icons.mail_outline_rounded, text: customer.email),
+                      _ContactLine(
+                        icon: Icons.mail_outline_rounded,
+                        text: customer.email,
+                      ),
                     if (customer.phoneNumber.isNotEmpty)
-                      _ContactLine(icon: Icons.phone_outlined, text: customer.phoneNumber),
+                      _ContactLine(
+                        icon: Icons.phone_outlined,
+                        text: customer.phoneNumber,
+                      ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: statusSoft,
                   borderRadius: BorderRadius.circular(999),
@@ -517,14 +555,17 @@ class _CustomerCard extends StatelessWidget {
               Expanded(
                 child: _Metric(
                   label: 'Current plan',
-                  value: customer.currentPlan.isEmpty ? 'No assigned plan' : customer.currentPlan,
+                  value: customer.currentPlan.isEmpty
+                      ? 'No assigned plan'
+                      : customer.currentPlan,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _Metric(
                   label: 'eSIM / SIM',
-                  value: '${customer.activeEsims} active · ${customer.totalEsims} total',
+                  value:
+                      '${customer.activeEsims} active · ${customer.totalEsims} total',
                 ),
               ),
               const SizedBox(width: 10),
@@ -567,22 +608,25 @@ class _ContactLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 3),
-        child: Row(
-          children: [
-            Icon(icon, size: 13, color: AppColors.textSecondary),
-            const SizedBox(width: 5),
-            Expanded(
-              child: Text(
-                text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              ),
+    padding: const EdgeInsets.only(top: 3),
+    child: Row(
+      children: [
+        Icon(icon, size: 13, color: AppColors.textSecondary),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
             ),
-          ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _Metric extends StatelessWidget {
@@ -592,27 +636,27 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 9,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontSize: 9,
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        value,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+      ),
+    ],
+  );
 }
 
 class _DetailRow extends StatelessWidget {
@@ -622,42 +666,42 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 110,
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+    padding: const EdgeInsets.symmetric(vertical: 9),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 enum _CustomerFilter { all, active, pending, inactive }
 
 extension on _CustomerFilter {
   String get label => switch (this) {
-        _CustomerFilter.all => 'All',
-        _CustomerFilter.active => 'Active',
-        _CustomerFilter.pending => 'Pending',
-        _CustomerFilter.inactive => 'Inactive',
-      };
+    _CustomerFilter.all => 'All',
+    _CustomerFilter.active => 'Active',
+    _CustomerFilter.pending => 'Pending',
+    _CustomerFilter.inactive => 'Inactive',
+  };
 }
 
 String _statusOf(CustomerDirectoryItem customer) {
@@ -674,10 +718,14 @@ String _statusOf(CustomerDirectoryItem customer) {
 }
 
 String _initials(String name) {
-  final parts = name.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+  final parts = name
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .toList();
   if (parts.isEmpty) return '?';
   return parts.take(2).map((part) => part[0].toUpperCase()).join();
 }
 
 String _money(double value) => 'USD ${value.toStringAsFixed(2)}';
-String _orDash(String value) => value.trim().isEmpty ? 'Not provided' : value.trim();
+String _orDash(String value) =>
+    value.trim().isEmpty ? 'Not provided' : value.trim();

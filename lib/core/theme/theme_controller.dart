@@ -9,8 +9,9 @@ class ThemeController {
   static const _storageKey = 'app_theme_mode';
   static const _storage = FlutterSecureStorage();
 
-  static final ValueNotifier<ThemeMode> mode =
-      ValueNotifier<ThemeMode>(ThemeMode.system);
+  static final ValueNotifier<ThemeMode> mode = ValueNotifier<ThemeMode>(
+    ThemeMode.system,
+  );
 
   static Future<void> initialize() async {
     try {

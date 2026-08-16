@@ -3,14 +3,12 @@ import '../../core/api/api_endpoints.dart';
 import 'sim_card_models.dart';
 
 class SimCardsRepository {
-  SimCardsRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  SimCardsRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 
-  Future<SimCardCatalog> fetchPackages({
-    String? productId,
-    String? region,
-  }) {
+  Future<SimCardCatalog> fetchPackages({String? productId, String? region}) {
     return _apiClient.get<SimCardCatalog>(
       ApiEndpoints.mobileSimPackages,
       queryParameters: {
@@ -50,19 +48,19 @@ class SimCardsRepository {
           raw = response;
         } else if (response is Map) {
           final root = Map<String, dynamic>.from(response);
-          raw = root['orders'] ??
-              root['results'] ??
-              root['data'] ??
-              const [];
+          raw = root['orders'] ?? root['results'] ?? root['data'] ?? const [];
         } else {
           raw = const [];
         }
 
         return raw is List
             ? raw
-                .whereType<Map>()
-                .map((item) => SimCardOrder.fromJson(Map<String, dynamic>.from(item)))
-                .toList(growable: false)
+                  .whereType<Map>()
+                  .map(
+                    (item) =>
+                        SimCardOrder.fromJson(Map<String, dynamic>.from(item)),
+                  )
+                  .toList(growable: false)
             : const [];
       },
     );

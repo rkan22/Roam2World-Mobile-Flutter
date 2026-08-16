@@ -175,9 +175,7 @@ class _PremiumHeader extends StatelessWidget {
             ],
           ),
         ),
-        NotificationIconButton(
-          onTap: onNotificationsTap,
-        ),
+        NotificationIconButton(onTap: onNotificationsTap),
       ],
     );
   }

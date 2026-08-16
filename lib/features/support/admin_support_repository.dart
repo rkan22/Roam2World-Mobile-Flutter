@@ -4,7 +4,7 @@ import 'admin_support_data.dart';
 
 class AdminSupportRepository {
   AdminSupportRepository({ApiClient? apiClient})
-      : _apiClient = apiClient ?? ApiClient();
+    : _apiClient = apiClient ?? ApiClient();
 
   final ApiClient _apiClient;
 

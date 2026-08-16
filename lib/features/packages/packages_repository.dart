@@ -4,7 +4,8 @@ import '../../core/cache/timed_cache.dart';
 import 'package_catalog.dart';
 
 class PackagesRepository {
-  PackagesRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
+  PackagesRepository({ApiClient? apiClient})
+    : _apiClient = apiClient ?? ApiClient();
 
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
   final ApiClient _apiClient;
@@ -73,7 +74,8 @@ class PackagesRepository {
         );
 
         for (final package in page.packages) {
-          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) continue;
+          if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+            continue;
           final dedupeKey = package.id.isEmpty
               ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
               : '${package.provider}|${package.id}';
@@ -92,7 +94,8 @@ class PackagesRepository {
       final externalCatalogs = await externalCatalogsFuture;
       for (final catalog in externalCatalogs) {
         for (final package in catalog.packages) {
-          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) continue;
+          if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+            continue;
           final key = '${package.provider}|${package.id}';
           if (seenIds.add(key)) externalPackages.add(package);
         }
@@ -101,40 +104,43 @@ class PackagesRepository {
       packages.addAll(await _applyCentralPricing(externalPackages));
 
       final term = normalizedSearch.toLowerCase();
-      final filtered = packages.where((package) {
-        if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) return false;
-        if (normalizedDestination.isNotEmpty &&
-            package.destinationKey.toLowerCase() != normalizedDestination.toLowerCase()) {
-          return false;
-        }
-        if (normalizedType.isNotEmpty &&
-            package.packageType.toLowerCase() != normalizedType.toLowerCase()) {
-          return false;
-        }
-        if (term.isNotEmpty &&
-            ![
-              package.name,
-              package.destination,
-              package.displayProvider,
-              package.provider,
-              package.id,
-              package.dataLabel,
-              package.validityLabel,
-            ].any((value) => value.toLowerCase().contains(term))) {
-          return false;
-        }
-        return true;
-      }).toList()
-        ..sort((a, b) {
-          final aTurkey = a.operatorKey == 'turkey';
-          final bTurkey = b.operatorKey == 'turkey';
-          if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
+      final filtered =
+          packages.where((package) {
+            if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+              return false;
+            if (normalizedDestination.isNotEmpty &&
+                package.destinationKey.toLowerCase() !=
+                    normalizedDestination.toLowerCase()) {
+              return false;
+            }
+            if (normalizedType.isNotEmpty &&
+                package.packageType.toLowerCase() !=
+                    normalizedType.toLowerCase()) {
+              return false;
+            }
+            if (term.isNotEmpty &&
+                ![
+                  package.name,
+                  package.destination,
+                  package.displayProvider,
+                  package.provider,
+                  package.id,
+                  package.dataLabel,
+                  package.validityLabel,
+                ].any((value) => value.toLowerCase().contains(term))) {
+              return false;
+            }
+            return true;
+          }).toList()..sort((a, b) {
+            final aTurkey = a.operatorKey == 'turkey';
+            final bTurkey = b.operatorKey == 'turkey';
+            if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
 
-          final priceCompare = a.price.compareTo(b.price);
-          if (priceCompare != 0) return priceCompare;
+            final priceCompare = a.price.compareTo(b.price);
+            if (priceCompare != 0) return priceCompare;
 
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        });
+            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          });
 
       final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
       cache.set(catalog);
@@ -179,18 +185,20 @@ class PackagesRepository {
     }
   }
 
-  Future<List<MobilePackage>> _applyCentralPricing(List<MobilePackage> packages) async {
+  Future<List<MobilePackage>> _applyCentralPricing(
+    List<MobilePackage> packages,
+  ) async {
     if (packages.isEmpty) return const [];
     const batchSize = 250;
     final batches = <List<MobilePackage>>[];
     for (var start = 0; start < packages.length; start += batchSize) {
-      final end = start + batchSize < packages.length ? start + batchSize : packages.length;
+      final end = start + batchSize < packages.length
+          ? start + batchSize
+          : packages.length;
       batches.add(packages.sublist(start, end));
     }
 
-    final pricedBatches = await Future.wait(
-      batches.map(_priceBatch),
-    );
+    final pricedBatches = await Future.wait(batches.map(_priceBatch));
     return pricedBatches.expand((batch) => batch).toList(growable: false);
   }
 
@@ -199,26 +207,36 @@ class PackagesRepository {
       final pricedBatch = await _apiClient.post<List<MobilePackage>>(
         ApiEndpoints.pricingBatchPreview,
         data: {
-          'items': batch.map((package) => {
-            'provider': package.provider,
-            'package_id': package.id,
-            'provider_price': package.price,
-            'country': package.destination,
-            'region': package.destinationKey,
-            'currency': package.currency,
-          }).toList(),
+          'items': batch
+              .map(
+                (package) => {
+                  'provider': package.provider,
+                  'package_id': package.id,
+                  'provider_price': package.price,
+                  'country': package.destination,
+                  'region': package.destinationKey,
+                  'currency': package.currency,
+                },
+              )
+              .toList(),
         },
         parser: (response) {
           final root = Map<String, dynamic>.from(response as Map);
           final rows = root['data'];
           if (rows is! List) return const [];
           final priced = <MobilePackage>[];
-          for (var index = 0; index < rows.length && index < batch.length; index++) {
+          for (
+            var index = 0;
+            index < rows.length && index < batch.length;
+            index++
+          ) {
             final row = rows[index];
             if (row is! Map) continue;
             final pricing = row['pricing'];
-            if (pricing is! Map || pricing['is_price_visible'] != true) continue;
-            final rawPrice = pricing['charge_amount'] ??
+            if (pricing is! Map || pricing['is_price_visible'] != true)
+              continue;
+            final rawPrice =
+                pricing['charge_amount'] ??
                 pricing['after_admin'] ??
                 pricing['final_customer_price'];
             final price = double.tryParse('$rawPrice');
@@ -261,8 +279,14 @@ class PackagesRepository {
   }
 
   bool _isHiddenProvider(MobilePackage package) {
-    final provider = package.provider.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    final display = package.displayProvider.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final provider = package.provider.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
+    final display = package.displayProvider.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
     return provider == 'esimcard' || display == 'esimcard';
   }
 

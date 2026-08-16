@@ -24,17 +24,16 @@ class NotificationRule {
     bool? enabled,
     List<String>? channels,
     String? severity,
-  }) =>
-      NotificationRule(
-        id: id,
-        name: name,
-        description: description,
-        threshold: threshold ?? this.threshold,
-        unit: unit,
-        enabled: enabled ?? this.enabled,
-        channels: channels ?? this.channels,
-        severity: severity ?? this.severity,
-      );
+  }) => NotificationRule(
+    id: id,
+    name: name,
+    description: description,
+    threshold: threshold ?? this.threshold,
+    unit: unit,
+    enabled: enabled ?? this.enabled,
+    channels: channels ?? this.channels,
+    severity: severity ?? this.severity,
+  );
 
   factory NotificationRule.fromJson(Map<String, dynamic> json) {
     return NotificationRule(
@@ -52,13 +51,13 @@ class NotificationRule {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'threshold': threshold,
-        'unit': unit,
-        'enabled': enabled,
-        'channels': channels,
-        'severity': severity,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'threshold': threshold,
+    'unit': unit,
+    'enabled': enabled,
+    'channels': channels,
+    'severity': severity,
+  };
 }

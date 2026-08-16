@@ -35,17 +35,16 @@ class B2BSurface extends StatelessWidget {
       decoration: BoxDecoration(
         color: resolvedBackground,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: resolvedBorder.withValues(alpha: isDark ? .9 : .78)),
+        border: Border.all(
+          color: resolvedBorder.withValues(alpha: isDark ? .9 : .78),
+        ),
         boxShadow: showShadow && !isDark ? B2BShadows.card : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Material(
           color: Colors.transparent,
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );

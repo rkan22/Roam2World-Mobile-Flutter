@@ -8,6 +8,10 @@ String resolvePushRoute(Map<String, dynamic> data) {
       (data['notification_event'] ?? data['event'] ?? data['type'] ?? '')
           .toString()
           .toLowerCase();
+  final orderId = (data['related_order_id'] ?? data['order_id'] ?? '')
+      .toString()
+      .trim();
+  final orderNumber = (data['order_number'] ?? '').toString().trim();
 
   if (raw.contains('wallet') ||
       event.contains('wallet') ||
@@ -16,7 +20,17 @@ String resolvePushRoute(Map<String, dynamic> data) {
   }
   if (raw.contains('order') ||
       event.contains('order') ||
+      event.contains('payment') ||
       event.contains('qr_ready')) {
+    if (orderId.isNotEmpty || orderNumber.isNotEmpty) {
+      return Uri(
+        path: AppRoutes.orders,
+        queryParameters: {
+          if (orderId.isNotEmpty) 'order_id': orderId,
+          if (orderNumber.isNotEmpty) 'order_number': orderNumber,
+        },
+      ).toString();
+    }
     return AppRoutes.orders;
   }
   if (raw.contains('esim') ||

@@ -37,7 +37,8 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
       final rules = await _repository.fetchRules();
       if (mounted) setState(() => _rules = rules);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Provider routing rules could not be loaded.');
+      if (mounted)
+        setState(() => _error = 'Provider routing rules could not be loaded.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -55,9 +56,9 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Routing action failed.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Routing action failed.')));
       }
     } finally {
       if (mounted) setState(() => _busyId = null);
@@ -76,21 +77,38 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
   Widget build(BuildContext context) {
     final primary = _rules.where((rule) => rule.isPrimary).length;
     final active = _rules.where((rule) => rule.isActive).length;
-    final categories = _rules.map((rule) => rule.category).where((value) => value.isNotEmpty).toSet().length;
+    final categories = _rules
+        .map((rule) => rule.category)
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .length;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Provider Routing'),
-        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))],
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(B2BSpacing.lg, B2BSpacing.md, B2BSpacing.lg, B2BSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+            B2BSpacing.lg,
+            B2BSpacing.md,
+            B2BSpacing.lg,
+            B2BSpacing.xxl,
+          ),
           children: [
-            Text('B2B provider routing', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'B2B provider routing',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: B2BSpacing.xs),
             const Text(
               'Live route priority and provider override controls from the mobile admin API.',
@@ -104,17 +122,41 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
             else ...[
               Row(
                 children: [
-                  Expanded(child: B2BMetricCard(label: 'Rules', value: '${_rules.length}', icon: Icons.route_outlined)),
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'Rules',
+                      value: '${_rules.length}',
+                      icon: Icons.route_outlined,
+                    ),
+                  ),
                   const SizedBox(width: B2BSpacing.sm),
-                  Expanded(child: B2BMetricCard(label: 'Active', value: '$active', icon: Icons.check_circle_outline_rounded)),
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'Active',
+                      value: '$active',
+                      icon: Icons.check_circle_outline_rounded,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: B2BSpacing.sm),
               Row(
                 children: [
-                  Expanded(child: B2BMetricCard(label: 'Primary', value: '$primary', icon: Icons.star_outline_rounded)),
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'Primary',
+                      value: '$primary',
+                      icon: Icons.star_outline_rounded,
+                    ),
+                  ),
                   const SizedBox(width: B2BSpacing.sm),
-                  Expanded(child: B2BMetricCard(label: 'Categories', value: '$categories', icon: Icons.category_outlined)),
+                  Expanded(
+                    child: B2BMetricCard(
+                      label: 'Categories',
+                      value: '$categories',
+                      icon: Icons.category_outlined,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: B2BSpacing.lg),
@@ -122,7 +164,8 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
                 const ContentEmptyState(
                   icon: Icons.route_outlined,
                   title: 'No routing rules',
-                  message: 'The backend returned no mobile provider route rules.',
+                  message:
+                      'The backend returned no mobile provider route rules.',
                 )
               else
                 for (final rule in _rules) ...[
@@ -149,7 +192,9 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      rule.displayName.isEmpty ? rule.provider : rule.displayName,
+                      rule.displayName.isEmpty
+                          ? rule.provider
+                          : rule.displayName,
                       style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 3),
@@ -171,7 +216,9 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
             'Fallback: ${rule.allowFallback ? 'enabled' : 'disabled'}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          if (rule.markupPercent != null || rule.resellerMarkupPercent != null || rule.dealerMarkupPercent != null) ...[
+          if (rule.markupPercent != null ||
+              rule.resellerMarkupPercent != null ||
+              rule.dealerMarkupPercent != null) ...[
             const SizedBox(height: 4),
             Text(
               'Markup · base ${_pct(rule.markupPercent)} · reseller ${_pct(rule.resellerMarkupPercent)} · dealer ${_pct(rule.dealerMarkupPercent)}',
@@ -208,5 +255,6 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
     );
   }
 
-  String _pct(double? value) => value == null ? '—' : '${value.toStringAsFixed(2)}%';
+  String _pct(double? value) =>
+      value == null ? '—' : '${value.toStringAsFixed(2)}%';
 }

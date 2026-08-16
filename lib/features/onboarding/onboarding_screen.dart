@@ -116,13 +116,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             children: [
                               Container(
                                 width: double.infinity,
-                                constraints: const BoxConstraints(maxWidth: 430),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 430,
+                                ),
                                 height: artworkHeight,
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.surface,
-                                  borderRadius:
-                                      BorderRadius.circular(B2BRadius.xxl),
+                                  borderRadius: BorderRadius.circular(
+                                    B2BRadius.xxl,
+                                  ),
                                   border: Border.all(
                                     color: theme.colorScheme.outlineVariant,
                                   ),
@@ -208,8 +211,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               SizedBox(height: compact ? 8 : 12),
                               ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 420),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 420,
+                                ),
                                 child: Text(
                                   item.$3,
                                   textAlign: TextAlign.center,
