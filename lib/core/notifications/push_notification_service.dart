@@ -182,14 +182,28 @@ class PushNotificationService {
   }
 
   Future<void> _registerCurrentToken() async {
-    if (Platform.isIOS) {
-      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      if (apnsToken == null) {
-        await Future<void>.delayed(const Duration(seconds: 1));
-      }
+    if (Platform.isIOS && !await _waitForApnsToken()) {
+      debugPrint(
+        'APNs token was not available after waiting; FCM registration deferred.',
+      );
+      return;
     }
+
     final token = await FirebaseMessaging.instance.getToken();
-    if (token != null && token.isNotEmpty) await _registerTokenSafely(token);
+    if (token == null || token.isEmpty) {
+      debugPrint('Firebase Messaging returned an empty device token.');
+      return;
+    }
+    await _registerTokenSafely(token);
+  }
+
+  Future<bool> _waitForApnsToken() async {
+    for (var attempt = 0; attempt < 15; attempt++) {
+      final token = await FirebaseMessaging.instance.getAPNSToken();
+      if (token != null && token.isNotEmpty) return true;
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    return false;
   }
 
   Future<void> _registerTokenSafely(String token) async {
@@ -200,6 +214,9 @@ class PushNotificationService {
         platform: Platform.isIOS ? 'ios' : 'android',
         appVersion: '${info.version}+${info.buildNumber}',
         deviceName: Platform.operatingSystem,
+      );
+      debugPrint(
+        'Push device token registered for ${Platform.operatingSystem}.',
       );
     } catch (error, stackTrace) {
       debugPrint('Push token registration failed: $error\n$stackTrace');
