@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import '../auth/auth_state.dart';
 import '../config/app_environment.dart';
 import '../storage/token_storage.dart';
 import 'api_endpoints.dart';
@@ -38,7 +39,14 @@ class ApiClient {
           final isRefreshRequest = request.path == ApiEndpoints.tokenRefresh;
           final alreadyRetried = request.extra['retried_after_refresh'] == true;
 
-          if (!isUnauthorized || isRefreshRequest || alreadyRetried) {
+          if (!isUnauthorized || isRefreshRequest) {
+            handler.next(exception);
+            return;
+          }
+
+          if (alreadyRetried) {
+            await _tokenStorage.clear();
+            AuthState.instance.sessionExpired();
             handler.next(exception);
             return;
           }
@@ -46,6 +54,7 @@ class ApiClient {
           try {
             final accessToken = await _refreshAccessToken();
             if (accessToken == null || accessToken.isEmpty) {
+              AuthState.instance.sessionExpired();
               handler.next(exception);
               return;
             }
@@ -56,6 +65,7 @@ class ApiClient {
             handler.resolve(response);
           } catch (_) {
             await _tokenStorage.clear();
+            AuthState.instance.sessionExpired();
             handler.next(exception);
           }
         },

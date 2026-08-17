@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/auth/biometric_auth_service.dart';
 import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
@@ -32,11 +33,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
   DashboardData? _dashboard;
   bool _loading = true;
   bool _savingPassword = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+  bool _updatingBiometrics = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadBiometrics();
+  }
+
+  Future<void> _loadBiometrics() async {
+    final results = await Future.wait<bool>([
+      BiometricAuthService.instance.isAvailable(),
+      BiometricAuthService.instance.isEnabled(),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _biometricAvailable = results[0];
+      _biometricEnabled = results[0] && results[1];
+    });
+  }
+
+  Future<void> _toggleBiometrics(bool enabled) async {
+    if (_updatingBiometrics) return;
+    setState(() => _updatingBiometrics = true);
+    var success = true;
+    if (enabled) {
+      success = await BiometricAuthService.instance.enable();
+    } else {
+      await BiometricAuthService.instance.disable();
+    }
+    if (!mounted) return;
+    setState(() {
+      _biometricEnabled = enabled && success;
+      _updatingBiometrics = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          !success
+              ? 'Face ID could not be enabled.'
+              : enabled
+              ? 'Face ID quick login enabled.'
+              : 'Face ID quick login disabled.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -292,6 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (confirmed != true) return;
+    await BiometricAuthService.instance.disable();
     await _authRepository.signOut();
     if (mounted) context.go('/login');
   }
@@ -354,6 +399,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
               const SizedBox(height: 18),
               _section('Change Password', _passwordForm()),
+              if (_biometricAvailable) ...[
+                const SizedBox(height: 18),
+                _section('Security', _securitySettings()),
+              ],
               const SizedBox(height: 18),
               _section('Theme Settings', _themeSettings()),
               const SizedBox(height: 18),
@@ -526,6 +575,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mode != ThemeMode.system) const SizedBox(width: 8),
         ],
       ],
+    ),
+  );
+
+  Widget _securitySettings() => SwitchListTile.adaptive(
+    contentPadding: EdgeInsets.zero,
+    value: _biometricEnabled,
+    onChanged: _updatingBiometrics ? null : _toggleBiometrics,
+    secondary: Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: const Icon(Icons.face_rounded, color: AppColors.primary),
+    ),
+    title: const Text(
+      'Face ID quick login',
+      style: TextStyle(fontWeight: FontWeight.w900),
+    ),
+    subtitle: Text(
+      _biometricEnabled
+          ? 'Face ID will be required when reopening the app.'
+          : 'Unlock your workspace without entering your password.',
     ),
   );
 

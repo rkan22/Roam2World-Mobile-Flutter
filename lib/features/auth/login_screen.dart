@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,17 +42,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false) || _isLoading) return;
-
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
-
     try {
       await _authRepository.signIn(
         email: _emailController.text,
         password: _passwordController.text,
       );
-      if (!mounted) return;
-      context.go(AppRoutes.dashboard);
+      if (mounted) context.go(AppRoutes.dashboard);
     } on ApiException catch (error) {
       _showError(error.message);
     } on FormatException catch (error) {
@@ -72,275 +71,293 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 24, 22, 30),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      backgroundColor: const Color(0xFF071222),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/onboarding/onboarding_global_travel.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x55030B18),
+                  Color(0xCC071222),
+                  Color(0xFF071222),
+                ],
+                stops: [0, .34, .62],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          gradient: B2BGradients.primary,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: B2BShadows.card,
+                      Center(
+                        child: Image.asset(
+                          'assets/branding/roam2world_logo_transparent.png',
+                          width: 250,
+                          fit: BoxFit.contain,
                         ),
-                        child: const Icon(
-                          Icons.public_rounded,
+                      ),
+                      const SizedBox(height: 132),
+                      const Text(
+                        'Business without borders.',
+                        style: TextStyle(
                           color: Colors.white,
-                          size: 25,
+                          fontSize: 36,
+                          height: 1.04,
+                          letterSpacing: -1.1,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Roam2World', style: theme.textTheme.titleLarge),
-                          Text(
-                            'Partner workspace',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Connect customers, deliver eSIMs and grow your operation from anywhere.',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: Colors.white.withValues(alpha: .76),
+                        ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
-                    decoration: BoxDecoration(
-                      gradient: B2BGradients.primary,
-                      borderRadius: BorderRadius.circular(B2BRadius.xxl),
-                      boxShadow: B2BShadows.hero,
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          right: -36,
-                          top: -42,
+                      const SizedBox(height: 20),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                           child: Container(
-                            width: 160,
-                            height: 160,
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: .08),
+                              color: const Color(
+                                0xFF081629,
+                              ).withValues(alpha: .56),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: .16),
+                              ),
+                              boxShadow: B2BShadows.hero,
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(
+                                        alpha: .14,
+                                      ),
+                                      borderRadius: BorderRadius.circular(99),
+                                    ),
+                                    child: const Text(
+                                      'SECURE B2B ACCESS',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 10.5,
+                                        letterSpacing: .8,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  const Text(
+                                    'Access your workspace',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    'Enter your partner credentials to continue.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white60,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  TextFormField(
+                                    controller: _emailController,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    enabled: !_isLoading,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [AutofillHints.email],
+                                    decoration: _fieldDecoration(
+                                      'Email address',
+                                      Icons.mail_outline_rounded,
+                                    ),
+                                    validator: (value) {
+                                      final text = value?.trim() ?? '';
+                                      if (text.isEmpty)
+                                        return 'Enter your email address';
+                                      if (!text.contains('@'))
+                                        return 'Enter a valid email address';
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    enabled: !_isLoading,
+                                    obscureText: _hidePassword,
+                                    textInputAction: TextInputAction.done,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    onFieldSubmitted: (_) => _submit(),
+                                    decoration:
+                                        _fieldDecoration(
+                                          'Password',
+                                          Icons.lock_outline_rounded,
+                                        ).copyWith(
+                                          suffixIcon: IconButton(
+                                            onPressed: _isLoading
+                                                ? null
+                                                : () => setState(
+                                                    () => _hidePassword =
+                                                        !_hidePassword,
+                                                  ),
+                                            icon: Icon(
+                                              _hidePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        ),
+                                    validator: (value) {
+                                      if ((value ?? '').isEmpty)
+                                        return 'Enter your password';
+                                      if ((value ?? '').length < 6)
+                                        return 'Password must be at least 6 characters';
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: _isLoading
+                                            ? null
+                                            : (value) => setState(
+                                                () =>
+                                                    _rememberMe = value ?? true,
+                                              ),
+                                      ),
+                                      Text(
+                                        'Remember me',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(color: Colors.white70),
+                                      ),
+                                      const Spacer(),
+                                      TextButton(
+                                        onPressed: _isLoading
+                                            ? null
+                                            : () => context.push(
+                                                AppRoutes.forgotPassword,
+                                              ),
+                                        child: const Text('Forgot password?'),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: FilledButton.icon(
+                                      onPressed: _isLoading ? null : _submit,
+                                      icon: _isLoading
+                                          ? const SizedBox.square(
+                                              dimension: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Icon(Icons.login_rounded),
+                                      label: Text(
+                                        _isLoading
+                                            ? 'Signing in...'
+                                            : 'Open workspace',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                      const SizedBox(height: 16),
+                      const Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 11,
-                                vertical: 7,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: .14),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: const Text(
-                                'BUSINESS CONNECTIVITY',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  letterSpacing: .7,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
+                            Icon(
+                              Icons.verified_user_outlined,
+                              size: 17,
+                              color: AppColors.primary,
                             ),
-                            const SizedBox(height: 18),
-                            const Text(
-                              'Welcome back',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 34,
-                                height: 1.05,
-                                letterSpacing: -.8,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
+                            SizedBox(width: 7),
                             Text(
-                              'Manage eSIM sales, orders and wallet operations from one secure workspace.',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: Colors.white.withValues(alpha: .78),
+                              'Encrypted partner access',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.5,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(B2BRadius.xl),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant,
-                      ),
-                      boxShadow: B2BShadows.card,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sign in to your account',
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Use your Roam2World partner credentials.',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _emailController,
-                            enabled: !_isLoading,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            autofillHints: const [AutofillHints.email],
-                            decoration: const InputDecoration(
-                              labelText: 'Email address',
-                              prefixIcon: Icon(Icons.mail_outline_rounded),
-                            ),
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-                              if (text.isEmpty)
-                                return 'Enter your email address';
-                              if (!text.contains('@'))
-                                return 'Enter a valid email address';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _passwordController,
-                            enabled: !_isLoading,
-                            obscureText: _hidePassword,
-                            textInputAction: TextInputAction.done,
-                            autofillHints: const [AutofillHints.password],
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () => setState(
-                                        () => _hidePassword = !_hidePassword,
-                                      ),
-                                icon: Icon(
-                                  _hidePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
-                              ),
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').isEmpty)
-                                return 'Enter your password';
-                              if ((value ?? '').length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: _isLoading
-                                    ? null
-                                    : (value) => setState(
-                                        () => _rememberMe = value ?? true,
-                                      ),
-                              ),
-                              Text(
-                                'Remember me',
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () => context.push(
-                                        AppRoutes.forgotPassword,
-                                      ),
-                                child: const Text('Forgot password?'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          FilledButton(
-                            onPressed: _isLoading ? null : _submit,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.3,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Sign in'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 9,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.successSoft,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.verified_user_outlined,
-                            size: 17,
-                            color: AppColors.success,
-                          ),
-                          SizedBox(width: 7),
-                          Text(
-                            'Secure partner access',
-                            style: TextStyle(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _fieldDecoration(String label, IconData icon) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: Colors.white.withValues(alpha: .12)),
+    );
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white60),
+      prefixIcon: Icon(icon, color: AppColors.primary),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: .07),
+      enabledBorder: border,
+      disabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
       ),
     );
   }

@@ -49,6 +49,7 @@ dependencies:
     path: vendor/NekokoLPA2/local_packages/ccid
   roam_lpa_core:
     path: packages/roam_lpa_core
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:
@@ -60,5 +61,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/catalog/europe.png
+    - assets/branding/
+    - assets/onboarding/
   config:
     enable-swift-package-manager: false

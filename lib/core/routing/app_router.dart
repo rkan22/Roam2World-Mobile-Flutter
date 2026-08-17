@@ -1,4 +1,6 @@
 import 'package:go_router/go_router.dart';
+import '../auth/auth_state.dart';
+import '../../features/auth/biometric_unlock_screen.dart';
 import '../../features/sim_cards/sim_card_order_history_screen.dart';
 import '../../features/sim_cards/sim_cards_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
@@ -51,6 +53,7 @@ abstract final class AppRoutes {
   static const onboarding = '/onboarding';
   static const login = '/login';
   static const forgotPassword = '/forgot-password';
+  static const biometricUnlock = '/biometric-unlock';
   static const dashboard = '/dashboard';
   static const packages = '/packages';
   static const packageDetail = '/packages/detail';
@@ -101,12 +104,35 @@ GoRouter createAppRouter({
   String initialLocation = AppRoutes.onboarding,
 }) => GoRouter(
   initialLocation: initialLocation,
+  refreshListenable: AuthState.instance,
+  redirect: (_, state) {
+    final auth = AuthState.instance;
+    final path = state.uri.path;
+    final isPublicRoute =
+        path == AppRoutes.onboarding ||
+        path == AppRoutes.login ||
+        path == AppRoutes.forgotPassword ||
+        path == AppRoutes.biometricUnlock;
+
+    if (!auth.isAuthenticated && !isPublicRoute) {
+      return AppRoutes.login;
+    }
+    if (auth.isAuthenticated &&
+        (path == AppRoutes.login || path == AppRoutes.onboarding)) {
+      return AppRoutes.dashboard;
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: AppRoutes.onboarding,
       builder: (_, _) => const OnboardingScreen(),
     ),
     GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
+    GoRoute(
+      path: AppRoutes.biometricUnlock,
+      builder: (_, _) => const BiometricUnlockScreen(),
+    ),
     GoRoute(
       path: AppRoutes.forgotPassword,
       builder: (_, _) => const ForgotPasswordScreen(),

@@ -1,5 +1,6 @@
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
+import '../../core/auth/auth_state.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/notifications/push_notification_service.dart';
 import 'auth_session.dart';
@@ -35,6 +36,7 @@ class AuthRepository {
       refreshToken: session.refreshToken,
     );
     await _tokenStorage.saveProfile(session.toStoredProfile());
+    AuthState.instance.signedIn();
     await PushNotificationService.instance.enableForAuthenticatedUser();
     return session;
   }
@@ -42,6 +44,7 @@ class AuthRepository {
   Future<void> signOut() async {
     await PushNotificationService.instance.disableForCurrentUser();
     await _tokenStorage.clear();
+    AuthState.instance.signedOut();
   }
 
   Future<String> requestPasswordReset(String email) =>
