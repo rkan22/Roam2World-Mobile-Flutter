@@ -42,9 +42,26 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
-    await PushNotificationService.instance.disableForCurrentUser();
-    await _tokenStorage.clear();
-    AuthState.instance.signedOut();
+    final refreshToken = await _tokenStorage.readRefreshToken();
+
+    try {
+      await PushNotificationService.instance.disableForCurrentUser();
+
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        try {
+          await _apiClient.post<Object?>(
+            ApiEndpoints.logout,
+            data: {'refresh_token': refreshToken},
+            parser: (response) => response,
+          );
+        } catch (_) {
+          // Local logout must still complete if the server is unavailable.
+        }
+      }
+    } finally {
+      await _tokenStorage.clear();
+      AuthState.instance.signedOut();
+    }
   }
 
   Future<String> requestPasswordReset(String email) =>
