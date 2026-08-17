@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../auth/auth_state.dart';
 import '../config/app_environment.dart';
+import '../monitoring/crash_reporting_service.dart';
 import '../storage/token_storage.dart';
 import 'api_endpoints.dart';
 import 'api_exception.dart';
@@ -34,6 +35,7 @@ class ApiClient {
           handler.next(options);
         },
         onError: (exception, handler) async {
+          unawaited(CrashReportingService.recordApiFailure(exception));
           final request = exception.requestOptions;
           final isUnauthorized = exception.response?.statusCode == 401;
           final isRefreshRequest = request.path == ApiEndpoints.tokenRefresh;
