@@ -77,9 +77,7 @@ void main() {
             'product_name': 'E-185-SC-AU-eO1-T-60D-20GB',
             'total_amount': '15.00',
           },
-          {
-            'product_name': '[eSIM] Europe (41 countries) / 10 GB / 30 Days',
-          },
+          {'product_name': '[eSIM] Europe (41 countries) / 10 GB / 30 Days'},
         ],
       },
     });
@@ -106,5 +104,73 @@ void main() {
       '30 Days',
       'WM E J1 VDFES XL',
     ]);
+  });
+
+  test('parses the current admin dashboard API contract', () {
+    final data = DashboardData.fromAdminResponse({
+      'success': true,
+      'data': {
+        'period': '30d',
+        'currency': 'USD',
+        'kpis': {
+          'revenue': '432.67',
+          'gross_profit': '94.29',
+          'gross_margin_percent': '21.79',
+          'completed_orders': 21,
+          'total_orders': 40,
+          'active_esims': 4,
+          'active_resellers': 1,
+          'active_dealers': 1,
+        },
+        'orders_by_status': {
+          'cancelled': 14,
+          'completed': 21,
+          'confirmed': 1,
+          'failed': 3,
+          'processing': 1,
+        },
+        'daily_operations': {
+          'wallet_requests_pending': 1,
+          'manual_fulfillment_pending': 1,
+          'provider_retries_requiring_review': 0,
+          'support_tickets_open': 0,
+          'available_blank_sims': 147,
+        },
+        'partner_performance': {
+          'resellers': [
+            {'id': 43},
+          ],
+          'dealers': [
+            {'id': 20},
+          ],
+        },
+        'latest_orders': [
+          {
+            'id': 917,
+            'order_number': 'ORD-917',
+            'status': 'processing',
+            'product_name': 'Movistar eSIM 300GB 28 Days',
+            'total_amount': '25.90',
+          },
+        ],
+      },
+    });
+
+    expect(data.currency, 'USD');
+    expect(data.monthlySales, 432.67);
+    expect(data.grossProfit, 94.29);
+    expect(data.totalOrders, 40);
+    expect(data.pendingOrders, 2);
+    expect(data.completedOrders, 21);
+    expect(data.failedOrders, 3);
+    expect(data.resellerCount, 1);
+    expect(data.dealerCount, 1);
+    expect(data.activeEsimCount, 4);
+    expect(data.pendingWalletRequests, 1);
+    expect(data.manualFulfillmentPending, 1);
+    expect(data.providerRetriesRequiringReview, 0);
+    expect(data.supportTicketsOpen, 0);
+    expect(data.availableBlankSims, 147);
+    expect(data.recentOrders.single.id, 917);
   });
 }

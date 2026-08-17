@@ -82,7 +82,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           onRefresh: _refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 120),
             children: [
               _header(),
               if (_stale) ...[const SizedBox(height: 12), const _StaleBanner()],
@@ -123,6 +123,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: -.45,
+                  height: 1.15,
                 ),
               ),
               const SizedBox(height: 4),
@@ -166,6 +167,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _kpiGrid(data, currency),
         const SizedBox(height: 14),
         _operationsStatus(data),
+        const SizedBox(height: 14),
+        _platformSnapshot(data),
         const SizedBox(height: 14),
         _adminTools(),
         const SizedBox(height: 14),
@@ -439,51 +442,141 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: _StatusBlock(
-                  label: 'Pending',
-                  value: '${data.pendingOrders}',
-                  icon: Icons.schedule_rounded,
-                  color: AppColors.warning,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/orders'),
+                  child: _StatusBlock(
+                    label: 'Pending',
+                    value: '${data.pendingOrders}',
+                    icon: Icons.schedule_rounded,
+                    color: AppColors.warning,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
-                child: _StatusBlock(
-                  label: 'Completed',
-                  value: '${data.completedOrders}',
-                  icon: Icons.check_circle_outline_rounded,
-                  color: AppColors.success,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/orders'),
+                  child: _StatusBlock(
+                    label: 'Done',
+                    value: '${data.completedOrders}',
+                    icon: Icons.check_circle_outline_rounded,
+                    color: AppColors.success,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
-                child: _StatusBlock(
-                  label: 'Failed',
-                  value: '${data.failedOrders}',
-                  icon: Icons.error_outline_rounded,
-                  color: AppColors.danger,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/orders'),
+                  child: _StatusBlock(
+                    label: 'Failed',
+                    value: '${data.failedOrders}',
+                    icon: Icons.error_outline_rounded,
+                    color: AppColors.danger,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/finance'),
+                  child: _StatusBlock(
+                    label: 'Wallet',
+                    value: '${data.pendingWalletRequests}',
+                    icon: Icons.account_balance_wallet_outlined,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/admin/manual-fulfillment'),
+                  child: _StatusBlock(
+                    label: 'Manual',
+                    value: '${data.manualFulfillmentPending}',
+                    icon: Icons.assignment_outlined,
+                    color: AppColors.violet,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  Widget _platformSnapshot(DashboardData data) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: B2BShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Platform Snapshot',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Items requiring operational attention',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: _StatusBlock(
-                  label: 'Reseller Requests',
-                  value: '${data.pendingResellerWalletRequests}',
-                  icon: Icons.account_balance_wallet_outlined,
-                  color: AppColors.primary,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/admin/provider-retry'),
+                  child: _StatusBlock(
+                    label: 'Provider Review',
+                    value: '${data.providerRetriesRequiringReview}',
+                    icon: Icons.sync_problem_outlined,
+                    color: AppColors.warning,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
-                child: _StatusBlock(
-                  label: 'Dealer Requests',
-                  value: '${data.pendingDealerWalletRequests}',
-                  icon: Icons.payments_outlined,
-                  color: AppColors.violet,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/support'),
+                  child: _StatusBlock(
+                    label: 'Open Support',
+                    value: '${data.supportTicketsOpen}',
+                    icon: Icons.support_agent_outlined,
+                    color: AppColors.danger,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/admin/manual-fulfillment'),
+                  child: _StatusBlock(
+                    label: 'Blank SIMs',
+                    value: '${data.availableBlankSims}',
+                    icon: Icons.sim_card_outlined,
+                    color: AppColors.success,
+                  ),
                 ),
               ),
             ],
@@ -519,6 +612,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'Partner management',
         Icons.hub_outlined,
         '/admin/resellers',
+      ),
+      _ToolData(
+        'Dealers',
+        'Dealer management',
+        Icons.groups_outlined,
+        '/admin/dealers',
+      ),
+      _ToolData(
+        'Pricing',
+        'Central pricing rules',
+        Icons.price_change_outlined,
+        '/pricing/rules',
+      ),
+      _ToolData(
+        'Provider Health',
+        'Provider availability',
+        Icons.monitor_heart_outlined,
+        '/admin/provider-health',
+      ),
+      _ToolData(
+        'Retry Queue',
+        'Failed provider jobs',
+        Icons.replay_circle_filled_outlined,
+        '/admin/provider-retry',
+      ),
+      _ToolData(
+        'Callbacks',
+        'Provider callback logs',
+        Icons.webhook_outlined,
+        '/admin/provider-callbacks',
+      ),
+      _ToolData(
+        'Routing',
+        'Provider routing rules',
+        Icons.alt_route_outlined,
+        '/admin/routing',
+      ),
+      _ToolData(
+        'Manual Fulfillment',
+        'Manual order tasks',
+        Icons.assignment_outlined,
+        '/admin/manual-fulfillment',
+      ),
+      _ToolData(
+        'Governance',
+        'Audit and controls',
+        Icons.policy_outlined,
+        '/admin/governance',
+      ),
+      _ToolData(
+        'WhatsApp',
+        'Messaging operations',
+        Icons.chat_outlined,
+        '/admin/whatsapp',
       ),
     ];
 
@@ -868,7 +1015,7 @@ class _StatusBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
     decoration: BoxDecoration(
       color: AppColors.background,
       borderRadius: BorderRadius.circular(14),
@@ -876,13 +1023,13 @@ class _StatusBlock extends StatelessWidget {
     ),
     child: Column(
       children: [
-        Icon(icon, size: 18, color: color),
+        Icon(icon, size: 17, color: color),
         const SizedBox(height: 7),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 2),
         Text(
@@ -892,7 +1039,7 @@ class _StatusBlock extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: AppColors.textSecondary,
-            fontSize: 9.5,
+            fontSize: 8,
             fontWeight: FontWeight.w700,
           ),
         ),
