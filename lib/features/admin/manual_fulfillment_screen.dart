@@ -38,8 +38,9 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
       final data = await _repository.fetchWorkspace();
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Manual fulfillment data could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

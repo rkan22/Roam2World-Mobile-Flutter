@@ -20,8 +20,9 @@ class ProviderStatusSheet extends StatelessWidget {
           break;
         }
       }
-      if (found && current != null && '$current'.trim().isNotEmpty)
+      if (found && current != null && '$current'.trim().isNotEmpty) {
         return current;
+      }
     }
     return null;
   }

@@ -7,7 +7,6 @@ import 'core/auth/biometric_auth_service.dart';
 import 'core/auth/initial_route_resolver.dart';
 import 'core/config/app_environment.dart';
 import 'core/monitoring/crash_reporting_service.dart';
-import 'core/routing/app_router.dart';
 import 'core/storage/token_storage.dart';
 import 'core/theme/theme_controller.dart';
 

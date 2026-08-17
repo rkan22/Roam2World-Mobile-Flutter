@@ -49,8 +49,9 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Dealer network could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

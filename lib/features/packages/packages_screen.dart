@@ -103,16 +103,20 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return _packages
         .where((item) {
           if (_selectedOperator.isNotEmpty &&
-              item.operatorKey != _selectedOperator)
+              item.operatorKey != _selectedOperator) {
             return false;
+          }
           if (_selectedType.isNotEmpty &&
-              item.packageType.toLowerCase() != _selectedType)
+              item.packageType.toLowerCase() != _selectedType) {
             return false;
+          }
           if (_selectedValidity != null &&
-              item.validityDays != _selectedValidity)
+              item.validityDays != _selectedValidity) {
             return false;
-          if (_selectedData != null && item.dataGb != _selectedData)
+          }
+          if (_selectedData != null && item.dataGb != _selectedData) {
             return false;
+          }
           if (term.isNotEmpty &&
               ![
                 item.name,
@@ -196,8 +200,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 
   Widget _buildCatalogContent(List<MobilePackage> visible) {
-    if (_loading)
+    if (_loading) {
       return const ContentLoadingState(label: 'Loading packages...');
+    }
     if (_error != null && _packages.isEmpty) {
       return ContentErrorState(
         message: _error!,

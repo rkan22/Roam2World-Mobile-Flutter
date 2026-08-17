@@ -46,10 +46,12 @@ class _SimCardOrderHistoryScreenState extends State<SimCardOrderHistoryScreen> {
 
   Color _statusColor(BuildContext context, String status) {
     final value = status.toLowerCase();
-    if (value.contains('fail') || value.contains('cancel'))
+    if (value.contains('fail') || value.contains('cancel')) {
       return Theme.of(context).colorScheme.error;
-    if (value.contains('complete') || value.contains('deliver'))
+    }
+    if (value.contains('complete') || value.contains('deliver')) {
       return Colors.green;
+    }
     return Theme.of(context).colorScheme.primary;
   }
 

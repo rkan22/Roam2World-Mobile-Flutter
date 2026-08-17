@@ -42,8 +42,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _submit() async {
     if (_submitting ||
         !(_formKey.currentState?.validate() ?? false) ||
-        !_accepted)
+        !_accepted) {
       return;
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -62,10 +63,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'The order could not be completed. Please try again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -274,8 +276,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           RegExp(r'\D'),
                           '',
                         );
-                        if (normalized.length != 20)
+                        if (normalized.length != 20) {
                           return 'Enter the 20-digit SIM number';
+                        }
                         return null;
                       },
                     )

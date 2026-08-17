@@ -25,8 +25,9 @@ class OrdersRepository {
 
     final query = <String, dynamic>{};
     if (status != null && status.isNotEmpty) query['status'] = status;
-    if (search != null && search.trim().isNotEmpty)
+    if (search != null && search.trim().isNotEmpty) {
       query['search'] = search.trim();
+    }
 
     final history = await _apiClient.get<OrderHistory>(
       isAdmin ? ApiEndpoints.mobileAdminOrders : ApiEndpoints.mobileOrders,

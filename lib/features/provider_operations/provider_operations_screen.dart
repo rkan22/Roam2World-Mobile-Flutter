@@ -89,11 +89,12 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
         provider: _renewProvider,
         esimId: esimId,
       );
-      if (mounted)
+      if (mounted) {
         setState(() {
           _renewalOptions = options;
           _selectedOption = options.isEmpty ? null : options.first;
         });
+      }
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (error) {
@@ -115,12 +116,14 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       if (_renewProvider == 'worldmove') {
         final sim = _worldmoveSimController.text.trim();
         final product = _worldmoveProductController.text.trim();
-        if (!RegExp(r'^\d{20}$').hasMatch(sim))
+        if (!RegExp(r'^\d{20}$').hasMatch(sim)) {
           throw const FormatException(
             'Worldmove requires a 20-digit SIM number.',
           );
-        if (product.isEmpty)
+        }
+        if (product.isEmpty) {
           throw const FormatException('Worldmove product ID is required.');
+        }
         result = await _repository.topupWorldmove(
           simNumber: sim,
           productId: product,
@@ -132,8 +135,9 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
         final rawData =
             option?['data_gb'] ?? option?['dataGb'] ?? option?['data_amount'];
         final dataGb = num.tryParse('$rawData');
-        if (dataGb == null)
+        if (dataGb == null) {
           throw const FormatException('Select a live renewal option first.');
+        }
         result = _renewProvider == 'tgt'
             ? await _repository.renewTgt(esimId: esimId, dataGb: dataGb)
             : await _repository.renewVodafone(esimId: esimId, dataGb: dataGb);
@@ -142,10 +146,11 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = error is FormatException ? error.message : '$error',
         );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -184,7 +189,7 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       ),
       const SizedBox(height: 18),
       DropdownButtonFormField<String>(
-        value: _usageProvider,
+        initialValue: _usageProvider,
         isExpanded: true,
         decoration: const InputDecoration(labelText: 'Provider'),
         items: const [
@@ -261,7 +266,7 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       ),
       const SizedBox(height: 18),
       DropdownButtonFormField<String>(
-        value: _renewProvider,
+        initialValue: _renewProvider,
         isExpanded: true,
         decoration: const InputDecoration(labelText: 'Provider'),
         items: const [
@@ -332,7 +337,7 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
         if (_renewalOptions.isNotEmpty) ...[
           const SizedBox(height: 10),
           DropdownButtonFormField<Map<String, dynamic>>(
-            value: _selectedOption,
+            initialValue: _selectedOption,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Renewal option'),
             items: _renewalOptions
@@ -394,8 +399,9 @@ class _ProviderOperationsScreenState extends State<ProviderOperationsScreen>
       'renewal_data_gb',
     ]) {
       final value = usage[key] ?? result[key];
-      if (value != null && '$value'.trim().isNotEmpty)
+      if (value != null && '$value'.trim().isNotEmpty) {
         rows.add(MapEntry(key, value));
+      }
     }
     return Container(
       margin: const EdgeInsets.only(top: 16),

@@ -38,8 +38,9 @@ class _ProviderHealthScreenState extends State<ProviderHealthScreen> {
       final data = await _repository.fetch(liveCheck: liveCheck);
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Provider health could not be loaded.');
+      }
     } finally {
       if (mounted) {
         setState(() {

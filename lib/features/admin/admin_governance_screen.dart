@@ -37,10 +37,11 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
       final data = await _repository.fetchAll();
       if (mounted) setState(() => _data = data);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'Governance configuration could not be loaded.',
         );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

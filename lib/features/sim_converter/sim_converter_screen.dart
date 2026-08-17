@@ -52,8 +52,9 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'SIM converter history could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -73,8 +74,9 @@ class _SimConverterScreenState extends State<SimConverterScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _parseError = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _parseError = 'Activation code could not be parsed.');
+      }
     } finally {
       if (mounted) setState(() => _parsing = false);
     }

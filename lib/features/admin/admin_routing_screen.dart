@@ -37,8 +37,9 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
       final rules = await _repository.fetchRules();
       if (mounted) setState(() => _rules = rules);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Provider routing rules could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

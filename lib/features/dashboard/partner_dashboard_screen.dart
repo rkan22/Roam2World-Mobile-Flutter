@@ -41,11 +41,12 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _loading = _data == null;
         _error = null;
       });
+    }
     try {
       final data = await _repository.fetchDashboard(forceRefresh: forceRefresh);
       if (!mounted) return;
@@ -56,8 +57,9 @@ class _PartnerDashboardScreenState extends State<PartnerDashboardScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Partner dashboard could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

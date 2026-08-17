@@ -265,15 +265,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         address: address.text,
       );
       await _load();
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Profile could not be updated: $error')),
         );
+      }
     }
   }
 
@@ -300,15 +302,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _oldPassword.clear();
       _newPassword.clear();
       _confirmPassword.clear();
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password changed successfully.')),
         );
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Password could not be changed: $error')),
         );
+      }
     } finally {
       if (mounted) setState(() => _savingPassword = false);
     }

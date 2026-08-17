@@ -38,8 +38,9 @@ class _ProviderCallbackLogsScreenState
       final items = await _repository.fetchLogs();
       if (mounted) setState(() => _items = items);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Provider callback logs could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

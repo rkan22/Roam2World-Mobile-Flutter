@@ -43,8 +43,9 @@ class _NotificationRulesScreenState extends State<NotificationRulesScreen> {
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Notification rules could not be loaded.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

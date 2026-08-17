@@ -273,12 +273,15 @@ class MobilePackage {
 
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
-    if (label.contains('orange') && label.contains('europe'))
+    if (label.contains('orange') && label.contains('europe')) {
       return 'worldmove';
-    if (label.contains('orange') && label.contains('world'))
+    }
+    if (label.contains('orange') && label.contains('world')) {
       return 'orange-world';
-    if (label.contains('orange') && label.contains('balkan'))
+    }
+    if (label.contains('orange') && label.contains('balkan')) {
       return 'orange-balkans';
+    }
     if (label.contains('vodafone')) return 'vodafone';
     if (label.contains('big data')) return 'flexnet';
     if (label.contains('balkan')) return 'orange-balkans';
@@ -364,16 +367,19 @@ class MobilePackage {
   static String _destination(Map<String, dynamic> j, String text) {
     final n = '${j['productRegion'] ?? ''} ${j['destination'] ?? ''} $text'
         .toLowerCase();
-    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye'))
+    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye')) {
       return 'turkey';
+    }
     if (n.contains('wm-e-j1-wld-') ||
         n.contains('global') ||
-        n.contains('world'))
+        n.contains('world')) {
       return 'global';
+    }
     if (n.contains('wm-eu-b-') ||
         n.contains('wm-e-j1-') ||
-        n.contains('europe'))
+        n.contains('europe')) {
       return 'europe';
+    }
     return '';
   }
 
@@ -470,8 +476,9 @@ class PackageCountry {
 String _displayData(dynamic value) {
   if (value == null) return '';
   final text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text))
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) {
     return '';
+  }
   final numeric = num.tryParse(text);
   return numeric == null ? text : '${_clean(numeric)}GB';
 }
@@ -479,8 +486,9 @@ String _displayData(dynamic value) {
 String _displayValidity(dynamic value) {
   if (value == null) return '';
   var text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text))
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) {
     return '';
+  }
   final numeric = num.tryParse(text);
   if (numeric != null) return '${_clean(numeric)} Days';
   text = text.replaceAll(RegExp(r'\bD\b', caseSensitive: false), 'Days');

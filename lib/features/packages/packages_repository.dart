@@ -74,8 +74,9 @@ class PackagesRepository {
         );
 
         for (final package in page.packages) {
-          if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) {
             continue;
+          }
           final dedupeKey = package.id.isEmpty
               ? '${package.provider}|${package.name}|${package.destination}|${package.price}'
               : '${package.provider}|${package.id}';
@@ -94,8 +95,9 @@ class PackagesRepository {
       final externalCatalogs = await externalCatalogsFuture;
       for (final catalog in externalCatalogs) {
         for (final package in catalog.packages) {
-          if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) {
             continue;
+          }
           final key = '${package.provider}|${package.id}';
           if (seenIds.add(key)) externalPackages.add(package);
         }
@@ -106,8 +108,10 @@ class PackagesRepository {
       final term = normalizedSearch.toLowerCase();
       final filtered =
           packages.where((package) {
-            if (_isHiddenProvider(package) || !_providerPackageAllowed(package))
+            if (_isHiddenProvider(package) ||
+                !_providerPackageAllowed(package)) {
               return false;
+            }
             if (normalizedDestination.isNotEmpty &&
                 package.destinationKey.toLowerCase() !=
                     normalizedDestination.toLowerCase()) {
@@ -233,8 +237,9 @@ class PackagesRepository {
             final row = rows[index];
             if (row is! Map) continue;
             final pricing = row['pricing'];
-            if (pricing is! Map || pricing['is_price_visible'] != true)
+            if (pricing is! Map || pricing['is_price_visible'] != true) {
               continue;
+            }
             final rawPrice =
                 pricing['charge_amount'] ??
                 pricing['after_admin'] ??
