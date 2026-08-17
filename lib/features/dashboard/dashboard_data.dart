@@ -60,6 +60,11 @@ class DashboardData {
     this.failedOrders = 0,
     this.pendingResellerWalletRequests = 0,
     this.pendingDealerWalletRequests = 0,
+    this.pendingWalletRequests = 0,
+    this.manualFulfillmentPending = 0,
+    this.providerRetriesRequiringReview = 0,
+    this.supportTicketsOpen = 0,
+    this.availableBlankSims = 0,
   });
 
   final String role;
@@ -87,6 +92,11 @@ class DashboardData {
   final int failedOrders;
   final int pendingResellerWalletRequests;
   final int pendingDealerWalletRequests;
+  final int pendingWalletRequests;
+  final int manualFulfillmentPending;
+  final int providerRetriesRequiringReview;
+  final int supportTicketsOpen;
+  final int availableBlankSims;
 
   DashboardData copyWith({
     double? balance,
@@ -113,6 +123,11 @@ class DashboardData {
     int? failedOrders,
     int? pendingResellerWalletRequests,
     int? pendingDealerWalletRequests,
+    int? pendingWalletRequests,
+    int? manualFulfillmentPending,
+    int? providerRetriesRequiringReview,
+    int? supportTicketsOpen,
+    int? availableBlankSims,
   }) {
     return DashboardData(
       role: role,
@@ -142,6 +157,14 @@ class DashboardData {
           pendingResellerWalletRequests ?? this.pendingResellerWalletRequests,
       pendingDealerWalletRequests:
           pendingDealerWalletRequests ?? this.pendingDealerWalletRequests,
+      pendingWalletRequests:
+          pendingWalletRequests ?? this.pendingWalletRequests,
+      manualFulfillmentPending:
+          manualFulfillmentPending ?? this.manualFulfillmentPending,
+      providerRetriesRequiringReview:
+          providerRetriesRequiringReview ?? this.providerRetriesRequiringReview,
+      supportTicketsOpen: supportTicketsOpen ?? this.supportTicketsOpen,
+      availableBlankSims: availableBlankSims ?? this.availableBlankSims,
     );
   }
 
@@ -241,26 +264,27 @@ class DashboardData {
   factory DashboardData.fromAdminResponse(dynamic response) {
     final root = Map<String, dynamic>.from(response as Map);
     final data = Map<String, dynamic>.from(root['data'] as Map? ?? const {});
-    final metrics = _map(data['metrics']);
-    final revenue = _map(metrics['revenue']);
-    final salesOverview = _map(data['sales_overview']);
-    final resellers = _map(metrics['resellers']);
-    final dealers = _map(metrics['dealers']);
-    final ordersMap = _map(metrics['orders']);
-    final walletRequests = _map(metrics['wallet_requests']);
+    final kpis = _map(data['kpis']);
+    final ordersByStatus = _map(data['orders_by_status']);
+    final partnerPerformance = _map(data['partner_performance']);
+    final dailyOperations = _map(data['daily_operations']);
+    final resellerItems = partnerPerformance['resellers'] as List? ?? const [];
+    final dealerItems = partnerPerformance['dealers'] as List? ?? const [];
     final orders = data['latest_orders'] as List? ?? const [];
+
+    final pendingOrders =
+        _toInt(ordersByStatus['pending']) +
+        _toInt(ordersByStatus['confirmed']) +
+        _toInt(ordersByStatus['processing']);
 
     return DashboardData(
       role: 'Admin',
       balance: 0,
-      currency: (salesOverview['currency'] ?? revenue['currency'] ?? 'USD')
-          .toString(),
+      currency: data['currency']?.toString() ?? 'USD',
       todaySales: 0,
-      monthlySales: _toDouble(
-        salesOverview['total_sales'] ?? revenue['total_sales'],
-      ),
-      totalEsimCount: 0,
-      activeEsimCount: 0,
+      monthlySales: _toDouble(kpis['revenue']),
+      totalEsimCount: _toInt(kpis['active_esims']),
+      activeEsimCount: _toInt(kpis['active_esims']),
       expiredEsimCount: 0,
       recentOrders: orders
           .whereType<Map>()
@@ -269,17 +293,34 @@ class DashboardData {
                 DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false),
-      period: salesOverview['period']?.toString() ?? 'this_month',
-      totalOrders: _toInt(ordersMap['total']),
-      resellerCount: _toInt(resellers['total']),
-      activeResellerCount: _toInt(resellers['active']),
-      dealerCount: _toInt(dealers['total']),
-      activeDealerCount: _toInt(dealers['active']),
-      pendingOrders: _toInt(ordersMap['pending']),
-      completedOrders: _toInt(ordersMap['completed']),
-      failedOrders: _toInt(ordersMap['failed']),
-      pendingResellerWalletRequests: _toInt(walletRequests['reseller_pending']),
-      pendingDealerWalletRequests: _toInt(walletRequests['dealer_pending']),
+      period: data['period']?.toString() ?? '30d',
+      grossProfit: _toDouble(kpis['gross_profit']),
+      grossMarginPercent: _toDouble(kpis['gross_margin_percent']),
+      successfulOrders: _toInt(kpis['completed_orders']),
+      pricedOrders: _toInt(kpis['total_orders']),
+      totalOrders: _toInt(kpis['total_orders']),
+      resellerCount: resellerItems.isNotEmpty
+          ? resellerItems.length
+          : _toInt(kpis['active_resellers']),
+      activeResellerCount: _toInt(kpis['active_resellers']),
+      dealerCount: dealerItems.isNotEmpty
+          ? dealerItems.length
+          : _toInt(kpis['active_dealers']),
+      activeDealerCount: _toInt(kpis['active_dealers']),
+      pendingOrders: pendingOrders,
+      completedOrders: _toInt(
+        ordersByStatus['completed'] ?? kpis['completed_orders'],
+      ),
+      failedOrders: _toInt(ordersByStatus['failed']),
+      pendingWalletRequests: _toInt(dailyOperations['wallet_requests_pending']),
+      manualFulfillmentPending: _toInt(
+        dailyOperations['manual_fulfillment_pending'],
+      ),
+      providerRetriesRequiringReview: _toInt(
+        dailyOperations['provider_retries_requiring_review'],
+      ),
+      supportTicketsOpen: _toInt(dailyOperations['support_tickets_open']),
+      availableBlankSims: _toInt(dailyOperations['available_blank_sims']),
     );
   }
 }

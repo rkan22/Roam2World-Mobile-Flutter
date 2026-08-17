@@ -29,6 +29,8 @@ class _WalletScreenState extends State<WalletScreen> {
   List<WalletRequest> _requests = const [];
   final Set<int> _processingRequests = <int>{};
   int _selectedFilter = 0;
+  int _selectedAdminSection = 0;
+  int _adminVisibleLimit = 5;
 
   @override
   void initState() {
@@ -485,6 +487,7 @@ class _WalletScreenState extends State<WalletScreen> {
             ),
             children: [
               _Header(
+                admin: _wallet?.isAdmin == true,
                 onBack: () {
                   final router = GoRouter.of(context);
                   if (router.canPop()) {
@@ -518,112 +521,488 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _content(WalletData wallet) {
     final transactions = _visibleTransactions(wallet);
+    final sortedRequests = [..._requests]
+      ..sort((a, b) {
+        if (a.isPending == b.isPending) return 0;
+        return a.isPending ? -1 : 1;
+      });
+    final visibleTransactions = wallet.isAdmin
+        ? transactions.take(_adminVisibleLimit).toList(growable: false)
+        : transactions;
+    final visibleRequests = wallet.isAdmin
+        ? sortedRequests.take(_adminVisibleLimit).toList(growable: false)
+        : sortedRequests;
+
+    final transactionSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeader(
+          title: 'Recent transactions',
+          subtitle: 'Latest wallet credits and debits',
+        ),
+        const SizedBox(height: B2BSpacing.sm),
+        _TransactionFilters(
+          selectedIndex: _selectedFilter,
+          onSelected: (index) => setState(() {
+            _selectedFilter = index;
+            _adminVisibleLimit = 5;
+          }),
+        ),
+        const SizedBox(height: B2BSpacing.md),
+        if (visibleTransactions.isEmpty)
+          const ContentEmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: 'No transactions found',
+            message: 'Wallet activity matching this filter will appear here.',
+          )
+        else
+          for (var index = 0; index < visibleTransactions.length; index++) ...[
+            _TransactionTile(transaction: visibleTransactions[index]),
+            if (index != visibleTransactions.length - 1)
+              const SizedBox(height: B2BSpacing.sm),
+          ],
+        if (wallet.isAdmin &&
+            visibleTransactions.length < transactions.length) ...[
+          const SizedBox(height: B2BSpacing.md),
+          _ShowMoreButton(
+            remaining: transactions.length - visibleTransactions.length,
+            onPressed: () => setState(() => _adminVisibleLimit += 5),
+          ),
+        ],
+      ],
+    );
+
+    final requestSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeader(
+          title: 'Wallet requests',
+          subtitle: 'Review funding requests and their current status',
+        ),
+        const SizedBox(height: B2BSpacing.md),
+        if (visibleRequests.isEmpty)
+          const ContentEmptyState(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'No wallet requests',
+            message: 'New funding requests will appear here.',
+          )
+        else
+          for (var index = 0; index < visibleRequests.length; index++) ...[
+            _WalletRequestTile(
+              request: visibleRequests[index],
+              processing: _processingRequests.contains(
+                visibleRequests[index].id,
+              ),
+              onApprove:
+                  visibleRequests[index].requestType.isNotEmpty &&
+                      visibleRequests[index].isPending
+                  ? () => _confirmReview(visibleRequests[index], approve: true)
+                  : null,
+              onReject:
+                  visibleRequests[index].requestType.isNotEmpty &&
+                      visibleRequests[index].isPending
+                  ? () => _confirmReview(visibleRequests[index], approve: false)
+                  : null,
+              onAdjust:
+                  visibleRequests[index].requestType == 'reseller_topup_request'
+                  ? () => _showAdminWalletAction(
+                      visibleRequests[index],
+                      refund: false,
+                    )
+                  : null,
+              onRefund:
+                  visibleRequests[index].requestType ==
+                          'reseller_topup_request' &&
+                      !visibleRequests[index].isPending
+                  ? () => _showAdminWalletAction(
+                      visibleRequests[index],
+                      refund: true,
+                    )
+                  : null,
+            ),
+            if (index != visibleRequests.length - 1)
+              const SizedBox(height: B2BSpacing.sm),
+          ],
+        if (wallet.isAdmin && visibleRequests.length < _requests.length) ...[
+          const SizedBox(height: B2BSpacing.md),
+          _ShowMoreButton(
+            remaining: _requests.length - visibleRequests.length,
+            onPressed: () => setState(() => _adminVisibleLimit += 5),
+          ),
+        ],
+      ],
+    );
+
     return WalletAdaptiveSections(
-      summary: Column(
+      summary: wallet.isAdmin
+          ? _AdminFinanceOverview(
+              entryCount: wallet.transactions.length,
+              pendingCount: wallet.secondaryAmount.toInt(),
+              currency: wallet.currency,
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _BalanceHero(
+                  wallet: wallet,
+                  amount: _money(wallet.availableAmount, wallet.currency),
+                  onTopUp: () => _showTopUpRequest(wallet),
+                ),
+                const SizedBox(height: B2BSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: B2BMetricCard(
+                        label: wallet.isDealer
+                            ? 'Current balance'
+                            : 'Current credit',
+                        value: _money(wallet.currentAmount, wallet.currency),
+                        icon: Icons.account_balance_wallet_outlined,
+                      ),
+                    ),
+                    const SizedBox(width: B2BSpacing.sm),
+                    Expanded(
+                      child: B2BMetricCard(
+                        label: wallet.secondaryLabel,
+                        value: _money(wallet.secondaryAmount, wallet.currency),
+                        icon: wallet.isDealer
+                            ? Icons.trending_down_rounded
+                            : Icons.credit_score_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+      transactions: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _BalanceHero(
-            wallet: wallet,
-            amount: _money(wallet.availableAmount, wallet.currency),
-            onTopUp: () => _showTopUpRequest(wallet),
+          if (wallet.isAdmin) ...[
+            _AdminWalletTabs(
+              selectedIndex: _selectedAdminSection,
+              requestCount: _requests.length,
+              onSelected: (index) {
+                setState(() {
+                  _selectedAdminSection = index;
+                  _adminVisibleLimit = 5;
+                });
+              },
+            ),
+            const SizedBox(height: B2BSpacing.lg),
+          ],
+          if (!wallet.isAdmin || _selectedAdminSection == 0)
+            transactionSection
+          else
+            requestSection,
+          if (!wallet.isAdmin && _requests.isNotEmpty) ...[
+            const SizedBox(height: B2BSpacing.xl),
+            requestSection,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminFinanceOverview extends StatelessWidget {
+  const _AdminFinanceOverview({
+    required this.entryCount,
+    required this.pendingCount,
+    required this.currency,
+  });
+
+  final int entryCount;
+  final int pendingCount;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x20020817),
+            blurRadius: 24,
+            offset: Offset(0, 12),
           ),
-          const SizedBox(height: B2BSpacing.md),
-          Row(
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -22,
+            bottom: -38,
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 130,
+              color: Colors.white.withValues(alpha: .045),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: B2BMetricCard(
-                  label: wallet.isAdmin
-                      ? 'Ledger entries'
-                      : wallet.isDealer
-                      ? 'Current balance'
-                      : 'Current credit',
-                  value: wallet.isAdmin
-                      ? wallet.transactions.length.toString()
-                      : _money(wallet.currentAmount, wallet.currency),
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: .18),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_outlined,
+                      color: AppColors.accent,
+                      size: 21,
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Finance Control',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Wallet activity & approvals',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: .15),
+                      borderRadius: BorderRadius.circular(B2BRadius.pill),
+                    ),
+                    child: const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: .5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: B2BSpacing.sm),
-              Expanded(
-                child: B2BMetricCard(
-                  label: wallet.secondaryLabel,
-                  value: wallet.isAdmin
-                      ? wallet.secondaryAmount.toInt().toString()
-                      : _money(wallet.secondaryAmount, wallet.currency),
-                  icon: wallet.isDealer
-                      ? Icons.trending_down_rounded
-                      : Icons.credit_score_rounded,
-                ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _FinanceMetric(
+                      label: 'Entries',
+                      value: '$entryCount',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FinanceMetric(
+                      label: 'Pending',
+                      value: '$pendingCount',
+                      highlight: pendingCount > 0,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FinanceMetric(label: 'Currency', value: currency),
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
-      transactions: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    );
+  }
+}
+
+class _FinanceMetric extends StatelessWidget {
+  const _FinanceMetric({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
+
+  final String label;
+  final String value;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: highlight
+              ? AppColors.warning.withValues(alpha: .35)
+              : Colors.white.withValues(alpha: .08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(
-            title: 'Recent transactions',
-            subtitle: 'Your latest wallet credits and debits',
-          ),
-          const SizedBox(height: B2BSpacing.sm),
-          _TransactionFilters(
-            selectedIndex: _selectedFilter,
-            onSelected: (index) => setState(() => _selectedFilter = index),
-          ),
-          const SizedBox(height: B2BSpacing.md),
-          if (transactions.isEmpty)
-            const ContentEmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: 'No transactions found',
-              message: 'Wallet activity matching this filter will appear here.',
-            )
-          else
-            for (var index = 0; index < transactions.length; index++) ...[
-              _TransactionTile(transaction: transactions[index]),
-              if (index != transactions.length - 1)
-                const SizedBox(height: B2BSpacing.sm),
-            ],
-          if (_requests.isNotEmpty) ...[
-            const SizedBox(height: B2BSpacing.xl),
-            const _SectionHeader(
-              title: 'Wallet requests',
-              subtitle: 'Funding requests and their current status',
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: B2BSpacing.md),
-            for (var index = 0; index < _requests.length; index++) ...[
-              _WalletRequestTile(
-                request: _requests[index],
-                processing: _processingRequests.contains(_requests[index].id),
-                onApprove:
-                    _requests[index].requestType.isNotEmpty &&
-                        _requests[index].isPending
-                    ? () => _confirmReview(_requests[index], approve: true)
-                    : null,
-                onReject:
-                    _requests[index].requestType.isNotEmpty &&
-                        _requests[index].isPending
-                    ? () => _confirmReview(_requests[index], approve: false)
-                    : null,
-                onAdjust:
-                    _requests[index].requestType == 'reseller_topup_request'
-                    ? () => _showAdminWalletAction(
-                        _requests[index],
-                        refund: false,
-                      )
-                    : null,
-                onRefund:
-                    _requests[index].requestType == 'reseller_topup_request' &&
-                        !_requests[index].isPending
-                    ? () =>
-                          _showAdminWalletAction(_requests[index], refund: true)
-                    : null,
-              ),
-              if (index != _requests.length - 1)
-                const SizedBox(height: B2BSpacing.sm),
-            ],
-          ],
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: highlight ? AppColors.warning : Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ShowMoreButton extends StatelessWidget {
+  const _ShowMoreButton({required this.remaining, required this.onPressed});
+
+  final int remaining;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.expand_more_rounded),
+        label: Text('Show more ($remaining)'),
+      ),
+    );
+  }
+}
+
+class _AdminWalletTabs extends StatelessWidget {
+  const _AdminWalletTabs({
+    required this.selectedIndex,
+    required this.requestCount,
+    required this.onSelected,
+  });
+
+  final int selectedIndex;
+  final int requestCount;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(B2BRadius.lg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _AdminWalletTab(
+              label: 'Transactions',
+              icon: Icons.receipt_long_outlined,
+              selected: selectedIndex == 0,
+              onTap: () => onSelected(0),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _AdminWalletTab(
+              label: 'Requests ($requestCount)',
+              icon: Icons.account_balance_wallet_outlined,
+              selected: selectedIndex == 1,
+              onTap: () => onSelected(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminWalletTab extends StatelessWidget {
+  const _AdminWalletTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(B2BRadius.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(B2BRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 17,
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -733,8 +1112,13 @@ class _WalletRequestTile extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack, required this.onRefresh});
+  const _Header({
+    required this.admin,
+    required this.onBack,
+    required this.onRefresh,
+  });
 
+  final bool admin;
   final VoidCallback onBack;
   final VoidCallback onRefresh;
 
@@ -751,10 +1135,15 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Wallet', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                admin ? 'Finance' : 'Wallet',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: B2BSpacing.xxs),
               Text(
-                'Business funds & settlement activity',
+                admin
+                    ? 'Wallet control & approval center'
+                    : 'Business funds & settlement activity',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
