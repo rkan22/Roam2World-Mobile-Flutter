@@ -10,8 +10,21 @@ import 'api_endpoints.dart';
 import 'api_exception.dart';
 
 class ApiClient {
-  ApiClient({Dio? dio, TokenStorage? tokenStorage})
+  ApiClient({Dio? dio, Dio? refreshDio, TokenStorage? tokenStorage})
     : _tokenStorage = tokenStorage ?? TokenStorage(),
+      _refreshDio =
+          refreshDio ??
+          Dio(
+            BaseOptions(
+              baseUrl: AppEnvironment.apiBaseUrl,
+              connectTimeout: AppEnvironment.connectTimeout,
+              receiveTimeout: AppEnvironment.receiveTimeout,
+              headers: const {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              },
+            ),
+          ),
       _dio =
           dio ??
           Dio(
@@ -76,6 +89,7 @@ class ApiClient {
   }
 
   final Dio _dio;
+  final Dio _refreshDio;
   final TokenStorage _tokenStorage;
   Future<String?>? _refreshFuture;
 
@@ -95,20 +109,8 @@ class ApiClient {
       return null;
     }
 
-    final refreshDio = Dio(
-      BaseOptions(
-        baseUrl: AppEnvironment.apiBaseUrl,
-        connectTimeout: AppEnvironment.connectTimeout,
-        receiveTimeout: AppEnvironment.receiveTimeout,
-        headers: const {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
-
     try {
-      final response = await refreshDio.post<dynamic>(
+      final response = await _refreshDio.post<dynamic>(
         ApiEndpoints.tokenRefresh,
         data: {'refresh': refreshToken},
       );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'app.dart';
 import 'core/auth/auth_state.dart';
 import 'core/auth/biometric_auth_service.dart';
+import 'core/auth/initial_route_resolver.dart';
 import 'core/config/app_environment.dart';
 import 'core/monitoring/crash_reporting_service.dart';
 import 'core/routing/app_router.dart';
@@ -31,13 +32,11 @@ Future<void> main() async {
   final completedOnboarding = results[1] as bool;
   final biometricEnabled = results[2] as bool;
 
-  final initialLocation = accessToken != null && accessToken.isNotEmpty
-      ? biometricEnabled
-            ? AppRoutes.biometricUnlock
-            : AppRoutes.dashboard
-      : completedOnboarding
-      ? AppRoutes.login
-      : AppRoutes.onboarding;
+  final initialLocation = resolveInitialRoute(
+    accessToken: accessToken,
+    completedOnboarding: completedOnboarding,
+    biometricEnabled: biometricEnabled,
+  );
 
   AuthState.instance.initialize(
     hasSession: accessToken != null && accessToken.isNotEmpty,
