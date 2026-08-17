@@ -3,6 +3,7 @@ class ApiEndpoints {
 
   static const String mobileLogin = '/api/v1/mobile/auth/login/';
   static const String tokenRefresh = '/api/v1/auth/refresh/';
+  static const String logout = '/api/v1/auth/logout/';
   static const String passwordResetRequest =
       '/api/v1/auth/password-reset-request/';
   static const String passwordResetVerifyOtp = '/api/v1/auth/otp-verify/';
