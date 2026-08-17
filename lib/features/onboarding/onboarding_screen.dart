@@ -14,270 +14,220 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final controller = PageController();
-  final storage = TokenStorage();
-  int page = 0;
+  final _controller = PageController();
+  final _storage = TokenStorage();
+  int _page = 0;
 
-  static const items = [
+  static const _items = [
     (
+      'assets/onboarding/onboarding_global_travel.png',
+      'Global connectivity, ready when you are',
+      'Deliver trusted mobile connectivity to business travelers in destinations worldwide.',
+      'GLOBAL COVERAGE',
       Icons.public_rounded,
-      'Sell connectivity anywhere',
-      'Browse global and regional eSIM plans from one premium business workspace.',
-      Color(0xFF6D5CE7),
     ),
     (
-      Icons.qr_code_2_rounded,
-      'Deliver eSIMs instantly',
-      'Create orders, access QR codes and share activation details in seconds.',
-      Color(0xFF0EA5E9),
+      'assets/onboarding/onboarding_esim_activation.png',
+      'Activate eSIMs in seconds',
+      'Create orders, access QR codes and share activation details from one secure workspace.',
+      'INSTANT DELIVERY',
+      Icons.bolt_rounded,
     ),
     (
+      'assets/onboarding/onboarding_b2b_operations.png',
+      'Run every operation with confidence',
+      'Track orders, wallet activity, customers and team performance wherever business takes you.',
+      'B2B OPERATIONS',
       Icons.insights_rounded,
-      'Run your business smarter',
-      'Track wallet balance, orders, activations and performance wherever you work.',
-      Color(0xFF14B8A6),
     ),
   ];
 
-  Future<void> _completeOnboarding() async {
-    await storage.markOnboardingCompleted();
+  Future<void> _complete() async {
+    await _storage.markOnboardingCompleted();
     if (mounted) context.go(AppRoutes.login);
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 12, 14, 0),
+      backgroundColor: const Color(0xFF071222),
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: _items.length,
+            onPageChanged: (value) => setState(() => _page = value),
+            itemBuilder: (context, index) =>
+                _OnboardingPage(item: _items[index]),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 12, 0),
               child: Row(
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      gradient: B2BGradients.primary,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: B2BShadows.card,
-                    ),
-                    child: const Icon(
-                      Icons.public_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
+                  Image.asset(
+                    'assets/branding/roam2world_logo_transparent.png',
+                    width: 190,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(width: 11),
-                  Text('Roam2World', style: theme.textTheme.titleLarge),
                   const Spacer(),
                   TextButton(
-                    onPressed: _completeOnboarding,
+                    onPressed: _complete,
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
                     child: const Text('Skip'),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: PageView.builder(
-                controller: controller,
-                itemCount: items.length,
-                onPageChanged: (value) => setState(() => page = value),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final compact = constraints.maxHeight < 520;
-                      final artworkHeight = compact
-                          ? (constraints.maxHeight * .48).clamp(170.0, 220.0)
-                          : (constraints.maxHeight * .58).clamp(240.0, 380.0);
-
-                      return SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(
-                          24,
-                          compact ? 10 : 18,
-                          24,
-                          10,
-                        ),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight - 20,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                constraints: const BoxConstraints(
-                                  maxWidth: 430,
-                                ),
-                                height: artworkHeight,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(
-                                    B2BRadius.xxl,
-                                  ),
-                                  border: Border.all(
-                                    color: theme.colorScheme.outlineVariant,
-                                  ),
-                                  boxShadow: B2BShadows.elevated,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(24),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        item.$4.withValues(alpha: .95),
-                                        AppColors.heroEnd,
-                                      ],
-                                    ),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      Positioned(
-                                        right: -34,
-                                        top: -28,
-                                        child: Container(
-                                          width: compact ? 120 : 160,
-                                          height: compact ? 120 : 160,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.white.withValues(
-                                              alpha: .10,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: -28,
-                                        bottom: -40,
-                                        child: Container(
-                                          width: compact ? 140 : 190,
-                                          height: compact ? 140 : 190,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.white.withValues(
-                                              alpha: .08,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Center(
-                                        child: Container(
-                                          width: compact ? 84 : 112,
-                                          height: compact ? 84 : 112,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: .15,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              compact ? 26 : 34,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: .20,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            item.$1,
-                                            size: compact ? 42 : 54,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: compact ? 18 : 34),
-                              Text(
-                                item.$2,
-                                textAlign: TextAlign.center,
-                                style: compact
-                                    ? theme.textTheme.headlineMedium
-                                    : theme.textTheme.headlineLarge,
-                              ),
-                              SizedBox(height: compact ? 8 : 12),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 420,
-                                ),
-                                child: Text(
-                                  item.$3,
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 22,
+            child: SafeArea(
+              top: false,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  items.length,
-                  (index) => AnimatedContainer(
-                    duration: B2BMotion.fast,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 7,
-                    width: page == index ? 28 : 7,
-                    decoration: BoxDecoration(
-                      color: page == index
-                          ? AppColors.primary
-                          : AppColors.borderStrong,
-                      borderRadius: BorderRadius.circular(99),
+                children: [
+                  ...List.generate(
+                    _items.length,
+                    (index) => AnimatedContainer(
+                      duration: B2BMotion.fast,
+                      height: 7,
+                      width: _page == index ? 28 : 7,
+                      margin: const EdgeInsets.only(right: 7),
+                      decoration: BoxDecoration(
+                        color: _page == index
+                            ? AppColors.primary
+                            : Colors.white.withValues(alpha: .32),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
                     ),
                   ),
-                ),
+                  const Spacer(),
+                  FilledButton.icon(
+                    onPressed: () {
+                      if (_page == _items.length - 1) {
+                        _complete();
+                      } else {
+                        _controller.nextPage(
+                          duration: B2BMotion.standard,
+                          curve: Curves.easeOutCubic,
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      _page == _items.length - 1
+                          ? Icons.check_rounded
+                          : Icons.arrow_forward_rounded,
+                    ),
+                    label: Text(
+                      _page == _items.length - 1 ? 'Get started' : 'Continue',
+                    ),
+                  ),
+                ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 18, 24, 16),
-              child: FilledButton.icon(
-                onPressed: () {
-                  if (page == items.length - 1) {
-                    _completeOnboarding();
-                  } else {
-                    controller.nextPage(
-                      duration: B2BMotion.standard,
-                      curve: Curves.easeOutCubic,
-                    );
-                  }
-                },
-                icon: Icon(
-                  page == items.length - 1
-                      ? Icons.arrow_forward_rounded
-                      : Icons.chevron_right_rounded,
-                ),
-                label: Text(
-                  page == items.length - 1 ? 'Get started' : 'Continue',
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _OnboardingPage extends StatelessWidget {
+  const _OnboardingPage({required this.item});
+
+  final (String, String, String, String, IconData) item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(item.$1, fit: BoxFit.cover),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x66030B18), Color(0x16030B18), Color(0xFF071222)],
+              stops: [0, .48, .82],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 120, 24, 116),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: .18),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: .55),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(item.$5, color: AppColors.primary, size: 16),
+                          const SizedBox(width: 7),
+                          Text(
+                            item.$4,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              letterSpacing: .8,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      item.$2,
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        color: Colors.white,
+                        fontSize: 36,
+                        height: 1.08,
+                        letterSpacing: -1,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item.$3,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: .78),
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

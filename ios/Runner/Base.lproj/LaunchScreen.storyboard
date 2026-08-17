@@ -15,29 +15,17 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="R2W-stack">
-                                <rect key="frame" x="96.5" y="388" width="200" height="76"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Roam2World B2B" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R2W-title">
-                                        <rect key="frame" x="0.0" y="0.0" width="200" height="43"/>
-                                        <fontDescription key="fontDescription" type="system" weight="bold" pointSize="30"/>
-                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Business connectivity, simplified." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="YES" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="R2W-subtitle">
-                                        <rect key="frame" x="0.0" y="51" width="200" height="25"/>
-                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
-                                        <color key="textColor" white="1" alpha="0.72" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </label>
-                                </subviews>
-                            </stackView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchLogo" translatesAutoresizingMaskIntoConstraints="NO" id="R2W-logo">
+                                <rect key="frame" x="46.5" y="391.5" width="300" height="69"/>
+                            </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="safe-area"/>
                         <color key="backgroundColor" red="0.05882352941" green="0.09019607843" blue="0.1647058824" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="R2W-stack" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="center-x"/>
-                            <constraint firstItem="R2W-stack" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="center-y"/>
-                            <constraint firstItem="R2W-stack" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="safe-area" secondAttribute="leading" constant="32" id="leading"/>
-                            <constraint firstItem="safe-area" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="R2W-stack" secondAttribute="trailing" constant="32" id="trailing"/>
+                            <constraint firstItem="R2W-logo" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="center-x"/>
+                            <constraint firstItem="R2W-logo" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="center-y"/>
+                            <constraint firstItem="R2W-logo" firstAttribute="width" constant="300" id="logo-width"/>
+                            <constraint firstItem="R2W-logo" firstAttribute="height" constant="69" id="logo-height"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -46,4 +34,7 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchLogo" width="600" height="137"/>
+    </resources>
 </document>
