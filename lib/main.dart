@@ -5,12 +5,15 @@ import 'app.dart';
 import 'core/auth/auth_state.dart';
 import 'core/auth/biometric_auth_service.dart';
 import 'core/config/app_environment.dart';
+import 'core/monitoring/crash_reporting_service.dart';
 import 'core/routing/app_router.dart';
 import 'core/storage/token_storage.dart';
 import 'core/theme/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await CrashReportingService.initialize();
 
   if (kReleaseMode) {
     AppEnvironment.validateReleaseConfiguration();
