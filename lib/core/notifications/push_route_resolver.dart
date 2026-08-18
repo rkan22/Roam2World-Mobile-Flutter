@@ -13,6 +13,10 @@ String resolvePushRoute(Map<String, dynamic> data) {
       .trim();
   final orderNumber = (data['order_number'] ?? '').toString().trim();
 
+  if (raw.contains('dealer-wallet')) {
+    return AppRoutes.dealerNetwork;
+  }
+
   if (raw.contains('wallet') ||
       event.contains('wallet') ||
       event.contains('balance')) {
