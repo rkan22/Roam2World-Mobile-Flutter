@@ -21,38 +21,126 @@ class ManualProductItem {
     required this.name,
     required this.operatorName,
     required this.type,
+    required this.fulfillmentMode,
     required this.currency,
     required this.providerCost,
     required this.active,
+    required this.visibleToResellers,
+    required this.visibleToDealers,
     required this.availableStock,
+    required this.dataGb,
+    required this.validityDays,
+    required this.coverageCountries,
+    required this.notes,
+    required this.lowStockThreshold,
   });
 
   final String packageId;
   final String name;
   final String operatorName;
   final String type;
+  final String fulfillmentMode;
   final String currency;
   final double providerCost;
   final bool active;
+  final bool visibleToResellers;
+  final bool visibleToDealers;
   final int? availableStock;
+  final double? dataGb;
+  final int? validityDays;
+  final List<String> coverageCountries;
+  final String notes;
+  final int lowStockThreshold;
 
-  factory ManualProductItem.fromJson(Map<String, dynamic> json) =>
-      ManualProductItem(
-        packageId: '${json['package_id'] ?? ''}',
-        name: '${json['product_name'] ?? ''}',
-        operatorName: '${json['operator_name'] ?? ''}',
-        type: '${json['product_type'] ?? ''}',
-        currency: '${json['currency'] ?? 'USD'}',
-        providerCost:
-            double.tryParse(
-              '${json['provider_cost'] ?? json['base_price'] ?? 0}',
-            ) ??
-            0,
-        active: json['is_active'] == true,
-        availableStock: json['available_stock'] == null
-            ? null
-            : int.tryParse('${json['available_stock']}'),
-      );
+  factory ManualProductItem.fromJson(Map<String, dynamic> json) {
+    final countries = json['coverage_countries'];
+    return ManualProductItem(
+      packageId: '${json['package_id'] ?? ''}',
+      name: '${json['product_name'] ?? ''}',
+      operatorName: '${json['operator_name'] ?? ''}',
+      type: '${json['product_type'] ?? ''}',
+      fulfillmentMode: '${json['fulfillment_mode'] ?? ''}',
+      currency: '${json['currency'] ?? 'USD'}',
+      providerCost:
+          double.tryParse(
+            '${json['provider_cost'] ?? json['base_price'] ?? 0}',
+          ) ??
+          0,
+      active: json['is_active'] == true,
+      visibleToResellers: json['visible_to_resellers'] != false,
+      visibleToDealers: json['visible_to_dealers'] != false,
+      availableStock: json['available_stock'] == null
+          ? null
+          : int.tryParse('${json['available_stock']}'),
+      dataGb: json['data_gb'] == null
+          ? null
+          : double.tryParse('${json['data_gb']}'),
+      validityDays: json['validity_days'] == null
+          ? null
+          : int.tryParse('${json['validity_days']}'),
+      coverageCountries: countries is List
+          ? countries.map((value) => '$value').toList()
+          : const [],
+      notes: '${json['notes'] ?? ''}',
+      lowStockThreshold:
+          int.tryParse('${json['low_stock_threshold'] ?? 0}') ?? 0,
+    );
+  }
+}
+
+class ManualProductDraft {
+  const ManualProductDraft({
+    required this.packageId,
+    required this.operatorName,
+    required this.productName,
+    required this.productType,
+    required this.providerCost,
+    required this.currency,
+    required this.dataGb,
+    required this.validityDays,
+    required this.coverageCountries,
+    required this.notes,
+    required this.isActive,
+    required this.visibleToResellers,
+    required this.visibleToDealers,
+    required this.lowStockThreshold,
+  });
+
+  final String packageId;
+  final String operatorName;
+  final String productName;
+  final String productType;
+  final double providerCost;
+  final String currency;
+  final double? dataGb;
+  final int? validityDays;
+  final List<String> coverageCountries;
+  final String notes;
+  final bool isActive;
+  final bool visibleToResellers;
+  final bool visibleToDealers;
+  final int lowStockThreshold;
+
+  String get fulfillmentMode =>
+      productType == 'sim' ? 'iccid_stock' : 'qr_assignment';
+
+  Map<String, dynamic> toJson() => {
+    'package_id': packageId.trim(),
+    'operator_name': operatorName.trim(),
+    'product_name': productName.trim(),
+    'product_type': productType,
+    'fulfillment_mode': fulfillmentMode,
+    'provider_cost': providerCost,
+    'currency': currency.trim().toUpperCase(),
+    'data_gb': dataGb,
+    'validity_days': validityDays,
+    'coverage_countries': coverageCountries,
+    'notes': notes.trim(),
+    'is_active': isActive,
+    'visible_to_resellers': visibleToResellers,
+    'visible_to_dealers': visibleToDealers,
+    'low_stock_threshold': productType == 'sim' ? lowStockThreshold : 0,
+  };
 }
 
 class ManualInventoryItem {
@@ -159,6 +247,25 @@ class ManualFulfillmentRepository {
       tasks: _list(tasksRoot['data']).map(ManualTaskItem.fromJson).toList(),
       availableBlankStock:
           int.tryParse('${inventoryRoot['available_blank_stock'] ?? 0}') ?? 0,
+    );
+  }
+
+  Future<void> createProduct(ManualProductDraft product) async {
+    await _apiClient.post<Map<String, dynamic>>(
+      ApiEndpoints.manualAdminProducts,
+      data: product.toJson(),
+      parser: (response) => Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  Future<void> updateProduct(
+    String packageId,
+    ManualProductDraft product,
+  ) async {
+    await _apiClient.patch<Map<String, dynamic>>(
+      ApiEndpoints.manualAdminProductDetail(packageId),
+      data: product.toJson(),
+      parser: (response) => Map<String, dynamic>.from(response as Map),
     );
   }
 

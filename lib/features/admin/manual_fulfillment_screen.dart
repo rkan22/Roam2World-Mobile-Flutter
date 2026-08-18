@@ -7,6 +7,7 @@ import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'manual_fulfillment_repository.dart';
+import 'manual_product_form_sheet.dart';
 
 class ManualFulfillmentScreen extends StatefulWidget {
   const ManualFulfillmentScreen({super.key});
@@ -102,6 +103,18 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _openProductForm([ManualProductItem? product]) async {
+    final draft = await showManualProductForm(context, product: product);
+    if (draft == null) return;
+
+    await _run(
+      () => product == null
+          ? _repository.createProduct(draft)
+          : _repository.updateProduct(product.packageId, draft),
+      product == null ? 'Manual product created.' : 'Manual product updated.',
+    );
   }
 
   Future<void> _addSims() async {
@@ -357,39 +370,71 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
   }
 
   Widget _products(List<ManualProductItem> products) {
-    if (products.isEmpty) {
-      return const ContentEmptyState(
-        icon: Icons.inventory_2_outlined,
-        title: 'No manual products',
-        message: 'No manual products were returned.',
-      );
-    }
-    return B2BSurface(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (var i = 0; i < products.length; i++) ...[
-            ListTile(
-              leading: Icon(
-                products[i].type == 'sim'
-                    ? Icons.sim_card_outlined
-                    : Icons.qr_code_2_rounded,
-              ),
-              title: Text(
-                products[i].name,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              subtitle: Text(
-                '${products[i].operatorName} · ${products[i].packageId}',
-              ),
-              trailing: Text(
-                '${products[i].currency} ${products[i].providerCost.toStringAsFixed(2)}',
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton.icon(
+          onPressed: _openProductForm,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Add manual product'),
+        ),
+        const SizedBox(height: B2BSpacing.md),
+        if (products.isEmpty)
+          const ContentEmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'No manual products',
+            message: 'Create the first manually fulfilled product.',
+          )
+        else
+          B2BSurface(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < products.length; i++) ...[
+                  ListTile(
+                    onTap: () => _openProductForm(products[i]),
+                    leading: Icon(
+                      products[i].type == 'sim'
+                          ? Icons.sim_card_outlined
+                          : Icons.qr_code_2_rounded,
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            products[i].name,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        _pill(products[i].active ? 'Active' : 'Inactive'),
+                      ],
+                    ),
+                    subtitle: Text(
+                      '${products[i].operatorName} · '
+                      '${products[i].packageId}\n'
+                      '${products[i].type == 'sim' ? 'Physical SIM' : 'eSIM'}'
+                      ' · Tap to edit',
+                    ),
+                    isThreeLine: true,
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${products[i].currency} '
+                          '${products[i].providerCost.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
+                  ),
+                  if (i != products.length - 1) const Divider(height: 1),
+                ],
+              ],
             ),
-            if (i != products.length - 1) const Divider(height: 1),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 
