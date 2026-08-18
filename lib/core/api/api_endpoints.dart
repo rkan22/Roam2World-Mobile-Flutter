@@ -39,6 +39,8 @@ class ApiEndpoints {
       '/api/v1/mobile/b2b/provider-health/';
   static const String manualAdminProducts =
       '/api/v1/admin/manual-fulfillment/products/';
+  static String manualAdminProductDetail(Object packageId) =>
+      '$manualAdminProducts${Uri.encodeComponent(packageId.toString())}/';
   static const String manualAdminSimInventory =
       '/api/v1/admin/manual-fulfillment/sim-inventory/';
   static const String manualAdminTasks =
@@ -187,8 +189,6 @@ class ApiEndpoints {
       '/api/v1/mobile/admin/resellers/$resellerId/markup/';
   static String mobileAdminDealerMarkup(Object dealerId) =>
       '/api/v1/mobile/admin/dealers/$dealerId/markup/';
-  static String manualAdminProductDetail(Object packageId) =>
-      '/api/v1/admin/manual-fulfillment/products/$packageId/';
   static String manualAdminAssignQr(Object taskId) =>
       '/api/v1/admin/manual-fulfillment/tasks/$taskId/assign-qr/';
   static String manualAdminActivateSim(Object taskId) =>
