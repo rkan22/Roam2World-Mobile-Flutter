@@ -5,6 +5,9 @@ import '../../core/api/api_endpoints.dart';
 import '../../core/api/api_exception.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../packages/package_catalog.dart';
+import '../packages/packages_repository.dart';
+import 'pricing_package_picker.dart';
 
 class CentralPricingRulesScreen extends StatefulWidget {
   const CentralPricingRulesScreen({super.key});
@@ -16,7 +19,9 @@ class CentralPricingRulesScreen extends StatefulWidget {
 
 class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
   final _repository = _PricingRulesRepository();
+  final _packagesRepository = PackagesRepository();
   final _packageController = TextEditingController();
+  final Map<String, String> _packageNames = {};
   final _markupController = TextEditingController(text: '0');
   final _minMarkupController = TextEditingController();
   final _maxMarkupController = TextEditingController();
@@ -46,6 +51,8 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
   bool _loading = true;
   bool _saving = false;
   bool _previewing = false;
+  bool _manualPackageId = false;
+  String? _selectedPackageName;
   String? _error;
   _PricePreview? _preview;
 
@@ -92,6 +99,65 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
     }
   }
 
+  String _packageKey(String provider, String packageId) =>
+      '${provider.toLowerCase()}|${packageId.toLowerCase()}';
+
+  String? _packageNameForRule(_PricingRule rule) {
+    if (rule.packageId.isEmpty) return null;
+    return _packageNames[_packageKey(rule.provider, rule.packageId)];
+  }
+
+  void _rememberPackages(List<MobilePackage> packages) {
+    if (!mounted) return;
+    setState(() {
+      for (final package in packages) {
+        _packageNames[_packageKey(package.provider, package.id)] = package.name;
+      }
+    });
+  }
+
+  Future<void> _selectPackage() async {
+    final selection = await showPricingPackagePicker(
+      context: context,
+      provider: _provider,
+      repository: _packagesRepository,
+      onCatalogLoaded: _rememberPackages,
+    );
+    if (!mounted || selection == null) return;
+
+    if (selection.allPackages) {
+      setState(() {
+        _packageController.clear();
+        _selectedPackageName = 'All packages';
+        _manualPackageId = false;
+        _preview = null;
+      });
+      return;
+    }
+
+    final package = selection.package;
+    if (package == null) return;
+
+    setState(() {
+      _packageController.text = package.id;
+      _selectedPackageName = package.name;
+      _manualPackageId = false;
+      _previewPriceController.text = package.price.toStringAsFixed(2);
+      _packageNames[_packageKey(package.provider, package.id)] = package.name;
+      _preview = null;
+    });
+  }
+
+  void _changeProvider(String value) {
+    setState(() {
+      _provider = value;
+      _packageController.clear();
+      _selectedPackageName = null;
+      _manualPackageId = false;
+      _preview = null;
+    });
+  }
+
   Future<void> _save() async {
     final markup = double.tryParse(_markupController.text.trim());
     final priority = int.tryParse(_priorityController.text.trim());
@@ -120,6 +186,8 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
       );
       if (!mounted) return;
       _packageController.clear();
+      _selectedPackageName = null;
+      _manualPackageId = false;
       _markupController.text = '0';
       _minMarkupController.clear();
       _maxMarkupController.clear();
@@ -275,19 +343,78 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                         .toList(),
                     onChanged: _saving
                         ? null
-                        : (value) =>
-                              setState(() => _provider = value ?? _provider),
+                        : (value) {
+                            if (value != null && value != _provider) {
+                              _changeProvider(value);
+                            }
+                          },
                   ),
                   const SizedBox(height: B2BSpacing.sm),
-                  TextField(
-                    controller: _packageController,
-                    enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Product ID',
-                      hintText: 'Optional · applies to all packages when empty',
+                  InkWell(
+                    onTap: _saving ? null : _selectPackage,
+                    borderRadius: BorderRadius.circular(B2BRadius.md),
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Package',
+                        helperText: 'Search by package name, ID or destination',
+                        suffixIcon: Icon(Icons.search_rounded),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _selectedPackageName ?? 'All packages',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          if (_packageController.text.trim().isNotEmpty)
+                            Text(
+                              _packageController.text.trim(),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: B2BSpacing.sm),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _saving
+                          ? null
+                          : () => setState(() {
+                              _manualPackageId = !_manualPackageId;
+                              if (!_manualPackageId) {
+                                _packageController.clear();
+                                _selectedPackageName = null;
+                              }
+                              _preview = null;
+                            }),
+                      icon: Icon(
+                        _manualPackageId
+                            ? Icons.expand_less_rounded
+                            : Icons.tune_rounded,
+                      ),
+                      label: Text(
+                        _manualPackageId
+                            ? 'Hide manual Product ID'
+                            : 'Advanced: enter Product ID manually',
+                      ),
+                    ),
+                  ),
+                  if (_manualPackageId) ...[
+                    TextField(
+                      controller: _packageController,
+                      enabled: !_saving,
+                      onChanged: (_) => setState(() {
+                        _selectedPackageName = null;
+                        _preview = null;
+                      }),
+                      decoration: const InputDecoration(
+                        labelText: 'Product ID',
+                        hintText: 'Leave empty to apply to all packages',
+                      ),
+                    ),
+                    const SizedBox(height: B2BSpacing.sm),
+                  ],
                   DropdownButtonFormField<String>(
                     initialValue: _targetRole,
                     decoration: const InputDecoration(
@@ -517,6 +644,7 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
                   child: _RuleCard(
                     rule: rule,
                     operatorLabel: _providers[rule.provider] ?? rule.provider,
+                    packageName: _packageNameForRule(rule),
                     onDelete: () => _delete(rule),
                   ),
                 ),
@@ -566,11 +694,13 @@ class _RuleCard extends StatelessWidget {
   const _RuleCard({
     required this.rule,
     required this.operatorLabel,
+    required this.packageName,
     required this.onDelete,
   });
 
   final _PricingRule rule;
   final String operatorLabel;
+  final String? packageName;
   final VoidCallback onDelete;
 
   @override
@@ -606,7 +736,19 @@ class _RuleCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: B2BSpacing.xs),
-        Text(rule.packageId.isEmpty ? 'All packages' : rule.packageId),
+        if (rule.packageId.isEmpty)
+          const Text(
+            'All packages',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          )
+        else ...[
+          Text(
+            packageName ?? rule.packageId,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          if (packageName != null)
+            Text(rule.packageId, style: Theme.of(context).textTheme.bodySmall),
+        ],
         const SizedBox(height: B2BSpacing.sm),
         Wrap(
           spacing: B2BSpacing.sm,
