@@ -117,6 +117,38 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
     );
   }
 
+  Future<void> _deleteProduct(ManualProductItem product) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.delete_outline_rounded),
+        title: const Text('Delete manual product?'),
+        content: Text(
+          '“${product.name}” will be deleted if it has never been used. '
+          'Products with order or stock history will be archived instead.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete product'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await _run(
+      () => _repository.deleteProduct(product.packageId),
+      'Product deleted or archived.',
+    );
+  }
+
   Future<void> _addSims() async {
     final raw = await _ask(
       'Add blank SIM ICCIDs',
@@ -413,19 +445,43 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
                       '${products[i].operatorName} · '
                       '${products[i].packageId}\n'
                       '${products[i].type == 'sim' ? 'Physical SIM' : 'eSIM'}'
+                      ' · ${products[i].currency} '
+                      '${products[i].providerCost.toStringAsFixed(2)}'
                       ' · Tap to edit',
                     ),
                     isThreeLine: true,
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${products[i].currency} '
-                          '${products[i].providerCost.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                    trailing: PopupMenuButton<String>(
+                      tooltip: 'Product actions',
+                      onSelected: (action) {
+                        if (action == 'edit') {
+                          _openProductForm(products[i]);
+                        } else if (action == 'delete') {
+                          _deleteProduct(products[i]);
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.edit_outlined),
+                            title: Text('Edit product'),
+                          ),
                         ),
-                        const Icon(Icons.chevron_right_rounded),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.delete_outline_rounded,
+                              color: AppColors.danger,
+                            ),
+                            title: Text(
+                              'Delete product',
+                              style: TextStyle(color: AppColors.danger),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
