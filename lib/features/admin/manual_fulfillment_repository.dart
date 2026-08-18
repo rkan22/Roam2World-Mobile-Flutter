@@ -269,6 +269,10 @@ class ManualFulfillmentRepository {
     );
   }
 
+  Future<void> deleteProduct(String packageId) {
+    return _apiClient.delete(ApiEndpoints.manualAdminProductDetail(packageId));
+  }
+
   Future<void> addBlankSims(List<String> iccids) async {
     await _apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.manualAdminSimInventory,
