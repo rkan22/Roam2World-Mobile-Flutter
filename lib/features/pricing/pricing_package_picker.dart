@@ -99,7 +99,8 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
 
   bool _matchesProvider(MobilePackage item, String provider) {
     final normalized = item.provider.trim().toLowerCase();
-    return normalized == provider.toLowerCase();
+    // Manual Fulfillment products are available in every operator's picker.
+    return normalized == provider.toLowerCase() || normalized == 'manual';
   }
 
   List<MobilePackage> get _filtered {
@@ -227,6 +228,11 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
                                 item.id,
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
+                              if (item.provider.toLowerCase() == 'manual')
+                                const Text(
+                                  'Manual Fulfillment',
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
                             ],
                           ),
                           trailing: Text(
