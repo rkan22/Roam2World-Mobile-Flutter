@@ -17,18 +17,16 @@ class AdminPartnersScreen extends StatefulWidget {
 
 class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
   final _repository = AdminPartnersRepository();
-  final _search = TextEditingController();
   AdminPartnerList? _data;
   bool _loading = true;
   String? _error;
   bool get _isReseller => widget.type == AdminPartnerType.resellers;
   String get _title => _isReseller ? 'Resellers' : 'Dealers';
 
-  @override void initState() { super.initState(); _search.addListener(_changed); _load(); }
-  void _changed() => setState(() {});
-  @override void dispose() { _search..removeListener(_changed)..dispose(); super.dispose(); }
+  @override void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() { _loading = _data == null; _error = null; });
     try {
       final data = _isReseller ? await _repository.fetchResellers() : await _repository.fetchDealers();
@@ -39,8 +37,6 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
 
   @override Widget build(BuildContext context) {
     final data = _data;
-    final query = _search.text.trim().toLowerCase();
-    final visible = data?.items.where((item) => query.isEmpty || item.companyName.toLowerCase().contains(query) || item.email.toLowerCase().contains(query) || item.resellerName.toLowerCase().contains(query)).toList(growable: false) ?? const <AdminPartnerItem>[];
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(onPressed: () => context.canPop() ? context.pop() : context.go('/operations'), icon: const Icon(Icons.arrow_back_rounded)),
@@ -66,13 +62,7 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
                 Expanded(child: B2BMetricCard(label: 'Active', value: '${data.active}', icon: Icons.verified_user_outlined)),
               ]),
               const SizedBox(height: B2BSpacing.lg),
-              TextField(controller: _search, decoration: InputDecoration(hintText: 'Search ${_title.toLowerCase()} by name, email or reseller', prefixIcon: const Icon(Icons.search_rounded), suffixIcon: _search.text.isEmpty ? null : IconButton(onPressed: _search.clear, icon: const Icon(Icons.close_rounded)))),
-              const SizedBox(height: B2BSpacing.md),
-              if (visible.isEmpty) ContentEmptyState(icon: Icons.people_outline_rounded, title: 'No ${_title.toLowerCase()} found', message: query.isEmpty ? 'The backend returned no rows.' : 'No partner matches your search.')
-              else for (final item in visible) ...[
-                _PartnerTile(item: item, onDetail: () => _openDetail(item.id)),
-                const SizedBox(height: B2BSpacing.sm),
-              ],
+              _PartnerSearchField(title: _title, items: data.items),
             ],
           ],
         ),
@@ -86,7 +76,34 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
     } else {
       await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, builder: (_) => _DealerDetailSheet(repository: _repository, dealerId: id));
     }
-    await _load();
+    if (mounted) await _load();
+  }
+}
+
+class _PartnerSearchField extends StatefulWidget {
+  const _PartnerSearchField({required this.title, required this.items});
+  final String title;
+  final List<AdminPartnerItem> items;
+  @override State<_PartnerSearchField> createState() => _PartnerSearchFieldState();
+}
+
+class _PartnerSearchFieldState extends State<_PartnerSearchField> {
+  late final TextEditingController _controller;
+  @override void initState() { super.initState(); _controller = TextEditingController(); }
+  @override void dispose() { _controller.dispose(); super.dispose(); }
+
+  @override Widget build(BuildContext context) {
+    final query = _controller.text.trim().toLowerCase();
+    final visible = widget.items.where((item) => query.isEmpty || item.companyName.toLowerCase().contains(query) || item.email.toLowerCase().contains(query) || item.resellerName.toLowerCase().contains(query)).toList(growable: false);
+    return Column(children: [
+      TextField(controller: _controller, onChanged: (_) => setState(() {}), decoration: InputDecoration(hintText: 'Search ${widget.title.toLowerCase()} by name, email or reseller', prefixIcon: const Icon(Icons.search_rounded), suffixIcon: _controller.text.isEmpty ? null : IconButton(onPressed: _controller.clear, icon: const Icon(Icons.close_rounded)))),
+      const SizedBox(height: B2BSpacing.md),
+      if (visible.isEmpty) ContentEmptyState(icon: Icons.people_outline_rounded, title: 'No ${widget.title.toLowerCase()} found', message: query.isEmpty ? 'The backend returned no rows.' : 'No partner matches your search.')
+      else for (final item in visible) ...[
+        _PartnerTile(item: item, onDetail: () {}),
+        const SizedBox(height: B2BSpacing.sm),
+      ],
+    ]);
   }
 }
 
@@ -98,58 +115,66 @@ class _PartnerTile extends StatelessWidget {
     final status = item.isSuspended ? 'Suspended' : (item.isActive ? 'Active' : 'Inactive');
     final last = item.lastActivity?.toLocal().toIso8601String().replaceFirst('T', ' ').split('.').first ?? 'No activity recorded';
     return B2BSurface(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        const CircleAvatar(child: Icon(Icons.business_rounded)), const SizedBox(width: B2BSpacing.md),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.companyName.isEmpty ? 'Partner #${item.id}' : item.companyName, style: const TextStyle(fontWeight: FontWeight.w900)), if (item.email.isNotEmpty) Text(item.email, style: Theme.of(context).textTheme.bodySmall), if (item.resellerName.isNotEmpty) Text('Reseller: ${item.resellerName}', style: Theme.of(context).textTheme.bodySmall)])),
-        Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: item.isActive ? Colors.green : Theme.of(context).colorScheme.outline)),
-      ]),
-      const SizedBox(height: B2BSpacing.md),
-      Wrap(spacing: B2BSpacing.lg, runSpacing: B2BSpacing.sm, children: [
-        _Metric(icon: Icons.account_balance_wallet_outlined, label: 'Wallet', value: '\$${item.walletBalance.toStringAsFixed(2)}'),
-        _Metric(icon: Icons.people_outline, label: 'Customers', value: '${item.customerCount}'),
-        _Metric(icon: Icons.shopping_bag_outlined, label: 'Orders', value: '${item.orderCount}'),
-      ]),
+      Text(item.companyName, style: Theme.of(context).textTheme.titleLarge),
+      Text(item.email),
+      Text('Reseller: ${item.resellerName.isEmpty ? '—' : item.resellerName}'),
+      Text('Wallet: \$${item.walletBalance.toStringAsFixed(2)}'),
+      Text('Customers: ${item.customerCount} • Orders: ${item.orderCount}'),
+      Text('Status: $status • Last activity: $last'),
       const SizedBox(height: B2BSpacing.sm),
-      Row(children: [Expanded(child: Text('Last activity: $last', style: Theme.of(context).textTheme.bodySmall)), TextButton.icon(onPressed: onDetail, icon: const Icon(Icons.manage_accounts_outlined), label: const Text('Details'))]),
+      Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: onDetail, icon: const Icon(Icons.open_in_new_rounded), label: const Text('Details'))),
     ]));
   }
 }
 
-class _Metric extends StatelessWidget {
-  const _Metric({required this.icon, required this.label, required this.value});
-  final IconData icon; final String label; final String value;
-  @override Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 17), const SizedBox(width: 5), Text('$label: ', style: Theme.of(context).textTheme.bodySmall), Text(value, style: const TextStyle(fontWeight: FontWeight.w800))]);
+class _ResellerDetailSheet extends StatefulWidget {
+  const _ResellerDetailSheet({required this.repository, required this.resellerId});
+  final AdminPartnersRepository repository;
+  final int resellerId;
+  @override State<_ResellerDetailSheet> createState() => _ResellerDetailSheetState();
+}
+
+class _ResellerDetailSheetState extends State<_ResellerDetailSheet> {
+  AdminResellerDetail? _detail;
+  bool _saving = false;
+  late final TextEditingController _first = TextEditingController();
+  late final TextEditingController _last = TextEditingController();
+  late final TextEditingController _email = TextEditingController();
+  late final TextEditingController _country = TextEditingController();
+  late final TextEditingController _phone = TextEditingController();
+  late final TextEditingController _clients = TextEditingController();
+  late final TextEditingController _sims = TextEditingController();
+  late final TextEditingController _credit = TextEditingController();
+  @override void initState() { super.initState(); _load(); }
+  Future<void> _load() async { final d = await widget.repository.fetchResellerDetail(widget.resellerId); if (!mounted) return; setState(() { _detail = d; _first.text=d.firstName; _last.text=d.lastName; _email.text=d.email; _country.text=d.phoneCountryCode; _phone.text=d.phoneNumber; _clients.text='${d.maxClients}'; _sims.text='${d.maxSims}'; _credit.text='${d.creditLimit}'; }); }
+  Future<void> _save() async { if (_detail == null) return; setState(() => _saving=true); try { await widget.repository.updateReseller(widget.resellerId, {'first_name':_first.text.trim(),'last_name':_last.text.trim(),'email':_email.text.trim(),'country_code':_country.text.trim(),'phone_number':_phone.text.trim(),'max_clients':int.tryParse(_clients.text),'max_sims':int.tryParse(_sims.text),'credit_limit':double.tryParse(_credit.text)}); if(mounted) Navigator.pop(context); } finally { if(mounted) setState(()=>_saving=false); } }
+  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _clients.dispose(); _sims.dispose(); _credit.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) { return SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_detail == null ? const CircularProgressIndicator() : Text('Reseller • ${_detail!.email}', style: Theme.of(context).textTheme.headlineSmall), if(_detail != null) ...[Text('Status: ${_detail!.status}'),Text('Wallet: \$${_detail!.currentCredit.toStringAsFixed(2)}'),const SizedBox(height:16),_field('First name',_first),_field('Last name',_last),_field('Email',_email,keyboard:TextInputType.emailAddress),_field('Country code',_country),_field('Phone',_phone,keyboard:TextInputType.phone),_field('Max clients',_clients,keyboard:TextInputType.number),_field('Max SIMs',_sims,keyboard:TextInputType.number),_field('Credit limit',_credit,keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:12),FilledButton.icon(onPressed:_saving?null:_save,icon:const Icon(Icons.save_outlined),label:Text(_saving?'Saving...':'Save changes'))]])); }
 }
 
 class _DealerDetailSheet extends StatefulWidget {
   const _DealerDetailSheet({required this.repository, required this.dealerId});
-  final AdminPartnersRepository repository; final int dealerId;
+  final AdminPartnersRepository repository;
+  final int dealerId;
   @override State<_DealerDetailSheet> createState() => _DealerDetailSheetState();
 }
+
 class _DealerDetailSheetState extends State<_DealerDetailSheet> {
-  AdminDealerDetail? _detail; bool _loading = true; bool _saving = false;
-  late final TextEditingController _first = TextEditingController(); late final TextEditingController _last = TextEditingController(); late final TextEditingController _email = TextEditingController(); late final TextEditingController _country = TextEditingController(); late final TextEditingController _phone = TextEditingController(); late final TextEditingController _notes = TextEditingController();
+  AdminDealerDetail? _detail;
+  bool _saving = false;
+  late final TextEditingController _first = TextEditingController();
+  late final TextEditingController _last = TextEditingController();
+  late final TextEditingController _email = TextEditingController();
+  late final TextEditingController _country = TextEditingController();
+  late final TextEditingController _phone = TextEditingController();
+  late final TextEditingController _clients = TextEditingController();
+  late final TextEditingController _sims = TextEditingController();
+  late final TextEditingController _credit = TextEditingController();
   @override void initState() { super.initState(); _load(); }
-  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _notes.dispose(); super.dispose(); }
-  Future<void> _load() async { try { final d = await widget.repository.fetchDealerDetail(widget.dealerId); if (!mounted) return; setState(() { _detail = d; _first.text = d.firstName; _last.text = d.lastName; _email.text = d.email; }); } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load dealer: $e'))); } finally { if (mounted) setState(() => _loading = false); } }
-  Future<void> _save() async { setState(() => _saving = true); try { final d = await widget.repository.updateDealer(widget.dealerId, {'first_name': _first.text.trim(), 'last_name': _last.text.trim(), 'email': _email.text.trim(), 'country_code': _country.text.trim(), 'phone_number': _phone.text.trim(), 'notes': _notes.text.trim()}); if (mounted) { setState(() => _detail = d); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dealer account updated'))); } } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e'))); } finally { if (mounted) setState(() => _saving = false); } }
-  Future<void> _toggleStatus() async { final suspended = !(_detail?.isSuspended ?? false); setState(() => _saving = true); try { final d = await widget.repository.setDealerStatus(widget.dealerId, suspend: suspended, reason: suspended ? 'Suspended by admin' : ''); if (mounted) setState(() => _detail = d); } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status update failed: $e'))); } finally { if (mounted) setState(() => _saving = false); } }
-  @override Widget build(BuildContext context) => DraggableScrollableSheet(expand: false, initialChildSize: .9, builder: (_, controller) => Material(child: _loading ? const Center(child: CircularProgressIndicator()) : _detail == null ? const Center(child: Text('Dealer not found')) : ListView(controller: controller, padding: const EdgeInsets.all(20), children: [Row(children: [Expanded(child: Text('Dealer account', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900))), IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close))]), Text('Reseller: ${_detail!.resellerName.isEmpty ? 'Not assigned' : _detail!.resellerName}'), Text('Wallet: \$${_detail!.currentBalance.toStringAsFixed(2)}'), Text('Customers: ${_detail!.totalClients}   Orders: ${_detail!.totalOrders}'), const SizedBox(height: 16), _field('First name', _first), _field('Last name', _last), _field('Email', _email, keyboard: TextInputType.emailAddress), _field('Country code', _country), _field('Phone', _phone, keyboard: TextInputType.phone), _field('Notes', _notes, maxLines: 3), const SizedBox(height: 12), FilledButton.icon(onPressed: _saving ? null : _save, icon: const Icon(Icons.save_outlined), label: Text(_saving ? 'Saving...' : 'Save changes')), const SizedBox(height: 8), OutlinedButton.icon(onPressed: _saving ? null : _toggleStatus, icon: Icon(_detail!.isSuspended ? Icons.play_arrow_rounded : Icons.pause_rounded), label: Text(_detail!.isSuspended ? 'Activate dealer' : 'Suspend dealer'))])));
-  Widget _field(String label, TextEditingController c, {TextInputType? keyboard, int maxLines = 1}) => Padding(padding: const EdgeInsets.only(bottom: 12), child: TextField(controller: c, keyboardType: keyboard, maxLines: maxLines, decoration: InputDecoration(labelText: label)));
+  Future<void> _load() async { final d = await widget.repository.fetchDealerDetail(widget.dealerId); if (!mounted) return; setState(() { _detail=d; _first.text=d.firstName; _last.text=d.lastName; _email.text=d.email; _country.text=''; _phone.text=''; _clients.text='${d.totalClients}'; _sims.text=''; _credit.text='${d.currentBalance}'; }); }
+  Future<void> _save() async { if (_detail == null) return; setState(() => _saving=true); try { await widget.repository.updateDealer(widget.dealerId, {'first_name':_first.text.trim(),'last_name':_last.text.trim(),'email':_email.text.trim(),'max_clients':int.tryParse(_clients.text),'credit_limit':double.tryParse(_credit.text)}); if(mounted) Navigator.pop(context); } finally { if(mounted) setState(()=>_saving=false); } }
+  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _clients.dispose(); _sims.dispose(); _credit.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) { return SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_detail == null ? const CircularProgressIndicator() : Text('Dealer • ${_detail!.email}', style: Theme.of(context).textTheme.headlineSmall), if(_detail != null) ...[Text('Status: ${_detail!.isSuspended ? 'Suspended' : (_detail!.isActive ? 'Active' : 'Inactive')}'),Text('Wallet: \$${_detail!.currentBalance.toStringAsFixed(2)}'),const SizedBox(height:16),_field('First name',_first),_field('Last name',_last),_field('Email',_email,keyboard:TextInputType.emailAddress),_field('Max clients',_clients,keyboard:TextInputType.number),_field('Credit limit',_credit,keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:12),FilledButton.icon(onPressed:_saving?null:_save,icon:const Icon(Icons.save_outlined),label:Text(_saving?'Saving...':'Save changes'))]])); }
 }
 
-class _ResellerDetailSheet extends StatefulWidget {
-  const _ResellerDetailSheet({required this.repository, required this.resellerId});
-  final AdminPartnersRepository repository; final int resellerId;
-  @override State<_ResellerDetailSheet> createState() => _ResellerDetailSheetState();
-}
-class _ResellerDetailSheetState extends State<_ResellerDetailSheet> {
-  AdminResellerDetail? _detail; bool _loading = true; bool _saving = false;
-  late final TextEditingController _first = TextEditingController(); late final TextEditingController _last = TextEditingController(); late final TextEditingController _email = TextEditingController(); late final TextEditingController _country = TextEditingController(); late final TextEditingController _phone = TextEditingController(); late final TextEditingController _clients = TextEditingController(); late final TextEditingController _sims = TextEditingController(); late final TextEditingController _credit = TextEditingController();
-  @override void initState() { super.initState(); _load(); }
-  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _clients.dispose(); _sims.dispose(); _credit.dispose(); super.dispose(); }
-  Future<void> _load() async { try { final d = await widget.repository.fetchResellerDetail(widget.resellerId); if (!mounted) return; setState(() { _detail = d; _first.text = d.firstName; _last.text = d.lastName; _email.text = d.email; _country.text = d.phoneCountryCode; _phone.text = d.phoneNumber; _clients.text = '${d.maxClients}'; _sims.text = '${d.maxSims}'; _credit.text = d.creditLimit.toStringAsFixed(2); }); } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load reseller: $e'))); } finally { if (mounted) setState(() => _loading = false); } }
-  Future<void> _save() async { setState(() => _saving = true); try { final d = await widget.repository.updateReseller(widget.resellerId, {'email': _email.text.trim(), 'first_name': _first.text.trim(), 'last_name': _last.text.trim(), 'country_code': _country.text.trim(), 'phone_number': _phone.text.trim(), 'max_clients': int.tryParse(_clients.text) ?? 0, 'max_sims': int.tryParse(_sims.text) ?? 0, 'credit_limit': double.tryParse(_credit.text) ?? 0}); if (mounted) { setState(() => _detail = d); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reseller account updated'))); } } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e'))); } finally { if (mounted) setState(() => _saving = false); } }
-  @override Widget build(BuildContext context) => DraggableScrollableSheet(expand: false, initialChildSize: .9, builder: (_, controller) => Material(child: _loading ? const Center(child: CircularProgressIndicator()) : _detail == null ? const Center(child: Text('Reseller not found')) : ListView(controller: controller, padding: const EdgeInsets.all(20), children: [Row(children: [Expanded(child: Text('Reseller account', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900))), IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close))]), Text('Status: ${_detail!.status}'), Text('Wallet: \$${_detail!.currentCredit.toStringAsFixed(2)}'), const SizedBox(height: 16), _field('First name', _first), _field('Last name', _last), _field('Email', _email, keyboard: TextInputType.emailAddress), _field('Country code', _country), _field('Phone', _phone, keyboard: TextInputType.phone), _field('Max clients', _clients, keyboard: TextInputType.number), _field('Max SIMs', _sims, keyboard: TextInputType.number), _field('Credit limit', _credit, keyboard: const TextInputType.numberWithOptions(decimal: true)), const SizedBox(height: 12), FilledButton.icon(onPressed: _saving ? null : _save, icon: const Icon(Icons.save_outlined), label: Text(_saving ? 'Saving...' : 'Save changes'))])));
-  Widget _field(String label, TextEditingController c, {TextInputType? keyboard}) => Padding(padding: const EdgeInsets.only(bottom: 12), child: TextField(controller: c, keyboardType: keyboard, decoration: InputDecoration(labelText: label)));
-}
+Widget _field(String label, TextEditingController controller, {TextInputType? keyboard}) => Padding(padding: const EdgeInsets.only(bottom: 10), child: TextField(controller: controller, keyboardType: keyboard, decoration: InputDecoration(labelText: label)));
