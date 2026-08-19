@@ -11,7 +11,11 @@ class AdminPartnersRepository {
   Future<AdminResellerDetail> fetchResellerDetail(int id) => _apiClient.get<AdminResellerDetail>('/api/v1/resellers/resellers/$id/', parser: AdminResellerDetail.fromResponse);
   Future<AdminResellerDetail> updateReseller(int id, Map<String, dynamic> payload) => _apiClient.patch<AdminResellerDetail>('/api/v1/resellers/resellers/$id/', data: payload, parser: AdminResellerDetail.fromResponse);
 
-  Future<AdminDealerDetail> fetchDealerDetail(int id) => _apiClient.get<AdminDealerDetail>('/api/v1/mobile/admin/dealers/$id/', parser: AdminDealerDetail.fromResponse);
-  Future<AdminDealerDetail> updateDealer(int id, Map<String, dynamic> payload) => _apiClient.patch<AdminDealerDetail>('/api/v1/mobile/admin/dealers/$id/', data: payload, parser: AdminDealerDetail.fromResponse);
+  // Dealer detail/update uses the canonical DRF resellers route. This route is
+  // already exposed by the backend DealerViewSet and avoids relying on the
+  // separately mounted mobile-admin alias, which may be missing on older API
+  // deployments.
+  Future<AdminDealerDetail> fetchDealerDetail(int id) => _apiClient.get<AdminDealerDetail>('/api/v1/resellers/dealers/$id/', parser: AdminDealerDetail.fromResponse);
+  Future<AdminDealerDetail> updateDealer(int id, Map<String, dynamic> payload) => _apiClient.patch<AdminDealerDetail>('/api/v1/resellers/dealers/$id/', data: payload, parser: AdminDealerDetail.fromResponse);
   Future<AdminDealerDetail> setDealerStatus(int id, {required bool suspend, String reason = ''}) => _apiClient.post<AdminDealerDetail>('/api/v1/mobile/admin/dealers/$id/status/', data: {'action': suspend ? 'suspend' : 'activate', 'reason': reason}, parser: AdminDealerDetail.fromResponse);
 }
