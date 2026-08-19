@@ -15,7 +15,7 @@ class AdminPartnerList {
     final data = rawData is Map
         ? Map<String, dynamic>.from(rawData)
         : <String, dynamic>{};
-    final rawItems = data['items'] ?? data['results'] ?? rawData;
+    final rawItems = data['items'] ?? data['results'] ?? root['results'] ?? rawData;
     final parsed = rawItems is List
         ? rawItems
               .whereType<Map>()
@@ -23,10 +23,9 @@ class AdminPartnerList {
               .toList(growable: false)
         : const <AdminPartnerItem>[];
 
-    final active = parsed.where((item) => item.isActive).length;
     return AdminPartnerList(
-      total: parsed.length,
-      active: active,
+      total: int.tryParse((data['total'] ?? root['count'] ?? parsed.length).toString()) ?? parsed.length,
+      active: parsed.where((item) => item.isActive).length,
       items: parsed,
     );
   }
@@ -61,33 +60,25 @@ class AdminPartnerItem {
         : const <String, dynamic>{};
     final firstName = (user['first_name'] ?? '').toString().trim();
     final lastName = (user['last_name'] ?? '').toString().trim();
-    final fullName = [firstName, lastName]
-        .where((value) => value.isNotEmpty)
-        .join(' ')
-        .trim();
-    final email = (user['email'] ?? '').toString().trim();
+    final fullName = [firstName, lastName].where((value) => value.isNotEmpty).join(' ').trim();
+    final email = (user['email'] ?? json['email'] ?? '').toString().trim();
     final company = (json['company_name'] ?? '').toString().trim();
-
-    final suspended = json['is_suspended'] == true ||
-        json['is_suspended']?.toString().toLowerCase() == 'true';
-    final userActive = user['is_active'];
-    final activeFromUser = userActive == null
-        ? true
-        : userActive == true || userActive.toString().toLowerCase() == 'true';
+    final suspended = json['is_suspended'] == true || json['is_suspended']?.toString().toLowerCase() == 'true';
+    final userActive = user['is_active'] ?? json['is_active'];
+    final active = userActive == null || userActive == true || userActive.toString().toLowerCase() == 'true';
 
     return AdminPartnerItem(
       id: int.tryParse((json['id'] ?? 0).toString()) ?? 0,
       companyName: company.isNotEmpty ? company : (fullName.isNotEmpty ? fullName : email),
       email: email,
-      isActive: activeFromUser && !suspended,
+      isActive: active && !suspended,
       walletBalance: _number(json['current_credit'] ?? json['available_credit']),
       customerCount: int.tryParse((json['total_clients'] ?? 0).toString()) ?? 0,
       orderCount: int.tryParse((json['total_orders'] ?? 0).toString()) ?? 0,
-      lastActivity: DateTime.tryParse((user['last_login'] ?? '').toString()),
+      lastActivity: DateTime.tryParse((user['last_login'] ?? json['last_login'] ?? '').toString()),
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
     );
   }
 
-  static double _number(dynamic value) =>
-      double.tryParse(value?.toString() ?? '') ?? 0;
+  static double _number(dynamic value) => double.tryParse(value?.toString() ?? '') ?? 0;
 }
