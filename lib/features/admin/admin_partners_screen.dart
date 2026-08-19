@@ -62,7 +62,7 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
                 Expanded(child: B2BMetricCard(label: 'Active', value: '${data.active}', icon: Icons.verified_user_outlined)),
               ]),
               const SizedBox(height: B2BSpacing.lg),
-              _PartnerSearchField(title: _title, items: data.items),
+              _PartnerSearchField(title: _title, items: data.items, onDetail: _openDetail),
             ],
           ],
         ),
@@ -81,9 +81,10 @@ class _AdminPartnersScreenState extends State<AdminPartnersScreen> {
 }
 
 class _PartnerSearchField extends StatefulWidget {
-  const _PartnerSearchField({required this.title, required this.items});
+  const _PartnerSearchField({required this.title, required this.items, required this.onDetail});
   final String title;
   final List<AdminPartnerItem> items;
+  final Future<void> Function(int id) onDetail;
   @override State<_PartnerSearchField> createState() => _PartnerSearchFieldState();
 }
 
@@ -100,7 +101,7 @@ class _PartnerSearchFieldState extends State<_PartnerSearchField> {
       const SizedBox(height: B2BSpacing.md),
       if (visible.isEmpty) ContentEmptyState(icon: Icons.people_outline_rounded, title: 'No ${widget.title.toLowerCase()} found', message: query.isEmpty ? 'The backend returned no rows.' : 'No partner matches your search.')
       else for (final item in visible) ...[
-        _PartnerTile(item: item, onDetail: () {}),
+        _PartnerTile(item: item, onDetail: () => widget.onDetail(item.id)),
         const SizedBox(height: B2BSpacing.sm),
       ],
     ]);
@@ -145,11 +146,99 @@ class _ResellerDetailSheetState extends State<_ResellerDetailSheet> {
   late final TextEditingController _clients = TextEditingController();
   late final TextEditingController _sims = TextEditingController();
   late final TextEditingController _credit = TextEditingController();
+
   @override void initState() { super.initState(); _load(); }
-  Future<void> _load() async { final d = await widget.repository.fetchResellerDetail(widget.resellerId); if (!mounted) return; setState(() { _detail = d; _first.text=d.firstName; _last.text=d.lastName; _email.text=d.email; _country.text=d.phoneCountryCode; _phone.text=d.phoneNumber; _clients.text='${d.maxClients}'; _sims.text='${d.maxSims}'; _credit.text='${d.creditLimit}'; }); }
-  Future<void> _save() async { if (_detail == null) return; setState(() => _saving=true); try { await widget.repository.updateReseller(widget.resellerId, {'first_name':_first.text.trim(),'last_name':_last.text.trim(),'email':_email.text.trim(),'country_code':_country.text.trim(),'phone_number':_phone.text.trim(),'max_clients':int.tryParse(_clients.text),'max_sims':int.tryParse(_sims.text),'credit_limit':double.tryParse(_credit.text)}); if(mounted) Navigator.pop(context); } finally { if(mounted) setState(()=>_saving=false); } }
-  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _clients.dispose(); _sims.dispose(); _credit.dispose(); super.dispose(); }
-  @override Widget build(BuildContext context) { return SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_detail == null ? const CircularProgressIndicator() : Text('Reseller • ${_detail!.email}', style: Theme.of(context).textTheme.headlineSmall), if(_detail != null) ...[Text('Status: ${_detail!.status}'),Text('Wallet: \$${_detail!.currentCredit.toStringAsFixed(2)}'),const SizedBox(height:16),_field('First name',_first),_field('Last name',_last),_field('Email',_email,keyboard:TextInputType.emailAddress),_field('Country code',_country),_field('Phone',_phone,keyboard:TextInputType.phone),_field('Max clients',_clients,keyboard:TextInputType.number),_field('Max SIMs',_sims,keyboard:TextInputType.number),_field('Credit limit',_credit,keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:12),FilledButton.icon(onPressed:_saving?null:_save,icon:const Icon(Icons.save_outlined),label:Text(_saving?'Saving...':'Save changes'))]])); }
+
+  Future<void> _load() async {
+    final d = await widget.repository.fetchResellerDetail(widget.resellerId);
+    if (!mounted) return;
+    setState(() {
+      _detail = d;
+      _first.text = d.firstName;
+      _last.text = d.lastName;
+      _email.text = d.email;
+      _country.text = d.phoneCountryCode;
+      _phone.text = d.phoneNumber;
+      _clients.text = '${d.maxClients}';
+      _sims.text = '${d.maxSims}';
+      _credit.text = '${d.creditLimit}';
+    });
+  }
+
+  Future<void> _save() async {
+    if (_detail == null) return;
+    setState(() => _saving = true);
+    try {
+      await widget.repository.updateReseller(widget.resellerId, {
+        'first_name': _first.text.trim(),
+        'last_name': _last.text.trim(),
+        'email': _email.text.trim(),
+        'country_code': _country.text.trim(),
+        'phone_number': _phone.text.trim(),
+        'max_clients': int.tryParse(_clients.text),
+        'max_sims': int.tryParse(_sims.text),
+        'credit_limit': double.tryParse(_credit.text),
+      });
+      if (mounted) Navigator.pop(context);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override void dispose() {
+    _first.dispose();
+    _last.dispose();
+    _email.dispose();
+    _country.dispose();
+    _phone.dispose();
+    _clients.dispose();
+    _sims.dispose();
+    _credit.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _detail == null
+                ? const CircularProgressIndicator()
+                : Text(
+                    'Reseller • ${_detail!.email}',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+            if (_detail != null) ...[
+              Text('Status: ${_detail!.status}'),
+              Text('Wallet: \$${_detail!.currentCredit.toStringAsFixed(2)}'),
+              const SizedBox(height: 16),
+              _field('First name', _first),
+              _field('Last name', _last),
+              _field('Email', _email, keyboard: TextInputType.emailAddress),
+              _field('Country code', _country),
+              _field('Phone', _phone, keyboard: TextInputType.phone),
+              _field('Max clients', _clients, keyboard: TextInputType.number),
+              _field('Max SIMs', _sims, keyboard: TextInputType.number),
+              _field(
+                'Credit limit',
+                _credit,
+                keyboard: const TextInputType.numberWithOptions(decimal: true),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(_saving ? 'Saving...' : 'Save changes'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _DealerDetailSheet extends StatefulWidget {
@@ -170,11 +259,105 @@ class _DealerDetailSheetState extends State<_DealerDetailSheet> {
   late final TextEditingController _clients = TextEditingController();
   late final TextEditingController _sims = TextEditingController();
   late final TextEditingController _credit = TextEditingController();
+
   @override void initState() { super.initState(); _load(); }
-  Future<void> _load() async { final d = await widget.repository.fetchDealerDetail(widget.dealerId); if (!mounted) return; setState(() { _detail=d; _first.text=d.firstName; _last.text=d.lastName; _email.text=d.email; _country.text=''; _phone.text=''; _clients.text='${d.totalClients}'; _sims.text=''; _credit.text='${d.currentBalance}'; }); }
-  Future<void> _save() async { if (_detail == null) return; setState(() => _saving=true); try { await widget.repository.updateDealer(widget.dealerId, {'first_name':_first.text.trim(),'last_name':_last.text.trim(),'email':_email.text.trim(),'max_clients':int.tryParse(_clients.text),'credit_limit':double.tryParse(_credit.text)}); if(mounted) Navigator.pop(context); } finally { if(mounted) setState(()=>_saving=false); } }
-  @override void dispose() { _first.dispose(); _last.dispose(); _email.dispose(); _country.dispose(); _phone.dispose(); _clients.dispose(); _sims.dispose(); _credit.dispose(); super.dispose(); }
-  @override Widget build(BuildContext context) { return SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_detail == null ? const CircularProgressIndicator() : Text('Dealer • ${_detail!.email}', style: Theme.of(context).textTheme.headlineSmall), if(_detail != null) ...[Text('Status: ${_detail!.isSuspended ? 'Suspended' : (_detail!.isActive ? 'Active' : 'Inactive')}'),Text('Wallet: \$${_detail!.currentBalance.toStringAsFixed(2)}'),const SizedBox(height:16),_field('First name',_first),_field('Last name',_last),_field('Email',_email,keyboard:TextInputType.emailAddress),_field('Max clients',_clients,keyboard:TextInputType.number),_field('Credit limit',_credit,keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:12),FilledButton.icon(onPressed:_saving?null:_save,icon:const Icon(Icons.save_outlined),label:Text(_saving?'Saving...':'Save changes'))]])); }
+
+  Future<void> _load() async {
+    final d = await widget.repository.fetchDealerDetail(widget.dealerId);
+    if (!mounted) return;
+    setState(() {
+      _detail = d;
+      _first.text = d.firstName;
+      _last.text = d.lastName;
+      _email.text = d.email;
+      _country.text = '';
+      _phone.text = '';
+      _clients.text = '${d.totalClients}';
+      _sims.text = '';
+      _credit.text = '${d.currentBalance}';
+    });
+  }
+
+  Future<void> _save() async {
+    if (_detail == null) return;
+    setState(() => _saving = true);
+    try {
+      await widget.repository.updateDealer(widget.dealerId, {
+        'first_name': _first.text.trim(),
+        'last_name': _last.text.trim(),
+        'email': _email.text.trim(),
+        'max_clients': int.tryParse(_clients.text),
+        'credit_limit': double.tryParse(_credit.text),
+      });
+      if (mounted) Navigator.pop(context);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override void dispose() {
+    _first.dispose();
+    _last.dispose();
+    _email.dispose();
+    _country.dispose();
+    _phone.dispose();
+    _clients.dispose();
+    _sims.dispose();
+    _credit.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _detail == null
+                ? const CircularProgressIndicator()
+                : Text(
+                    'Dealer • ${_detail!.email}',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+            if (_detail != null) ...[
+              Text(
+                'Status: ${_detail!.isSuspended
+                    ? 'Suspended'
+                    : (_detail!.isActive ? 'Active' : 'Inactive')}',
+              ),
+              Text('Wallet: \$${_detail!.currentBalance.toStringAsFixed(2)}'),
+              const SizedBox(height: 16),
+              _field('First name', _first),
+              _field('Last name', _last),
+              _field('Email', _email, keyboard: TextInputType.emailAddress),
+              _field('Max clients', _clients, keyboard: TextInputType.number),
+              _field(
+                'Credit limit',
+                _credit,
+                keyboard: const TextInputType.numberWithOptions(decimal: true),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(_saving ? 'Saving...' : 'Save changes'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-Widget _field(String label, TextEditingController controller, {TextInputType? keyboard}) => Padding(padding: const EdgeInsets.only(bottom: 10), child: TextField(controller: controller, keyboardType: keyboard, decoration: InputDecoration(labelText: label)));
+Widget _field(String label, TextEditingController controller, {TextInputType? keyboard}) =>
+    Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboard,
+        decoration: InputDecoration(labelText: label),
+      ),
+    );
