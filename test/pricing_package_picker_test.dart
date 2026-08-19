@@ -31,7 +31,11 @@ MobilePackage _package({
     id: id,
     name: name,
     provider: provider,
-    displayProvider: provider == 'airhub' ? 'Vodafone' : 'Orange Balkans',
+    displayProvider: provider == 'airhub'
+        ? 'Vodafone'
+        : provider == 'manual'
+        ? 'Manual'
+        : 'Orange Balkans',
     destination: destination,
     destinationKey: destination.toLowerCase(),
     dataLabel: '10 GB',
@@ -63,6 +67,12 @@ void main() {
             name: 'Orange Balkans 10GB',
             provider: 'tgt',
             destination: 'Balkans',
+          ),
+          _package(
+            id: 'MANUAL-TR-10GB',
+            name: 'Manual Turkey 10GB',
+            provider: 'manual',
+            destination: 'Turkey',
           ),
         ],
       ),
@@ -105,6 +115,35 @@ void main() {
     expect(selected, isNotNull);
     expect(selected!.allPackages, isFalse);
     expect(selected!.package!.id, 'VODAFONE-TR-10GB');
+  });
+
+  testWidgets('includes manual fulfillment products for any operator', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () {
+                showPricingPackagePicker(
+                  context: context,
+                  provider: 'airhub',
+                  repository: repository,
+                );
+              },
+              child: const Text('Open picker'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open picker'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manual Turkey 10GB'), findsOneWidget);
+    expect(find.text('Manual Fulfillment'), findsOneWidget);
   });
 
   testWidgets('returns all-packages selection', (tester) async {
