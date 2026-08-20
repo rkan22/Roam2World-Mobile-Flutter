@@ -180,6 +180,14 @@ class PackagesRepository {
 
   Future<PackageCatalog> _fetchManualCatalog() async {
     try {
+      final adminCatalog = await _apiClient.get<PackageCatalog>(
+        ApiEndpoints.manualAdminProducts,
+        parser: PackageCatalog.fromManualResponse,
+      );
+      if (adminCatalog.packages.isNotEmpty) return adminCatalog;
+    } catch (_) {}
+
+    try {
       return await _apiClient.get<PackageCatalog>(
         ApiEndpoints.manualCatalogProducts,
         parser: PackageCatalog.fromManualResponse,
