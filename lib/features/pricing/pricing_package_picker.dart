@@ -76,13 +76,12 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
 
     try {
       final catalog = await widget.repository.fetchPackages();
-      final packages =
-          catalog.packages
-              .where((item) => _matchesProvider(item, widget.provider))
-              .toList()
-            ..sort(
-              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-            );
+      final packages = catalog.packages
+          .where((item) => _matchesProvider(item, widget.provider))
+          .toList()
+        ..sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
 
       widget.onCatalogLoaded?.call(packages);
 
@@ -98,9 +97,20 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
   }
 
   bool _matchesProvider(MobilePackage item, String provider) {
-    final normalized = item.provider.trim().toLowerCase();
-    // Manual Fulfillment products are available in every operator's picker.
-    return normalized == provider.toLowerCase() || normalized == 'manual';
+    final selected = provider.trim().toLowerCase();
+    final source = item.provider.trim().toLowerCase();
+
+    // Manual Fulfillment is its own operator. It must never leak into
+    // another operator's package picker.
+    if (selected == 'manual') return item.operatorKey == 'manual';
+    if (source == 'manual') return false;
+
+    // For providers represented by a dedicated operator key, prefer the
+    // normalized operator identity so T.T Turkey/KPN/Orange families remain
+    // separated even though they share the Worldmove source.
+    if (item.operatorKey == selected) return true;
+
+    return source == selected;
   }
 
   List<MobilePackage> get _filtered {
@@ -236,8 +246,7 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
                             ],
                           ),
                           trailing: Text(
-                            '${item.currency} '
-                            '${item.price.toStringAsFixed(2)}',
+                            item.formattedPrice,
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           onTap: () => Navigator.pop(
