@@ -228,8 +228,7 @@ class MobilePackage {
     );
   }
 
-  String get formattedPrice =>
-      price <= 0 ? 'Contact Admin' : '$currency ${price.toStringAsFixed(2)}';
+  String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
   num? get dataGb => num.tryParse(
     RegExp(r'\d+(?:\.\d+)?').firstMatch(dataLabel)?.group(0) ?? '',
   );
@@ -274,9 +273,15 @@ class MobilePackage {
 
     if (label.contains('movistar')) return 'movistar';
     if (label.contains('kpn')) return 'kpn';
-    if (label.contains('orange') && label.contains('europe')) return 'worldmove';
-    if (label.contains('orange') && label.contains('world')) return 'orange-world';
-    if (label.contains('orange') && label.contains('balkan')) return 'orange-balkans';
+    if (label.contains('orange') && label.contains('europe')) {
+      return 'worldmove';
+    }
+    if (label.contains('orange') && label.contains('world')) {
+      return 'orange-world';
+    }
+    if (label.contains('orange') && label.contains('balkan')) {
+      return 'orange-balkans';
+    }
     if (label.contains('vodafone')) return 'vodafone';
     if (label.contains('big data')) return 'flexnet';
     if (label.contains('balkan')) return 'orange-balkans';
@@ -299,10 +304,15 @@ class MobilePackage {
       'planName',
       'title',
     ]);
-    final fallbackName = _simplifyRawName(rawName.isEmpty ? 'Package' : rawName);
+    final fallbackName = _simplifyRawName(
+      rawName.isEmpty ? 'Package' : rawName,
+    );
     final dataText = _displayData(data);
     final validityText = _displayValidity(validity);
-    final suffix = [dataText, validityText].where((value) => value.isNotEmpty).join(' ');
+    final suffix = [
+      dataText,
+      validityText,
+    ].where((value) => value.isNotEmpty).join(' ');
 
     if (p == 'worldmove') {
       final code = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
@@ -319,13 +329,23 @@ class MobilePackage {
           : 'Worldmove';
       return suffix.isEmpty ? fallbackName : '$operator $suffix';
     }
-    if (p == 'tgt') return suffix.isEmpty ? 'Orange Balkans' : 'Orange Balkans $suffix';
-    if (p == 'flexnet') return suffix.isEmpty ? 'Orange Big Data' : 'Orange Big Data $suffix';
-    if (p.contains('airhub')) return suffix.isEmpty ? fallbackName : 'Vodafone $suffix';
+    if (p == 'tgt') {
+      return suffix.isEmpty ? 'Orange Balkans' : 'Orange Balkans $suffix';
+    }
+    if (p == 'flexnet') {
+      return suffix.isEmpty ? 'Orange Big Data' : 'Orange Big Data $suffix';
+    }
+    if (p.contains('airhub')) {
+      return suffix.isEmpty ? fallbackName : 'Vodafone $suffix';
+    }
     return fallbackName.isEmpty ? 'Package' : fallbackName;
   }
 
-  static String _display(Map<String, dynamic> j, String identity, String wmCode) {
+  static String _display(
+    Map<String, dynamic> j,
+    String identity,
+    String wmCode,
+  ) {
     if (_text(j, ['provider']).toLowerCase() == 'worldmove') {
       final c = wmCode.isNotEmpty ? wmCode : identity.toUpperCase();
       if (c.startsWith('WM-EU-B-')) return 'KPN Europe';
@@ -335,50 +355,90 @@ class MobilePackage {
       if (c.startsWith('WM-E-J1-O-')) return 'Orange Europe';
       return 'Worldmove';
     }
-    final value = _text(j, ['display_provider', 'provider_label', 'operator_name', 'provider']);
+    final value = _text(j, [
+      'display_provider',
+      'provider_label',
+      'operator_name',
+      'provider',
+    ]);
     return value.isEmpty ? 'Roam2World' : value;
   }
 
   static String _destination(Map<String, dynamic> j, String text) {
-    final n = '${j['productRegion'] ?? ''} ${j['destination'] ?? ''} $text'.toLowerCase();
-    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye')) return 'turkey';
-    if (n.contains('wm-e-j1-wld-') || n.contains('global') || n.contains('world')) return 'global';
-    if (n.contains('wm-eu-b-') || n.contains('wm-e-j1-') || n.contains('europe')) return 'europe';
+    final n = '${j['productRegion'] ?? ''} ${j['destination'] ?? ''} $text'
+        .toLowerCase();
+    if (n.contains('wm-tr-') || n.contains('turkey') || n.contains('turkiye')) {
+      return 'turkey';
+    }
+    if (n.contains('wm-e-j1-wld-') ||
+        n.contains('global') ||
+        n.contains('world')) {
+      return 'global';
+    }
+    if (n.contains('wm-eu-b-') ||
+        n.contains('wm-e-j1-') ||
+        n.contains('europe')) {
+      return 'europe';
+    }
     return '';
   }
 
-  static String _type(Map<String, dynamic> j, String identity, String provider) {
-    final value = _text(j, ['package_type', 'packageType', 'product_type']).toLowerCase();
+  static String _type(
+    Map<String, dynamic> j,
+    String identity,
+    String provider,
+  ) {
+    final value = _text(j, [
+      'package_type',
+      'packageType',
+      'product_type',
+    ]).toLowerCase();
     final code = identity.toUpperCase();
     if (j['is_esim'] == false ||
         value == 'sim' ||
         value == 'simcard' ||
         value == 'physical_sim' ||
-        (provider.toLowerCase() == 'worldmove' && code.startsWith('WM-EU-B-')) ||
-        (provider.toLowerCase() == 'tgt' && code.contains('E-185-SC-'))) return 'simcard';
+        (provider.toLowerCase() == 'worldmove' &&
+            code.startsWith('WM-EU-B-')) ||
+        (provider.toLowerCase() == 'tgt' && code.contains('E-185-SC-'))) {
+      return 'simcard';
+    }
     return 'esim';
   }
 
   static List<PackageCountry> _countries(Map<String, dynamic> j) {
     final values = <dynamic>[
-      j['supported_countries'], j['supportedCountries'], j['coverage_countries'],
-      j['coverageCountries'], j['country_list'], j['countryList'], j['country_codes'],
-      j['countryCodes'], j['countries'], j['coverage'], j['country'],
+      j['supported_countries'],
+      j['supportedCountries'],
+      j['coverage_countries'],
+      j['coverageCountries'],
+      j['country_list'],
+      j['countryList'],
+      j['country_codes'],
+      j['countryCodes'],
+      j['countries'],
+      j['coverage'],
+      j['country'],
     ];
+
     final result = <PackageCountry>[];
     final seen = <String>{};
     for (final value in values) {
       for (final item in _flattenCoverage(value)) {
         final country = _countryFromCoverage(item);
         if (country == null) continue;
-        final key = country.code.isNotEmpty ? country.code : country.name.toLowerCase();
+        final key = country.code.isNotEmpty
+            ? country.code
+            : country.name.toLowerCase();
         if (seen.add(key)) result.add(country);
       }
     }
+
     final identity = _identity(j).toUpperCase();
     if (identity.startsWith('WM-TR-') && seen.add('TR')) {
       result.add(const PackageCountry(name: 'Turkey', code: 'TR'));
     }
+
     if (identity.startsWith('WM-E-J1-VDFES-')) {
       for (final country in const [
         PackageCountry(name: 'Europe', code: 'EU'),
@@ -389,60 +449,302 @@ class MobilePackage {
         if (seen.add(country.code)) result.add(country);
       }
     }
+
     return result;
   }
 
-  static Iterable<dynamic> _flattenCoverage(dynamic value) {
-    if (value is List) return value.expand(_flattenCoverage);
-    if (value is Map) return [value];
-    if (value == null) return const [];
-    return [value];
-  }
-
-  static PackageCountry? _countryFromCoverage(dynamic value) {
-    if (value is Map) {
-      final name = _text(value, ['name', 'country_name', 'country', 'label']);
-      final code = _text(value, ['code', 'country_code', 'iso2', 'iso_code']).toUpperCase();
-      if (name.isEmpty && code.isEmpty) return null;
-      return PackageCountry(name: name, code: code);
-    }
-    final text = '$value'.trim();
-    if (text.isEmpty) return null;
-    return PackageCountry(name: text, code: '');
-  }
-
-  static String _identity(Map<String, dynamic> j) =>
-      _text(j, ['id', 'package_id', 'planCode', 'productCode', 'product_code', 'code', 'sku']);
-
-  static String _worldmoveCode(Map<String, dynamic> j) =>
-      _text(j, ['product_code', 'productCode', 'planCode', 'code', 'sku', 'package_id', 'id']);
-
-  static String _text(Map<String, dynamic> j, List<String> keys) {
-    for (final key in keys) {
-      final value = j[key];
-      if (value != null && '$value'.trim().isNotEmpty) return '$value'.trim();
+  static String _description(Map<String, dynamic> j) {
+    for (final key in const [
+      'description',
+      'package_description',
+      'plan_description',
+      'product_description',
+      'short_description',
+    ]) {
+      final text = j[key]?.toString().trim() ?? '';
+      if (text.isNotEmpty) return text;
     }
     return '';
   }
-
-  static dynamic _first(List<dynamic> values) {
-    for (final value in values) {
-      if (value != null && '$value'.trim().isNotEmpty) return value;
-    }
-    return null;
-  }
-
-  static String _clean(dynamic value) => '$value'.replaceAll(RegExp(r'\.0+$'), '');
-  static dynamic _dataFromText(String text) => RegExp(r'(\d+(?:\.\d+)?)\s*GB', caseSensitive: false).firstMatch(text)?.group(1);
-  static dynamic _validityFromText(String text) => RegExp(r'(\d+)\s*(?:D|DAY|DAYS)', caseSensitive: false).firstMatch(text)?.group(1);
-  static String _displayData(dynamic value) => value == null ? '' : '${_clean(value)}GB';
-  static String _displayValidity(dynamic value) => value == null ? '' : '${_clean(value)}D';
-  static String _simplifyRawName(String value) => value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  static String _description(Map<String, dynamic> j) => _text(j, ['description', 'notes']);
 }
 
 class PackageCountry {
   const PackageCountry({required this.name, required this.code});
-  final String name;
-  final String code;
+  final String name, code;
 }
+
+String _displayData(dynamic value) {
+  if (value == null) return '';
+  final text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) {
+    return '';
+  }
+  final numeric = num.tryParse(text);
+  return numeric == null ? text : '${_clean(numeric)}GB';
+}
+
+String _displayValidity(dynamic value) {
+  if (value == null) return '';
+  var text = '$value'.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (text.isEmpty || RegExp(r'^n\/?a$', caseSensitive: false).hasMatch(text)) {
+    return '';
+  }
+  final numeric = num.tryParse(text);
+  if (numeric != null) return '${_clean(numeric)} Days';
+  text = text.replaceAll(RegExp(r'\bD\b', caseSensitive: false), 'Days');
+  return text;
+}
+
+String _simplifyRawName(String value) {
+  var text = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+  text = text.replaceFirst(
+    RegExp(r'^\s*[\[【]?(?:eSIM|Sim|SIM)[\]】]?\s*', caseSensitive: false),
+    '',
+  );
+  text = text.replaceAll(
+    RegExp(r'\([^)]*countries?[^)]*\)', caseSensitive: false),
+    '',
+  );
+  text = text.replaceAll(RegExp(r'\(e0?1\)', caseSensitive: false), '');
+  text = text.replaceAll(
+    RegExp(r'\busage\s+package\b', caseSensitive: false),
+    '',
+  );
+  text = text.replaceAll(RegExp(r'\s*\/\s*'), ' ');
+  text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return text;
+}
+
+Iterable<dynamic> _flattenCoverage(dynamic value) sync* {
+  if (value == null) return;
+  if (value is List) {
+    for (final item in value) {
+      yield* _flattenCoverage(item);
+    }
+    return;
+  }
+  if (value is Map) {
+    yield value;
+    return;
+  }
+  final text = '$value'.trim();
+  if (text.isEmpty) return;
+  for (final token in text.split(RegExp(r'[,;/|]'))) {
+    final trimmed = token.trim();
+    if (trimmed.isNotEmpty) yield trimmed;
+  }
+}
+
+PackageCountry? _countryFromCoverage(dynamic item) {
+  if (item is Map) {
+    final m = Map<String, dynamic>.from(item);
+    final rawCode =
+        '${m['code'] ?? m['country_code'] ?? m['iso2'] ?? m['countryCode'] ?? ''}'
+            .trim()
+            .toUpperCase();
+    final rawName =
+        '${m['name'] ?? m['country_name'] ?? m['country'] ?? m['countryName'] ?? rawCode}'
+            .trim();
+    final code = rawCode.isNotEmpty ? rawCode : _countryCode(rawName);
+    if (code.isEmpty && rawName.isEmpty) return null;
+    return PackageCountry(
+      name: rawName.isEmpty || rawName.length == 2
+          ? _countryName(code)
+          : rawName,
+      code: code,
+    );
+  }
+
+  final text = '$item'.trim();
+  if (text.isEmpty) return null;
+  final code = text.length == 2 ? text.toUpperCase() : _countryCode(text);
+  if (code.isEmpty) return null;
+  return PackageCountry(name: _countryName(code), code: code);
+}
+
+String _countryCode(String name) {
+  final normalized = name.trim().toLowerCase();
+  return const {
+        'austria': 'AT',
+        'belgium': 'BE',
+        'bulgaria': 'BG',
+        'switzerland': 'CH',
+        'cyprus': 'CY',
+        'czechia': 'CZ',
+        'czech republic': 'CZ',
+        'germany': 'DE',
+        'denmark': 'DK',
+        'estonia': 'EE',
+        'spain': 'ES',
+        'finland': 'FI',
+        'france': 'FR',
+        'united kingdom': 'GB',
+        'uk': 'GB',
+        'greece': 'GR',
+        'croatia': 'HR',
+        'hungary': 'HU',
+        'ireland': 'IE',
+        'iceland': 'IS',
+        'italy': 'IT',
+        'lithuania': 'LT',
+        'luxembourg': 'LU',
+        'latvia': 'LV',
+        'malta': 'MT',
+        'netherlands': 'NL',
+        'norway': 'NO',
+        'poland': 'PL',
+        'portugal': 'PT',
+        'romania': 'RO',
+        'serbia': 'RS',
+        'sweden': 'SE',
+        'slovenia': 'SI',
+        'slovakia': 'SK',
+        'turkey': 'TR',
+        'turkiye': 'TR',
+        'türkiye': 'TR',
+        'ukraine': 'UA',
+        'united states': 'US',
+        'usa': 'US',
+        'canada': 'CA',
+        'mexico': 'MX',
+        'brazil': 'BR',
+        'australia': 'AU',
+        'new zealand': 'NZ',
+        'japan': 'JP',
+        'united arab emirates': 'AE',
+        'saudi arabia': 'SA',
+        'europe': 'EU',
+      }[normalized] ??
+      '';
+}
+
+String _worldmoveCode(Map<String, dynamic> j) => _text(j, [
+  'wmproductId',
+  'wmproduct_id',
+  'wmProductId',
+  'productCode',
+  'product_code',
+  'code',
+  'sku',
+  'id',
+]).toUpperCase();
+
+String _identity(Map<String, dynamic> j) => [
+  j['id'],
+  j['wmproductId'],
+  j['wmproduct_id'],
+  j['wmProductId'],
+  j['package_id'],
+  j['planCode'],
+  j['productCode'],
+  j['product_code'],
+  j['code'],
+  j['sku'],
+  j['name'],
+  j['package_name'],
+  j['productName'],
+  j['product_name'],
+  j['planName'],
+  j['productRegion'],
+  j['operator_name'],
+  j['operator'],
+].where((v) => v != null && '$v'.trim().isNotEmpty).join(' ');
+
+String _text(Map<String, dynamic> j, List<String> keys) {
+  for (final key in keys) {
+    final v = j[key];
+    if (v != null && v.toString().trim().isNotEmpty) return v.toString().trim();
+  }
+  return '';
+}
+
+dynamic _first(List<dynamic> values) {
+  for (final v in values) {
+    if (v != null && v.toString().trim().isNotEmpty) return v;
+  }
+  return null;
+}
+
+String _clean(dynamic v) {
+  final n = num.tryParse('$v');
+  if (n == null) return '$v';
+  return n == n.roundToDouble() ? '${n.toInt()}' : '$n';
+}
+
+num? _dataFromText(String text) {
+  final match = RegExp(
+    r'(\d+(?:\.\d+)?)\s*GB',
+    caseSensitive: false,
+  ).firstMatch(text);
+  if (match != null) return num.tryParse(match.group(1)!);
+  const fallbacks = {
+    'WM-E-J1-VDFES-M': 25,
+    'WM-E-J1-VDFES-XL': 45,
+    'WM-E-J1-VDFES-XXL': 60,
+    'WM-E-J1-WLD-O-14D': 20,
+    'WM-E-J1-WLD-O-MINI-30D': 3,
+  };
+  for (final e in fallbacks.entries) {
+    if (text.toUpperCase().contains(e.key)) return e.value;
+  }
+  return null;
+}
+
+int? _validityFromText(String text) {
+  final match = RegExp(
+    r'(\d+)\s*(?:D|DAY|DAYS)(?:\b|/)',
+    caseSensitive: false,
+  ).firstMatch(text);
+  if (match != null) return int.tryParse(match.group(1)!);
+  if (text.toUpperCase().contains('WM-E-J1-VDFES-')) return 30;
+  return null;
+}
+
+String _countryName(String code) =>
+    const {
+      'AT': 'Austria',
+      'BE': 'Belgium',
+      'BG': 'Bulgaria',
+      'CH': 'Switzerland',
+      'CY': 'Cyprus',
+      'CZ': 'Czechia',
+      'DE': 'Germany',
+      'DK': 'Denmark',
+      'EE': 'Estonia',
+      'ES': 'Spain',
+      'FI': 'Finland',
+      'FR': 'France',
+      'GB': 'United Kingdom',
+      'GR': 'Greece',
+      'HR': 'Croatia',
+      'HU': 'Hungary',
+      'IE': 'Ireland',
+      'IS': 'Iceland',
+      'IT': 'Italy',
+      'LT': 'Lithuania',
+      'LU': 'Luxembourg',
+      'LV': 'Latvia',
+      'MT': 'Malta',
+      'NL': 'Netherlands',
+      'NO': 'Norway',
+      'PL': 'Poland',
+      'PT': 'Portugal',
+      'RO': 'Romania',
+      'RS': 'Serbia',
+      'SE': 'Sweden',
+      'SI': 'Slovenia',
+      'SK': 'Slovakia',
+      'TR': 'Turkey',
+      'UA': 'Ukraine',
+      'US': 'United States',
+      'CA': 'Canada',
+      'MX': 'Mexico',
+      'BR': 'Brazil',
+      'AU': 'Australia',
+      'NZ': 'New Zealand',
+      'JP': 'Japan',
+      'AE': 'United Arab Emirates',
+      'SA': 'Saudi Arabia',
+      'EU': 'Europe',
+    }[code] ??
+    code;
