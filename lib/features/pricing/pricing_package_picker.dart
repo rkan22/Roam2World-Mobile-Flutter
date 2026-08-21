@@ -246,7 +246,9 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
                             ],
                           ),
                           trailing: Text(
-                            item.formattedPrice,
+                            item.price <= 0
+                                ? 'Contact Admin'
+                                : item.formattedPrice,
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           onTap: () => Navigator.pop(
