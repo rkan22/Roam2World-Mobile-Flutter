@@ -106,45 +106,44 @@ class PackagesRepository {
       packages.addAll(await _applyCentralPricing(externalPackages));
 
       final term = normalizedSearch.toLowerCase();
-      final filtered =
-          packages.where((package) {
-            if (_isHiddenProvider(package) ||
-                !_providerPackageAllowed(package)) {
-              return false;
-            }
-            if (normalizedDestination.isNotEmpty &&
-                package.destinationKey.toLowerCase() !=
-                    normalizedDestination.toLowerCase()) {
-              return false;
-            }
-            if (normalizedType.isNotEmpty &&
-                package.packageType.toLowerCase() !=
-                    normalizedType.toLowerCase()) {
-              return false;
-            }
-            if (term.isNotEmpty &&
-                ![
-                  package.name,
-                  package.destination,
-                  package.displayProvider,
-                  package.provider,
-                  package.id,
-                  package.dataLabel,
-                  package.validityLabel,
-                ].any((value) => value.toLowerCase().contains(term))) {
-              return false;
-            }
-            return true;
-          }).toList()..sort((a, b) {
-            final aTurkey = a.operatorKey == 'turkey';
-            final bTurkey = b.operatorKey == 'turkey';
-            if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
+      final filtered = packages.where((package) {
+        if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) {
+          return false;
+        }
+        if (normalizedDestination.isNotEmpty &&
+            package.destinationKey.toLowerCase() !=
+                normalizedDestination.toLowerCase()) {
+          return false;
+        }
+        if (normalizedType.isNotEmpty &&
+            package.packageType.toLowerCase() !=
+                normalizedType.toLowerCase()) {
+          return false;
+        }
+        if (term.isNotEmpty &&
+            ![
+              package.name,
+              package.destination,
+              package.displayProvider,
+              package.provider,
+              package.id,
+              package.dataLabel,
+              package.validityLabel,
+            ].any((value) => value.toLowerCase().contains(term))) {
+          return false;
+        }
+        return true;
+      }).toList()
+        ..sort((a, b) {
+          final aTurkey = a.operatorKey == 'turkey';
+          final bTurkey = b.operatorKey == 'turkey';
+          if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
 
-            final priceCompare = a.price.compareTo(b.price);
-            if (priceCompare != 0) return priceCompare;
+          final priceCompare = a.price.compareTo(b.price);
+          if (priceCompare != 0) return priceCompare;
 
-            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-          });
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
 
       final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
       cache.set(catalog);
@@ -258,15 +257,16 @@ class PackagesRepository {
           return priced;
         },
       );
-      if (pricedBatch.isEmpty) return batch;
       final pricedById = <String, MobilePackage>{
         for (final item in pricedBatch) item.id: item,
       };
+      // Keep unpriced packages visible, but zero their customer price so the
+      // UI renders Contact Admin instead of leaking provider cost.
       return batch
-          .map((item) => pricedById[item.id] ?? item)
+          .map((item) => pricedById[item.id] ?? item.withPrice(0))
           .toList(growable: false);
     } catch (_) {
-      return batch;
+      return batch.map((item) => item.withPrice(0)).toList(growable: false);
     }
   }
 
