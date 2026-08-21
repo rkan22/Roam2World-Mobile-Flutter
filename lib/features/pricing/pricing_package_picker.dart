@@ -76,12 +76,13 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
 
     try {
       final catalog = await widget.repository.fetchPackages();
-      final packages = catalog.packages
-          .where((item) => _matchesProvider(item, widget.provider))
-          .toList()
-        ..sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
+      final packages =
+          catalog.packages
+              .where((item) => _matchesProvider(item, widget.provider))
+              .toList()
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
 
       widget.onCatalogLoaded?.call(packages);
 
@@ -102,7 +103,7 @@ class _PricingPackagePickerState extends State<_PricingPackagePicker> {
 
     // Manual Fulfillment is its own operator. It must never leak into
     // another operator's package picker.
-    if (selected == 'manual') return item.operatorKey == 'manual';
+    if (selected == 'manual') return source == 'manual';
     if (source == 'manual') return false;
 
     // For providers represented by a dedicated operator key, prefer the

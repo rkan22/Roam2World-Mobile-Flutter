@@ -35,6 +35,7 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
     'worldmove': 'Orange Europe',
     'flexnet': 'Orange Big Data',
     'tgt': 'Orange Balkans',
+    'manual': 'Manual Fulfillment',
   };
 
   static const _roles = <String, String>{
