@@ -40,6 +40,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _submit() async {
+    if (!widget.package.isPriceAvailable) {
+      if (mounted) {
+        setState(() {
+          _error =
+              'This package requires a central pricing rule. Contact Admin.';
+        });
+      }
+      return;
+    }
     if (_submitting ||
         !(_formKey.currentState?.validate() ?? false) ||
         !_accepted) {
@@ -95,7 +104,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         child: FilledButton(
-          onPressed: _accepted && !_submitting ? _submit : null,
+          onPressed: package.isPriceAvailable && _accepted && !_submitting
+              ? _submit
+              : null,
           child: _submitting
               ? const SizedBox(
                   height: 22,
@@ -110,7 +121,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     const Icon(Icons.lock_outline_rounded, size: 18),
                     const SizedBox(width: 8),
-                    Text('Confirm order  •  ${package.formattedPrice}'),
+                    Text(
+                      package.isPriceAvailable
+                          ? 'Confirm order  •  ${package.formattedPrice}'
+                          : 'Contact Admin',
+                    ),
                   ],
                 ),
         ),

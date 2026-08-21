@@ -228,7 +228,11 @@ class MobilePackage {
     );
   }
 
-  String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
+  bool get isPriceAvailable => price > 0;
+  String get formattedPrice => isPriceAvailable
+      ? '$currency ${price.toStringAsFixed(2)}'
+      : 'Contact Admin';
+
   num? get dataGb => num.tryParse(
     RegExp(r'\d+(?:\.\d+)?').firstMatch(dataLabel)?.group(0) ?? '',
   );

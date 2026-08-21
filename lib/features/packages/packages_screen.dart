@@ -582,7 +582,7 @@ class _OperatorPlanCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
+        onTap: package.isPriceAvailable ? onTap : null,
         child: Container(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
           decoration: BoxDecoration(
@@ -674,7 +674,7 @@ class _OperatorPlanCard extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: onTap,
+                  onPressed: package.isPriceAvailable ? onTap : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -683,7 +683,9 @@ class _OperatorPlanCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    manual ? 'Review request' : 'Order',
+                    package.isPriceAvailable
+                        ? (manual ? 'Review request' : 'Order')
+                        : 'Contact Admin',
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
