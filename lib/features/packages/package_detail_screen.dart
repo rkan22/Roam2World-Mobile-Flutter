@@ -22,7 +22,9 @@ class PackageDetailScreen extends StatelessWidget {
         child: SizedBox(
           height: 58,
           child: FilledButton.icon(
-            onPressed: () => context.push('/checkout', extra: package),
+            onPressed: package.isPriceAvailable
+                ? () => context.push('/checkout', extra: package)
+                : null,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -32,7 +34,9 @@ class PackageDetailScreen extends StatelessWidget {
             ),
             icon: const Icon(Icons.shopping_bag_outlined, size: 20),
             label: Text(
-              'Continue to checkout  •  ${package.formattedPrice}',
+              package.isPriceAvailable
+                  ? 'Continue to checkout  •  ${package.formattedPrice}'
+                  : 'Contact Admin',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
@@ -318,7 +322,9 @@ class _PlanSummaryCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Ready for B2B checkout',
+                    package.isPriceAvailable
+                        ? 'Ready for B2B checkout'
+                        : 'Central pricing required',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w800,
