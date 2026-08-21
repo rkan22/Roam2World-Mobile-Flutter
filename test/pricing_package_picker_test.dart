@@ -108,6 +108,7 @@ void main() {
 
     expect(find.text('Vodafone Turkey 10GB'), findsOneWidget);
     expect(find.text('Orange Balkans 10GB'), findsNothing);
+    expect(find.text('Manual Turkey 10GB'), findsNothing);
 
     await tester.tap(find.text('Vodafone Turkey 10GB'));
     await tester.pumpAndSettle();
@@ -117,7 +118,7 @@ void main() {
     expect(selected!.package!.id, 'VODAFONE-TR-10GB');
   });
 
-  testWidgets('includes manual fulfillment products for any operator', (
+  testWidgets('shows manual fulfillment only for the manual operator', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -128,7 +129,7 @@ void main() {
               onPressed: () {
                 showPricingPackagePicker(
                   context: context,
-                  provider: 'airhub',
+                  provider: 'manual',
                   repository: repository,
                 );
               },
@@ -143,7 +144,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Manual Turkey 10GB'), findsOneWidget);
-    expect(find.text('Manual Fulfillment'), findsOneWidget);
+    expect(find.text('Vodafone Turkey 10GB'), findsNothing);
+    expect(find.text('Orange Balkans 10GB'), findsNothing);
   });
 
   testWidgets('returns all-packages selection', (tester) async {
