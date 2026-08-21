@@ -59,12 +59,10 @@ class ApiEndpoints {
     '/api/v1/providers/airhub/packages/filtered/',
   ];
   static const List<String> flexnetCatalogSources = [
-    '/api/v1/flexnet/plans/',
-    '/api/v1/flexnet/packages/',
-    '/api/v1/providers/flexnet/packages/',
+    '/api/v1/mobile/b2b/flexnet/big-data/packages/',
   ];
   static const List<String> tgtCatalogSources = [
-    '/api/v1/tgt/catalog/plans/',
+    '/api/v1/mobile/b2b/tgt/balkans/packages/',
     '/api/v1/mobile/smart/packages/',
   ];
   static const String mobilePackages = '/api/v1/mobile/packages/';
