@@ -124,6 +124,7 @@ class MobilePackage {
     required this.packageType,
     required this.countryCode,
     required this.isFeatured,
+    this.isPriceVisible = true,
     this.description = '',
     this.supportedCountries = const [],
   });
@@ -142,6 +143,7 @@ class MobilePackage {
       description;
   final double price;
   final bool isFeatured;
+  final bool isPriceVisible;
   final List<PackageCountry> supportedCountries;
 
   factory MobilePackage.fromJson(Map<String, dynamic> json) {
@@ -223,12 +225,13 @@ class MobilePackage {
       packageType: _type(json, identity, provider),
       countryCode: first.code,
       isFeatured: json['is_featured'] == true || json['isFeatured'] == true,
+      isPriceVisible: json['is_price_visible'] == true,
       description: _description(json),
       supportedCountries: countries,
     );
   }
 
-  bool get isPriceAvailable => price > 0;
+  bool get isPriceAvailable => isPriceVisible && price > 0;
   String get formattedPrice => isPriceAvailable
       ? '$currency ${price.toStringAsFixed(2)}'
       : 'Contact Admin';
@@ -253,6 +256,7 @@ class MobilePackage {
     packageType: packageType,
     countryCode: countryCode,
     isFeatured: isFeatured,
+    isPriceVisible: value > 0,
     description: description,
     supportedCountries: supportedCountries,
   );
