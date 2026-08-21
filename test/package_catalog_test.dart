@@ -19,6 +19,7 @@ void main() {
             'package_validity': 30,
             'package_validity_unit': 'Days',
             'final_price': '15.50',
+            'is_price_visible': true,
             'currency': 'USD',
             'countries': [
               {'name': 'Turkey', 'code': 'TR'},
@@ -36,6 +37,19 @@ void main() {
     expect(catalog.packages.first.dataLabel, '10 GB');
     expect(catalog.packages.first.formattedPrice, 'USD 15.50');
     expect(catalog.packages.first.countryCode, 'TR');
+  });
+
+  test('hides package price unless backend explicitly allows it', () {
+    final package = MobilePackage.fromJson({
+      'id': 'unpriced-package',
+      'name': 'Unpriced Package',
+      'provider': 'flexnet',
+      'price': '39.99',
+      'is_price_visible': false,
+    });
+
+    expect(package.isPriceAvailable, isFalse);
+    expect(package.formattedPrice, 'Contact Admin');
   });
 
   test('parses and classifies Worldmove unified catalog packages', () {

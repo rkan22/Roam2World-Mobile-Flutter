@@ -106,44 +106,45 @@ class PackagesRepository {
       packages.addAll(await _applyCentralPricing(externalPackages));
 
       final term = normalizedSearch.toLowerCase();
-      final filtered = packages.where((package) {
-        if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) {
-          return false;
-        }
-        if (normalizedDestination.isNotEmpty &&
-            package.destinationKey.toLowerCase() !=
-                normalizedDestination.toLowerCase()) {
-          return false;
-        }
-        if (normalizedType.isNotEmpty &&
-            package.packageType.toLowerCase() !=
-                normalizedType.toLowerCase()) {
-          return false;
-        }
-        if (term.isNotEmpty &&
-            ![
-              package.name,
-              package.destination,
-              package.displayProvider,
-              package.provider,
-              package.id,
-              package.dataLabel,
-              package.validityLabel,
-            ].any((value) => value.toLowerCase().contains(term))) {
-          return false;
-        }
-        return true;
-      }).toList()
-        ..sort((a, b) {
-          final aTurkey = a.operatorKey == 'turkey';
-          final bTurkey = b.operatorKey == 'turkey';
-          if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
+      final filtered =
+          packages.where((package) {
+            if (_isHiddenProvider(package) ||
+                !_providerPackageAllowed(package)) {
+              return false;
+            }
+            if (normalizedDestination.isNotEmpty &&
+                package.destinationKey.toLowerCase() !=
+                    normalizedDestination.toLowerCase()) {
+              return false;
+            }
+            if (normalizedType.isNotEmpty &&
+                package.packageType.toLowerCase() !=
+                    normalizedType.toLowerCase()) {
+              return false;
+            }
+            if (term.isNotEmpty &&
+                ![
+                  package.name,
+                  package.destination,
+                  package.displayProvider,
+                  package.provider,
+                  package.id,
+                  package.dataLabel,
+                  package.validityLabel,
+                ].any((value) => value.toLowerCase().contains(term))) {
+              return false;
+            }
+            return true;
+          }).toList()..sort((a, b) {
+            final aTurkey = a.operatorKey == 'turkey';
+            final bTurkey = b.operatorKey == 'turkey';
+            if (aTurkey != bTurkey) return aTurkey ? -1 : 1;
 
-          final priceCompare = a.price.compareTo(b.price);
-          if (priceCompare != 0) return priceCompare;
+            final priceCompare = a.price.compareTo(b.price);
+            if (priceCompare != 0) return priceCompare;
 
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        });
+            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          });
 
       final catalog = PackageCatalog(packages: filtered, hasMore: hasMore);
       cache.set(catalog);
@@ -304,27 +305,9 @@ class PackagesRepository {
   }
 
   bool _providerPackageAllowed(MobilePackage package) {
-    if (package.id.isEmpty) return false;
-    if (package.provider.trim().toLowerCase() != 'tgt') return true;
-    return const {
-      'E-185-SC-AU-EO1-T-30D/60D-1GB',
-      'E-185-SC-AU-EO1-T-30D/60D-3GB',
-      'E-185-SC-AU-EO1-T-30D/60D-5GB',
-      'E-185-SC-AU-EO1-T-30D/60D-10GB',
-      'E-185-SC-AU-EO1-T-30D/60D-20GB',
-      'E-185-SC-AU-EO1-T-30D/60D-30GB',
-      'E-185-SC-AU-EO1-T-30D/60D-50GB',
-      'E-185-ES-AU-EO1-T-30D/60D-1GB',
-      'E-185-ES-AU-EO1-T-30D/60D-3GB',
-      'E-185-ES-AU-EO1-T-30D/60D-5GB',
-      'E-185-ES-AU-EO1-T-30D/60D-10GB',
-      'E-185-ES-AU-EO1-T-30D/60D-20GB',
-      'E-185-ES-AU-EO1-T-30D/60D-30GB',
-      'E-185-ES-AU-EO1-T-30D/60D-50GB',
-      'E-185-SC-AU-EO1-T-CTM-60D/60D-20GB',
-      'E-185-SC-AU-EO1-T-CTM-60D/60D-60GB',
-      'E-185-ES-AU-EO1-T-CTM-60D/60D-20GB',
-      'E-185-ES-AU-EO1-T-CTM-60D/60D-60GB',
-    }.contains(package.id.toUpperCase());
+    // Provider-specific allow/block rules are enforced by the backend.
+    // Keeping a second hard-coded TGT list here made valid live products
+    // disappear whenever the provider catalog changed.
+    return package.id.isNotEmpty;
   }
 }
