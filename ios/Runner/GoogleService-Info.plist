@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.roam2world.b2b</string>
+	<string>com.roam2world.mobile</string>
 	<key>PROJECT_ID</key>
 	<string>roam2world-b2b</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:383607664330:ios:4e2ca91a2bc59ecb90ce33</string>
+	<string>1:383607664330:ios:8f3091fb12d8a3ca90ce33</string>
 </dict>
 </plist>
