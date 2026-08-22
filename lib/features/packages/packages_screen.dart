@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../../shared/widgets/staggered_entrance.dart';
 import 'package_catalog.dart';
 import 'packages_repository.dart';
 
@@ -190,7 +192,29 @@ class _PackagesScreenState extends State<PackagesScreen> {
               _CatalogSection(
                 title: 'Available Plans',
                 trailing: '${visible.length} plans',
-                child: _buildCatalogContent(visible),
+                child: AnimatedSwitcher(
+                  duration: B2BMotion.standard,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final offset = Tween<Offset>(
+                      begin: const Offset(0, .025),
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: offset, child: child),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey(
+                      '${_loading}_${_selectedOperator}_${_selectedType}_'
+                      '${_selectedValidity}_${_selectedData}_'
+                      '${_searchController.text}_${visible.length}',
+                    ),
+                    child: _buildCatalogContent(visible),
+                  ),
+                ),
               ),
             ],
           ),
@@ -221,10 +245,14 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return Column(
       children: [
         for (var index = 0; index < visible.length; index++) ...[
-          _OperatorPlanCard(
-            package: visible[index],
-            onTap: () =>
-                context.push('/packages/detail', extra: visible[index]),
+          StaggeredEntrance(
+            key: ValueKey('${visible[index].provider}-${visible[index].id}'),
+            index: index,
+            child: _OperatorPlanCard(
+              package: visible[index],
+              onTap: () =>
+                  context.push('/packages/detail', extra: visible[index]),
+            ),
           ),
           if (index != visible.length - 1) const SizedBox(height: 14),
         ],
@@ -577,125 +605,105 @@ class _OperatorPlanCard extends StatelessWidget {
     final manual = package.provider.toLowerCase() == 'manual';
     final typeLabel = package.packageType == 'simcard' ? 'SIM Card' : 'eSIM';
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: package.isPriceAvailable ? onTap : null,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-            boxShadow: theme.brightness == Brightness.light
-                ? const [
-                    BoxShadow(
-                      color: Color(0x14020817),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
+    return B2BSurface(
+      onTap: package.isPriceAvailable ? onTap : null,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      radius: 22,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          package.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -.35,
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          package.destination,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  SizedBox.square(
-                    dimension: 64,
-                    child: Center(
-                      child: _CountryVisual(
-                        code: package.countryCode,
-                        destinationKey: package.destinationKey,
-                        size: 56,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      package.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -.35,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text(
-                manual
-                    ? '${package.displayProvider} · manual delivery'
-                    : package.displayProvider,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w800,
+                    const SizedBox(height: 7),
+                    Text(
+                      package.destination,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (package.supportedCountries.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _CoveragePreview(countries: package.supportedCountries),
-              ],
-              const SizedBox(height: 22),
-              _PlanDetailRow(label: 'Region', value: package.destination),
-              _PlanDetailRow(label: 'Type', value: typeLabel),
-              _PlanDetailRow(label: 'Data', value: package.dataLabel),
-              _PlanDetailRow(label: 'Validity', value: package.validityLabel),
-              _PlanDetailRow(
-                label: 'Price',
-                value: package.formattedPrice,
-                emphasize: true,
-              ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton(
-                  onPressed: package.isPriceAvailable ? onTap : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    package.isPriceAvailable
-                        ? (manual ? 'Review request' : 'Order')
-                        : 'Contact Admin',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
+              const SizedBox(width: 14),
+              SizedBox.square(
+                dimension: 64,
+                child: Center(
+                  child: _CountryVisual(
+                    code: package.countryCode,
+                    destinationKey: package.destinationKey,
+                    size: 56,
                   ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          Text(
+            manual
+                ? '${package.displayProvider} · manual delivery'
+                : package.displayProvider,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (package.supportedCountries.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _CoveragePreview(countries: package.supportedCountries),
+          ],
+          const SizedBox(height: 22),
+          _PlanDetailRow(label: 'Region', value: package.destination),
+          _PlanDetailRow(label: 'Type', value: typeLabel),
+          _PlanDetailRow(label: 'Data', value: package.dataLabel),
+          _PlanDetailRow(label: 'Validity', value: package.validityLabel),
+          _PlanDetailRow(
+            label: 'Price',
+            value: package.formattedPrice,
+            emphasize: true,
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: FilledButton(
+              onPressed: package.isPriceAvailable ? onTap : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                package.isPriceAvailable
+                    ? (manual ? 'Review request' : 'Order')
+                    : 'Contact Admin',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
