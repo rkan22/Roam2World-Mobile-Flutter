@@ -30,6 +30,7 @@ void main() {
     expect(data.role, 'reseller');
     expect(data.balance, 125.5);
     expect(data.monthlySales, 740.25);
+    expect(data.salesTrend, isEmpty);
     expect(data.totalEsimCount, 15);
     expect(data.activeEsimCount, 12);
     expect(data.recentOrders.single.orderNumber, 'R2W-009');
@@ -53,6 +54,27 @@ void main() {
     expect(data.totalEsimCount, 28);
     expect(data.activeEsimCount, 21);
     expect(data.expiredEsimCount, 7);
+  });
+
+  test('parses backend-provided sales trend without inventing points', () {
+    final data = DashboardData.fromResponse({
+      'data': {
+        'role': 'reseller',
+        'sales': {
+          'revenue': '300.00',
+          'series': [
+            {'label': '20 Aug', 'revenue': '80.00'},
+            {'label': '21 Aug', 'revenue': '100.00'},
+            {'label': '22 Aug', 'revenue': '120.00'},
+          ],
+        },
+      },
+    });
+
+    expect(data.salesTrend, hasLength(3));
+    expect(data.salesTrend.first.label, '20 Aug');
+    expect(data.salesTrend.first.value, 80);
+    expect(data.salesTrend.last.value, 120);
   });
 
   test('uses dealer current balance field', () {
