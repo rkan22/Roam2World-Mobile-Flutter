@@ -1,5 +1,28 @@
 import '../../shared/formatters/order_package_name_formatter.dart';
 
+class DashboardSalesTrendPoint {
+  const DashboardSalesTrendPoint({required this.label, required this.value});
+
+  final String label;
+  final double value;
+
+  factory DashboardSalesTrendPoint.fromJson(Map<String, dynamic> json) {
+    return DashboardSalesTrendPoint(
+      label:
+          _first([
+            json['label'],
+            json['date'],
+            json['day'],
+            json['period'],
+          ])?.toString() ??
+          '',
+      value: _toDouble(
+        _first([json['value'], json['revenue'], json['amount'], json['total']]),
+      ),
+    );
+  }
+}
+
 class DashboardOrderSummary {
   const DashboardOrderSummary({
     required this.id,
@@ -44,6 +67,7 @@ class DashboardData {
     required this.activeEsimCount,
     required this.expiredEsimCount,
     required this.recentOrders,
+    this.salesTrend = const [],
     this.period = '30d',
     this.grossProfit = 0,
     this.grossMarginPercent = 0,
@@ -76,6 +100,7 @@ class DashboardData {
   final int activeEsimCount;
   final int expiredEsimCount;
   final List<DashboardOrderSummary> recentOrders;
+  final List<DashboardSalesTrendPoint> salesTrend;
   final String period;
   final double grossProfit;
   final double grossMarginPercent;
@@ -107,6 +132,7 @@ class DashboardData {
     int? activeEsimCount,
     int? expiredEsimCount,
     List<DashboardOrderSummary>? recentOrders,
+    List<DashboardSalesTrendPoint>? salesTrend,
     String? period,
     double? grossProfit,
     double? grossMarginPercent,
@@ -139,6 +165,7 @@ class DashboardData {
       activeEsimCount: activeEsimCount ?? this.activeEsimCount,
       expiredEsimCount: expiredEsimCount ?? this.expiredEsimCount,
       recentOrders: recentOrders ?? this.recentOrders,
+      salesTrend: salesTrend ?? this.salesTrend,
       period: period ?? this.period,
       grossProfit: grossProfit ?? this.grossProfit,
       grossMarginPercent: grossMarginPercent ?? this.grossMarginPercent,
@@ -251,6 +278,15 @@ class DashboardData {
                 DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false),
+      salesTrend: _parseSalesTrend(
+        _first([
+          sales['series'],
+          sales['trend'],
+          data['sales_series'],
+          data['revenue_series'],
+          data['revenue_history'],
+        ]),
+      ),
       period: data['period']?.toString() ?? '30d',
       grossProfit: _toDouble(sales['gross_profit']),
       grossMarginPercent: _toDouble(sales['gross_margin_percent']),
@@ -293,6 +329,14 @@ class DashboardData {
                 DashboardOrderSummary.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList(growable: false),
+      salesTrend: _parseSalesTrend(
+        _first([
+          data['sales_series'],
+          data['revenue_series'],
+          data['revenue_history'],
+          kpis['series'],
+        ]),
+      ),
       period: data['period']?.toString() ?? '30d',
       grossProfit: _toDouble(kpis['gross_profit']),
       grossMarginPercent: _toDouble(kpis['gross_margin_percent']),
@@ -323,6 +367,18 @@ class DashboardData {
       availableBlankSims: _toInt(dailyOperations['available_blank_sims']),
     );
   }
+}
+
+List<DashboardSalesTrendPoint> _parseSalesTrend(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map(
+        (item) =>
+            DashboardSalesTrendPoint.fromJson(Map<String, dynamic>.from(item)),
+      )
+      .where((point) => point.label.isNotEmpty)
+      .toList(growable: false);
 }
 
 double _toDouble(dynamic value) =>

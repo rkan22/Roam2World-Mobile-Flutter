@@ -387,15 +387,9 @@ class _SalesOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final points = <double>[
-      data.todaySales * .42,
-      data.todaySales * .58,
-      data.todaySales * .51,
-      data.todaySales * .72,
-      data.todaySales * .64,
-      data.todaySales * .83,
-      data.todaySales,
-    ];
+    final theme = Theme.of(context);
+    final points = data.salesTrend.map((point) => point.value).toList();
+    final hasTrend = points.length >= 2;
 
     return B2BSurface(
       child: Column(
@@ -405,19 +399,74 @@ class _SalesOverview extends StatelessWidget {
           const SizedBox(height: B2BSpacing.sm),
           Text(
             '${data.currency} ${data.monthlySales.toStringAsFixed(2)}',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: theme.textTheme.headlineMedium,
           ),
           const SizedBox(height: B2BSpacing.xs),
           Text(
-            'Current month revenue trend',
-            style: Theme.of(context).textTheme.bodySmall,
+            'Revenue for ${data.period.toUpperCase()}',
+            style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: B2BSpacing.lg),
-          SizedBox(
-            height: 120,
-            width: double.infinity,
-            child: CustomPaint(painter: _SalesSparklinePainter(points)),
-          ),
+          if (hasTrend) ...[
+            SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: CustomPaint(painter: _SalesSparklinePainter(points)),
+            ),
+            const SizedBox(height: B2BSpacing.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  data.salesTrend.first.label,
+                  style: theme.textTheme.labelSmall,
+                ),
+                Text(
+                  data.salesTrend.last.label,
+                  style: theme.textTheme.labelSmall,
+                ),
+              ],
+            ),
+          ] else ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(B2BSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: .42,
+                ),
+                borderRadius: BorderRadius.circular(B2BRadius.md),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.insights_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: B2BSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Trend chart will appear when the dashboard API provides time-series data.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: B2BSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Today', style: theme.textTheme.bodySmall),
+                Text(
+                  '${data.currency} ${data.todaySales.toStringAsFixed(2)}',
+                  style: theme.textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -454,6 +503,7 @@ class _SalesSparklinePainter extends CustomPainter {
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
+
     canvas.drawPath(
       fillPath,
       Paint()
@@ -463,6 +513,7 @@ class _SalesSparklinePainter extends CustomPainter {
           colors: [Color(0x332563EB), Color(0x002563EB)],
         ).createShader(Offset.zero & size),
     );
+
     canvas.drawPath(
       path,
       Paint()
@@ -475,8 +526,14 @@ class _SalesSparklinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SalesSparklinePainter oldDelegate) =>
-      oldDelegate.points != points;
+  bool shouldRepaint(covariant _SalesSparklinePainter oldDelegate) {
+    if (identical(oldDelegate.points, points)) return false;
+    if (oldDelegate.points.length != points.length) return true;
+    for (var index = 0; index < points.length; index++) {
+      if (oldDelegate.points[index] != points[index]) return true;
+    }
+    return false;
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
