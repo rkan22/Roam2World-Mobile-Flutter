@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/widgets/r2w_toast.dart';
+
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/api/api_exception.dart';
@@ -271,9 +273,7 @@ class _CentralPricingRulesScreenState extends State<CentralPricingRulesScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    R2WToast.info(context, message);
   }
 
   @override

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -58,15 +60,11 @@ class _ProviderCallbackLogsScreenState
     try {
       await _repository.updateStatus(item.id, 'processed');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Callback marked processed.')),
-      );
+      R2WToast.success(context, 'Callback marked processed.');
       await _load();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Callback status could not be updated.')),
-      );
+      R2WToast.error(context, 'Callback status could not be updated.');
     }
   }
 

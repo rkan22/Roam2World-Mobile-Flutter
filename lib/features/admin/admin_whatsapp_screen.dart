@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -60,14 +62,10 @@ class _AdminWhatsAppScreenState extends State<AdminWhatsAppScreen> {
       final updated = await _repository.updateFeatured(data.catalog, _featured);
       if (!mounted) return;
       setState(() => _data = updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('WhatsApp catalog updated.')),
-      );
+      R2WToast.success(context, 'WhatsApp catalog updated.');
     } on ApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.message)));
+        R2WToast.error(context, error.message);
       }
     } finally {
       if (mounted) setState(() => _saving = false);

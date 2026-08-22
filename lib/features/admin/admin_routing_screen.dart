@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -51,15 +53,11 @@ class _AdminRoutingScreenState extends State<AdminRoutingScreen> {
       await _repository.override(action: action, rule: rule);
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${rule.provider}: $action completed')),
-        );
+        R2WToast.success(context, '${rule.provider}: $action completed');
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Routing action failed.')));
+        R2WToast.error(context, 'Routing action failed.');
       }
     } finally {
       if (mounted) setState(() => _busyId = null);

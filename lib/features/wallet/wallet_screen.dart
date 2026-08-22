@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -109,19 +111,15 @@ class _WalletScreenState extends State<WalletScreen> {
             )
             .toList();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            approve ? 'Wallet request approved.' : 'Wallet request rejected.',
-          ),
-        ),
-      );
+      if (approve) {
+        R2WToast.success(context, 'Wallet request approved.');
+      } else {
+        R2WToast.warning(context, 'Wallet request rejected.');
+      }
       await _load(forceRefresh: true);
     } on ApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.message)));
+        R2WToast.error(context, error.message);
       }
     } finally {
       if (mounted) setState(() => _processingRequests.remove(request.id));
@@ -278,14 +276,11 @@ class _WalletScreenState extends State<WalletScreen> {
                         }
                         if (!mounted || !dialogContext.mounted) return;
                         Navigator.of(dialogContext).pop();
-                        ScaffoldMessenger.of(this.context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              refund
-                                  ? 'Wallet refund completed.'
-                                  : 'Wallet adjustment completed.',
-                            ),
-                          ),
+                        R2WToast.success(
+                          this.context,
+                          refund
+                              ? 'Wallet refund completed.'
+                              : 'Wallet adjustment completed.',
                         );
                         await _load(forceRefresh: true);
                       } on ApiException catch (error) {
@@ -350,12 +345,9 @@ class _WalletScreenState extends State<WalletScreen> {
               );
               if (!mounted || !sheetContext.mounted) return;
               Navigator.of(sheetContext).pop();
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${request.currency} ${request.amount.toStringAsFixed(2)} top-up request created. Status: ${request.status}.',
-                  ),
-                ),
+              R2WToast.success(
+                this.context,
+                '${request.currency} ${request.amount.toStringAsFixed(2)} top-up request created. Status: ${request.status}.',
               );
               await _load(forceRefresh: true);
             } on ApiException catch (error) {

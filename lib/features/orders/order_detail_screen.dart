@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -42,11 +44,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       context.push('/esims/detail', extra: linked);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Linked SIM / eSIM details could not be loaded.'),
-        ),
-      );
+      R2WToast.error(context, 'Linked SIM / eSIM details could not be loaded.');
     } finally {
       if (mounted) setState(() => _openingLinkedSim = false);
     }

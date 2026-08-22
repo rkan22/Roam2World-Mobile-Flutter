@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -70,9 +72,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     if (value.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label copied.')));
+    R2WToast.info(context, '$label copied.');
   }
 
   Future<void> _openLpa() async {
@@ -206,15 +206,11 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
               finalPrice: selected.price,
             );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      R2WToast.success(context, message);
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      R2WToast.error(context, error.message);
     } finally {
       if (mounted) setState(() => _renewing = false);
     }
@@ -259,9 +255,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      R2WToast.error(context, error.message);
     } finally {
       if (mounted) setState(() => _operating = false);
     }
@@ -269,10 +263,9 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
 
   Future<void> _topUpWorldmove() async {
     if (_esim.iccid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A SIM or ICCID number is required for top-up.'),
-        ),
+      R2WToast.warning(
+        context,
+        'A SIM or ICCID number is required for top-up.',
       );
       return;
     }
@@ -337,19 +330,14 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
         simNumber: _esim.iccid,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.message.isEmpty ? 'Top-up completed.' : result.message,
-          ),
-        ),
+      R2WToast.success(
+        context,
+        result.message.isEmpty ? 'Top-up completed.' : result.message,
       );
       await _load();
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      R2WToast.error(context, error.message);
     } finally {
       if (mounted) setState(() => _operating = false);
     }

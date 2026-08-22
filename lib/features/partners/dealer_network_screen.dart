@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -82,17 +84,14 @@ class _DealerNetworkScreenState extends State<DealerNetworkScreen> {
     try {
       await _repository.approveRequest(request);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${request.dealerName} funding request approved.'),
-        ),
+      R2WToast.success(
+        context,
+        '${request.dealerName} funding request approved.',
       );
       await _load();
     } on ApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.message)));
+        R2WToast.error(context, error.message);
       }
     }
   }
