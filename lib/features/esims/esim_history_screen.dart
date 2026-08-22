@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -127,15 +129,11 @@ class _EsimHistoryScreenState extends State<EsimHistoryScreen> {
     } on ApiException catch (error) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      R2WToast.error(context, error.message);
     } catch (_) {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Live TGT usage could not be checked.')),
-      );
+      R2WToast.error(context, 'Live TGT usage could not be checked.');
     }
   }
 

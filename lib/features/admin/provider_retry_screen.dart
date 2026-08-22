@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -77,15 +79,11 @@ class _ProviderRetryScreenState extends State<ProviderRetryScreen> {
       }
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Provider retry queue updated.')),
-        );
+        R2WToast.success(context, 'Provider retry queue updated.');
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Action failed: $error')));
+        R2WToast.error(context, 'Action failed: $error');
       }
     } finally {
       if (mounted) setState(() => _busy = false);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -272,7 +274,7 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   }
 
   void _message(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+    R2WToast.info(context, value);
   }
 
   String _money(double value, String currency) =>

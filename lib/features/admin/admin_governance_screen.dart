@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -99,16 +101,13 @@ class _AdminGovernanceScreenState extends State<AdminGovernanceScreen> {
       if (decoded is! Map) throw const FormatException();
       await save(Map<String, dynamic>.from(decoded));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Governance configuration saved.')),
-      );
+      R2WToast.success(context, 'Governance configuration saved.');
       await _load();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid JSON or server rejected the configuration.'),
-        ),
+      R2WToast.error(
+        context,
+        'Invalid JSON or server rejected the configuration.',
       );
     }
   }

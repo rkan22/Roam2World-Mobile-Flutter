@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/widgets/r2w_toast.dart';
+
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -95,9 +97,7 @@ class _SimCardsScreenState extends State<SimCardsScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    R2WToast.error(context, message);
   }
 
   @override

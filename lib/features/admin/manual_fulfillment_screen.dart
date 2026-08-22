@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -91,17 +93,11 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
     try {
       await action();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(success)));
+      R2WToast.success(context, success);
       await _load();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('The server action could not be completed.'),
-        ),
-      );
+      R2WToast.error(context, 'The server action could not be completed.');
     }
   }
 

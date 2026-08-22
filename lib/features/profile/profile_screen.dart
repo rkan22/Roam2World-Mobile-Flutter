@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -70,17 +72,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _biometricEnabled = enabled && success;
       _updatingBiometrics = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          !success
-              ? 'Face ID could not be enabled.'
-              : enabled
-              ? 'Face ID quick login enabled.'
-              : 'Face ID quick login disabled.',
-        ),
-      ),
-    );
+    if (!success) {
+      R2WToast.error(context, 'Face ID could not be enabled.');
+    } else if (enabled) {
+      R2WToast.success(context, 'Face ID quick login enabled.');
+    } else {
+      R2WToast.info(context, 'Face ID quick login disabled.');
+    }
   }
 
   @override
@@ -266,15 +264,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+        R2WToast.success(context, 'Profile updated.');
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile could not be updated: $error')),
-        );
+        R2WToast.error(context, 'Profile could not be updated: $error');
       }
     }
   }
@@ -283,12 +277,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_oldPassword.text.isEmpty ||
         _newPassword.text.length < 8 ||
         _newPassword.text != _confirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Check your current password and make sure the new passwords match (minimum 8 characters).',
-          ),
-        ),
+      R2WToast.warning(
+        context,
+        'Check your current password and make sure the new passwords match (minimum 8 characters).',
       );
       return;
     }
@@ -303,15 +294,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _newPassword.clear();
       _confirmPassword.clear();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully.')),
-        );
+        R2WToast.success(context, 'Password changed successfully.');
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password could not be changed: $error')),
-        );
+        R2WToast.error(context, 'Password could not be changed: $error');
       }
     } finally {
       if (mounted) setState(() => _savingPassword = false);

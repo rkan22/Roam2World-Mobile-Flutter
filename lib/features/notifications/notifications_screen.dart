@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/r2w_toast.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -80,11 +82,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _items = next;
       });
       _syncUnreadCount();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notification status could not be updated.'),
-        ),
-      );
+      R2WToast.error(context, 'Notification status could not be updated.');
     }
   }
 
@@ -104,11 +102,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _items = previous);
       _syncUnreadCount();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notifications could not be marked as read.'),
-        ),
-      );
+      R2WToast.error(context, 'Notifications could not be marked as read.');
     } finally {
       if (mounted) setState(() => _markingAll = false);
     }
