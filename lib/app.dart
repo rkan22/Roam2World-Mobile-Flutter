@@ -5,6 +5,7 @@ import 'core/notifications/push_notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'shared/widgets/adaptive_app_frame.dart';
+import 'features/splash/neon_splash_overlay.dart';
 
 class Roam2WorldApp extends StatefulWidget {
   final String initialLocation;
@@ -16,6 +17,8 @@ class Roam2WorldApp extends StatefulWidget {
 }
 
 class _Roam2WorldAppState extends State<Roam2WorldApp> {
+  bool _showSplash = true;
+
   late final router = createAppRouter(initialLocation: widget.initialLocation);
 
   @override
@@ -44,8 +47,19 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeMode,
-          builder: (context, child) =>
+          builder: (context, child) => Stack(
+            children: [
               AdaptiveAppFrame(child: child ?? const SizedBox.shrink()),
+              if (_showSplash)
+                NeonSplashOverlay(
+                  onFinished: () {
+                    if (mounted) {
+                      setState(() => _showSplash = false);
+                    }
+                  },
+                ),
+            ],
+          ),
           routerConfig: router,
         );
       },
