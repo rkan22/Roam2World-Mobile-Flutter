@@ -2,7 +2,7 @@ name: roam2world_mobile_flutter
 description: "Roam2World B2B mobile application for reseller and dealer operations."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.12.2
