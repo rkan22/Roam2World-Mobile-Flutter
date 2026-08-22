@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../routing/branded_page_transitions.dart';
 import 'app_colors.dart';
 
 class AppTheme {
@@ -97,6 +98,16 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
       splashFactory: InkRipple.splashFactory,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: BrandedPageTransitionsBuilder(),
+          TargetPlatform.iOS: BrandedPageTransitionsBuilder(),
+          TargetPlatform.macOS: BrandedPageTransitionsBuilder(),
+          TargetPlatform.windows: BrandedPageTransitionsBuilder(),
+          TargetPlatform.linux: BrandedPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: BrandedPageTransitionsBuilder(),
+        },
+      ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: background,
