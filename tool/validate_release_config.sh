@@ -33,8 +33,8 @@ done
 require_file ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png
 
 require_match '^version: [0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$' pubspec.yaml
-require_match 'applicationId = "com\.roam2world\.mobile"' android/app/build.gradle.kts
-require_match 'namespace = "com\.roam2world\.mobile"' android/app/build.gradle.kts
+require_match 'applicationId = "com\.roam2world\.b2b"' android/app/build.gradle.kts
+require_match 'namespace = "com\.roam2world\.b2b"' android/app/build.gradle.kts
 require_match 'create\("release"\)' android/app/build.gradle.kts
 require_match 'isMinifyEnabled = true' android/app/build.gradle.kts
 require_match 'isShrinkResources = true' android/app/build.gradle.kts
@@ -43,8 +43,8 @@ require_match 'android:label="Roam2World B2B"' android/app/src/main/AndroidManif
 require_match 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
 require_match 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
 require_match 'PRODUCT_BUNDLE_IDENTIFIER=com\.roam2world\.mobile' ios/Flutter/Release.xcconfig
-require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.b2b;' ios/Runner.xcodeproj/project.pbxproj
-require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.b2b\.RunnerTests;' ios/Runner.xcodeproj/project.pbxproj
+require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.mobile;' ios/Runner.xcodeproj/project.pbxproj
+require_match 'PRODUCT_BUNDLE_IDENTIFIER = com\.roam2world\.mobile\.RunnerTests;' ios/Runner.xcodeproj/project.pbxproj
 require_match 'IPHONEOS_DEPLOYMENT_TARGET = 15\.0;' ios/Runner.xcodeproj/project.pbxproj
 require_match '<string>Roam2World Mobile</string>' ios/Runner/Info.plist
 require_match 'Icon-App-1024x1024@1x\.png' ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
