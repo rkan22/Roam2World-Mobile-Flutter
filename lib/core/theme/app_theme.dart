@@ -185,55 +185,104 @@ class AppTheme {
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 52),
-          backgroundColor: primary,
-          foregroundColor: AppColors.navy,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(B2BRadius.md),
-          ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 14.5,
-          ),
-        ),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: const Size(0, 52),
+              backgroundColor: primary,
+              foregroundColor: AppColors.navy,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(B2BRadius.md),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+              ),
+            ).copyWith(
+              animationDuration: B2BMotion.fast,
+              elevation: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) return 0;
+                return states.contains(WidgetState.pressed) ? 0 : 3;
+              }),
+              shadowColor: WidgetStatePropertyAll(
+                primary.withValues(alpha: .26),
+              ),
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return Colors.white.withValues(alpha: .16);
+                }
+                return null;
+              }),
+            ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(0, 52),
-          backgroundColor: primary,
-          foregroundColor: AppColors.navy,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(B2BRadius.md),
-          ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 14.5,
-          ),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              minimumSize: const Size(0, 52),
+              backgroundColor: primary,
+              foregroundColor: AppColors.navy,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(B2BRadius.md),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+              ),
+            ).copyWith(
+              animationDuration: B2BMotion.fast,
+              elevation: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) return 0;
+                return states.contains(WidgetState.pressed) ? 0 : 3;
+              }),
+              shadowColor: WidgetStatePropertyAll(
+                primary.withValues(alpha: .26),
+              ),
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return Colors.white.withValues(alpha: .16);
+                }
+                return null;
+              }),
+            ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 50),
-          foregroundColor: primary,
-          side: BorderSide(
-            color: isDark ? const Color(0xFF334155) : AppColors.borderStrong,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(B2BRadius.md),
-          ),
-          textStyle: const TextStyle(fontWeight: FontWeight.w800),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 50),
+              foregroundColor: primary,
+              side: BorderSide(
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : AppColors.borderStrong,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(B2BRadius.md),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ).copyWith(
+              animationDuration: B2BMotion.fast,
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return primary.withValues(alpha: .10);
+                }
+                return null;
+              }),
+            ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primary,
-          textStyle: const TextStyle(fontWeight: FontWeight.w800),
-        ),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: primary,
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ).copyWith(
+              animationDuration: B2BMotion.fast,
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return primary.withValues(alpha: .10);
+                }
+                return null;
+              }),
+            ),
       ),
       checkboxTheme: CheckboxThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
