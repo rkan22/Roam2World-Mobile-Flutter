@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/animated_metric_value.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -219,8 +221,8 @@ class _WalletHero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: B2BSpacing.md),
-          Text(
-            '${data.currency} ${data.balance.toStringAsFixed(2)}',
+          AnimatedMetricValue(
+            value: '${data.currency} ${data.balance.toStringAsFixed(2)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(

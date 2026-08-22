@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../shared/widgets/animated_metric_value.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -285,8 +287,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
               const SizedBox(height: 5),
-              Text(
-                _money(data.monthlySales, currency),
+              AnimatedMetricValue(
+                value: _money(data.monthlySales, currency),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -388,8 +390,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: Icon(metric.icon, size: 18, color: metric.color),
           ),
           const SizedBox(height: 13),
-          Text(
-            metric.value,
+          AnimatedMetricValue(
+            value: metric.value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleLarge?.copyWith(

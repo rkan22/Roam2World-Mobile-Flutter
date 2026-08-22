@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/animated_metric_value.dart';
 import '../tokens/b2b_tokens.dart';
 import 'b2b_surface.dart';
 
@@ -61,10 +62,8 @@ class B2BMetricCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: B2BSpacing.md),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          AnimatedMetricValue(
+            value: value,
             style: theme.textTheme.titleLarge?.copyWith(
               color: scheme.onSurface,
               fontSize: 22,
