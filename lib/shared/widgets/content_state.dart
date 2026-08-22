@@ -164,6 +164,7 @@ class ContentEmptyState extends StatelessWidget {
     title: title,
     message: message,
     actionLabel: actionLabel,
+    actionIcon: Icons.arrow_forward_rounded,
     onAction: onAction,
   );
 }
@@ -187,74 +188,194 @@ class ContentErrorState extends StatelessWidget {
     title: title,
     message: message,
     actionLabel: onRetry == null ? null : 'Try again',
+    actionIcon: Icons.refresh_rounded,
     onAction: onRetry,
   );
 }
 
-class _StateCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
+class _StateCard extends StatefulWidget {
   const _StateCard({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.message,
+    required this.actionIcon,
     this.actionLabel,
     this.onAction,
   });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String message;
+  final IconData actionIcon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  State<_StateCard> createState() => _StateCardState();
+}
+
+class _StateCardState extends State<_StateCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<double> _scale;
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: B2BMotion.standard,
+    );
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _scale = Tween<double>(
+      begin: .965,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (disableAnimations) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Center(
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(26),
-        constraints: const BoxConstraints(maxWidth: 430),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(B2BRadius.xl),
-          border: Border.all(color: scheme.outlineVariant),
-          boxShadow: theme.brightness == Brightness.light
-              ? B2BShadows.card
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 66,
-              width: 66,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: .11),
-                borderRadius: BorderRadius.circular(22),
+      child: FadeTransition(
+        key: const Key('content-state-fade'),
+        opacity: _opacity,
+        child: ScaleTransition(
+          key: const Key('content-state-scale'),
+          scale: _scale,
+          child: Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(26),
+            constraints: const BoxConstraints(maxWidth: 430),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  widget.iconColor.withValues(alpha: isDark ? .10 : .055),
+                  scheme.surface,
+                  scheme.surface,
+                ],
+                stops: const [0, .42, 1],
               ),
-              child: Icon(icon, size: 31, color: iconColor),
+              borderRadius: BorderRadius.circular(B2BRadius.xl),
+              border: Border.all(
+                color: widget.iconColor.withValues(alpha: isDark ? .28 : .16),
+              ),
+              boxShadow: isDark ? null : B2BShadows.elevated,
             ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Semantics(
+                  label: 'Roam2World B2B',
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surface.withValues(alpha: .78),
+                      borderRadius: BorderRadius.circular(B2BRadius.pill),
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.travel_explore_rounded,
+                          size: 15,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'ROAM2WORLD  •  B2B',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: .75,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  height: 72,
+                  width: 72,
+                  decoration: BoxDecoration(
+                    color: widget.iconColor.withValues(alpha: .11),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: widget.iconColor.withValues(alpha: .15),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.iconColor.withValues(alpha: .12),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(widget.icon, size: 34, color: widget.iconColor),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 9),
+                Text(
+                  widget.message,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.55,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                if (widget.actionLabel != null && widget.onAction != null) ...[
+                  const SizedBox(height: 22),
+                  FilledButton.icon(
+                    onPressed: widget.onAction,
+                    icon: Icon(widget.actionIcon, size: 19),
+                    label: Text(widget.actionLabel!),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-            ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 20),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
+          ),
         ),
       ),
     );
