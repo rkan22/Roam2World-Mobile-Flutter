@@ -125,6 +125,7 @@ class MobilePackage {
     required this.countryCode,
     required this.isFeatured,
     this.isPriceVisible = true,
+    this.badgeLabel,
     this.description = '',
     this.supportedCountries = const [],
   });
@@ -144,6 +145,7 @@ class MobilePackage {
   final double price;
   final bool isFeatured;
   final bool isPriceVisible;
+  final String? badgeLabel;
   final List<PackageCountry> supportedCountries;
 
   factory MobilePackage.fromJson(Map<String, dynamic> json) {
@@ -226,9 +228,26 @@ class MobilePackage {
       countryCode: first.code,
       isFeatured: json['is_featured'] == true || json['isFeatured'] == true,
       isPriceVisible: json['is_price_visible'] == true,
+      badgeLabel: _badgeLabel(json),
       description: _description(json),
       supportedCountries: countries,
     );
+  }
+
+  static String? _badgeLabel(Map<String, dynamic> json) {
+    if (json['is_best_seller'] == true || json['bestSeller'] == true) {
+      return 'Best Seller';
+    }
+    if (json['is_best_value'] == true || json['bestValue'] == true) {
+      return 'Best Value';
+    }
+    if (json['is_new'] == true || json['isNew'] == true) {
+      return 'New';
+    }
+    if (json['is_featured'] == true || json['isFeatured'] == true) {
+      return 'Featured';
+    }
+    return null;
   }
 
   bool get isPriceAvailable => isPriceVisible && price > 0;
@@ -257,6 +276,7 @@ class MobilePackage {
     countryCode: countryCode,
     isFeatured: isFeatured,
     isPriceVisible: value > 0,
+    badgeLabel: badgeLabel,
     description: description,
     supportedCountries: supportedCountries,
   );

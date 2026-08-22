@@ -642,16 +642,25 @@ class _OperatorPlanCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
-              SizedBox.square(
-                dimension: 64,
-                child: Center(
-                  child: _CountryVisual(
-                    code: package.countryCode,
-                    destinationKey: package.destinationKey,
-                    size: 56,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (package.badgeLabel != null) ...[
+                    _PackageBadge(label: package.badgeLabel!),
+                    const SizedBox(height: 8),
+                  ],
+                  SizedBox.square(
+                    dimension: 64,
+                    child: Center(
+                      child: _CountryVisual(
+                        code: package.countryCode,
+                        destinationKey: package.destinationKey,
+                        size: 56,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -704,6 +713,66 @@ class _OperatorPlanCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PackageBadge extends StatelessWidget {
+  const _PackageBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, foreground, background) = switch (label) {
+      'Best Seller' => (
+        Icons.local_fire_department_rounded,
+        const Color(0xFFB42318),
+        const Color(0xFFFFE8E5),
+      ),
+      'Best Value' => (
+        Icons.bolt_rounded,
+        const Color(0xFF7A4E00),
+        const Color(0xFFFFF0C7),
+      ),
+      'New' => (
+        Icons.auto_awesome_rounded,
+        const Color(0xFF075985),
+        const Color(0xFFE0F5FF),
+      ),
+      _ => (
+        Icons.star_rounded,
+        const Color(0xFF5B21B6),
+        const Color(0xFFF0E8FF),
+      ),
+    };
+
+    return Semantics(
+      label: '$label package',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(B2BRadius.full),
+          border: Border.all(color: foreground.withValues(alpha: .18)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: foreground),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: .15,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
