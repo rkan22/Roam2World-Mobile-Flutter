@@ -209,4 +209,23 @@ void main() {
     expect(package.supportedCountries, hasLength(2));
     expect(package.supportedCountries.first.code, 'DE');
   });
+
+  test('keeps destination label consistent with Europe coverage', () {
+    final package = MobilePackage.fromJson({
+      'id': 'orange-balkans-1gb',
+      'name': 'Orange Balkans 1GB 3 Days',
+      'provider': 'tgt',
+      'destination_label': 'Global',
+      'destination_key': 'europe',
+      'data_quantity': 1,
+      'package_validity': 3,
+      'countries': [
+        {'name': 'Europe', 'code': 'EU'},
+      ],
+    });
+
+    expect(package.destinationKey, 'europe');
+    expect(package.destination, 'Europe');
+    expect(package.countryCode, 'EU');
+  });
 }

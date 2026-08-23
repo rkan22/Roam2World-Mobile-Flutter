@@ -180,6 +180,41 @@ class MobilePackage {
           '${_first([json['final_price'], json['finalPrice'], json['price'], json['sale_price'], json['salePrice'], json['reseller_price'], json['resellerPrice'], 0])}',
         ) ??
         0;
+
+    final rawDestination = _text(json, [
+      'destination_label',
+      'coverage_label',
+      'productRegion',
+      'destination',
+      'region',
+    ]);
+
+    final explicitDestinationKey = _text(json, [
+      'destination_key',
+    ]).toLowerCase();
+
+    var destinationKey = explicitDestinationKey.isNotEmpty
+        ? explicitDestinationKey
+        : _destination(json, identity);
+
+    if (destinationKey == 'eu') destinationKey = 'europe';
+    if (destinationKey == 'world') destinationKey = 'global';
+    if (destinationKey == 'turkiye') destinationKey = 'turkey';
+
+    final countryCode = first.code.toUpperCase();
+
+    var destination = rawDestination.isNotEmpty
+        ? rawDestination
+        : (first.name.isNotEmpty ? first.name : 'Global');
+
+    if (destinationKey == 'europe' || countryCode == 'EU') {
+      destination = 'Europe';
+    } else if (destinationKey == 'turkey' || countryCode == 'TR') {
+      destination = 'Turkey';
+    } else if (destinationKey == 'global') {
+      destination = 'Global';
+    }
+
     return MobilePackage(
       id: provider.toLowerCase() == 'worldmove' && wmCode.isNotEmpty
           ? wmCode
@@ -195,25 +230,8 @@ class MobilePackage {
       name: _name(json, identity, wmCode, data, validity),
       provider: provider,
       displayProvider: _display(json, identity, wmCode),
-      destination:
-          _text(json, [
-            'destination_label',
-            'coverage_label',
-            'productRegion',
-            'destination',
-            'region',
-          ]).isNotEmpty
-          ? _text(json, [
-              'destination_label',
-              'coverage_label',
-              'productRegion',
-              'destination',
-              'region',
-            ])
-          : (first.name.isNotEmpty ? first.name : 'Global'),
-      destinationKey: _text(json, ['destination_key']).isNotEmpty
-          ? _text(json, ['destination_key']).toLowerCase()
-          : _destination(json, identity),
+      destination: destination,
+      destinationKey: destinationKey,
       dataLabel: data == null
           ? (json['unlimited'] == true ? 'Unlimited' : 'Data')
           : '${_clean(data)} ${_text(json, ['data_unit']).isNotEmpty ? _text(json, ['data_unit']) : 'GB'}',
@@ -225,7 +243,7 @@ class MobilePackage {
           ? _text(json, ['currency'])
           : 'USD',
       packageType: _type(json, identity, provider),
-      countryCode: first.code,
+      countryCode: countryCode,
       isFeatured: json['is_featured'] == true || json['isFeatured'] == true,
       isPriceVisible: json['is_price_visible'] == true,
       badgeLabel: _badgeLabel(json),

@@ -7,6 +7,8 @@ import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../../shared/widgets/package_destination_visual.dart';
+import '../../shared/widgets/package_type_chip.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import '../../shared/widgets/staggered_entrance.dart';
@@ -650,15 +652,29 @@ class _OperatorPlanCard extends StatelessWidget {
                     _PackageBadge(label: package.badgeLabel!),
                     const SizedBox(height: 8),
                   ],
-                  SizedBox.square(
-                    dimension: 64,
-                    child: Center(
-                      child: _CountryVisual(
-                        code: package.countryCode,
-                        destinationKey: package.destinationKey,
-                        size: 56,
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      SizedBox.square(
+                        dimension: 64,
+                        child: Center(
+                          child: PackageDestinationVisual(
+                            code: package.countryCode,
+                            destinationKey: package.destinationKey,
+                            size: 56,
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: PackageTypeChip(
+                          packageType: package.packageType,
+                          size: 32,
+                          iconSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -839,7 +855,7 @@ class _CoveragePreview extends StatelessWidget {
         children: [
           for (var index = 0; index < visible.length; index++) ...[
             if (index > 0) const SizedBox(width: 2),
-            _CountryVisual(
+            PackageDestinationVisual(
               code: visible[index].code,
               destinationKey: visible[index].code == 'EU' ? 'europe' : '',
               size: 28,
@@ -856,52 +872,6 @@ class _CoveragePreview extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _CountryVisual extends StatelessWidget {
-  const _CountryVisual({
-    required this.code,
-    required this.destinationKey,
-    required this.size,
-  });
-
-  final String code;
-  final String destinationKey;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final normalizedCode = code.toUpperCase();
-    final isEurope =
-        destinationKey.toLowerCase() == 'europe' || normalizedCode == 'EU';
-    final url = isEurope
-        ? 'https://flagcdn.com/w160/eu.png'
-        : normalizedCode.length == 2
-        ? 'https://flagcdn.com/w80/${normalizedCode.toLowerCase()}.png'
-        : null;
-
-    if (url == null) {
-      return Icon(
-        Icons.public_rounded,
-        color: AppColors.primary,
-        size: size * .72,
-      );
-    }
-
-    return ClipOval(
-      child: Image.network(
-        url,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.public_rounded,
-          color: AppColors.primary,
-          size: size * .72,
-        ),
       ),
     );
   }
