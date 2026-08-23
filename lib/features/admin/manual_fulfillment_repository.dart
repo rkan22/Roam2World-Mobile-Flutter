@@ -121,6 +121,26 @@ class ManualProductDraft {
   final bool visibleToDealers;
   final int lowStockThreshold;
 
+  factory ManualProductDraft.fromProduct(
+    ManualProductItem product, {
+    bool? isActive,
+  }) => ManualProductDraft(
+    packageId: product.packageId,
+    operatorName: product.operatorName,
+    productName: product.name,
+    productType: product.type,
+    providerCost: product.providerCost,
+    currency: product.currency,
+    dataGb: product.dataGb,
+    validityDays: product.validityDays,
+    coverageCountries: product.coverageCountries,
+    notes: product.notes,
+    isActive: isActive ?? product.active,
+    visibleToResellers: product.visibleToResellers,
+    visibleToDealers: product.visibleToDealers,
+    lowStockThreshold: product.lowStockThreshold,
+  );
+
   String get fulfillmentMode =>
       productType == 'sim' ? 'iccid_stock' : 'qr_assignment';
 

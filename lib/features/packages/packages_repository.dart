@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/cache/timed_cache.dart';
@@ -8,6 +10,7 @@ class PackagesRepository {
     : _apiClient = apiClient ?? ApiClient();
 
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
+  static final ValueNotifier<int> catalogRevision = ValueNotifier<int>(0);
   final ApiClient _apiClient;
   bool lastFetchUsedStale = false;
 
@@ -74,7 +77,11 @@ class PackagesRepository {
         );
 
         for (final package in page.packages) {
-          if (_isHiddenProvider(package) || !_providerPackageAllowed(package)) {
+          // TGT catalog has a dedicated backend-authoritative endpoint.
+          // Ignore stale or duplicated TGT rows from the unified endpoint.
+          if (_isTgtProvider(package) ||
+              _isHiddenProvider(package) ||
+              !_providerPackageAllowed(package)) {
             continue;
           }
           final dedupeKey = package.id.isEmpty
@@ -164,6 +171,7 @@ class PackagesRepository {
       cache.clear();
     }
     _caches.clear();
+    catalogRevision.value++;
   }
 
   Future<PackageCatalog> _fetchWorldmoveCatalog() async {
@@ -290,6 +298,14 @@ class PackagesRepository {
       } catch (_) {}
     }
     return const PackageCatalog(packages: [], hasMore: false);
+  }
+
+  bool _isTgtProvider(MobilePackage package) {
+    final provider = package.provider.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
+    return provider == 'tgt';
   }
 
   bool _isHiddenProvider(MobilePackage package) {

@@ -63,7 +63,6 @@ class ApiEndpoints {
   ];
   static const List<String> tgtCatalogSources = [
     '/api/v1/mobile/b2b/tgt/balkans/packages/',
-    '/api/v1/mobile/smart/packages/',
   ];
   static const String mobilePackages = '/api/v1/mobile/packages/';
   static const String mobileWorldmovePackages =

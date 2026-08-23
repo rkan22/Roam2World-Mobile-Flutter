@@ -245,7 +245,12 @@ class MobilePackage {
       packageType: _type(json, identity, provider),
       countryCode: countryCode,
       isFeatured: json['is_featured'] == true || json['isFeatured'] == true,
-      isPriceVisible: json['is_price_visible'] == true,
+      isPriceVisible:
+          json['is_price_visible'] == true ||
+          json['isPriceVisible'] == true ||
+          (!json.containsKey('is_price_visible') &&
+              !json.containsKey('isPriceVisible') &&
+              price > 0),
       badgeLabel: _badgeLabel(json),
       description: _description(json),
       supportedCountries: countries,
