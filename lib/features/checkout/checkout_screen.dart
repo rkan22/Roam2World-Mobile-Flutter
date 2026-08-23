@@ -812,49 +812,6 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-String _checkoutPackageName(MobilePackage package) {
-  var name = package.name
-      .replaceAll(RegExp(r'\[\s*esim\s*\]', caseSensitive: false), '')
-      .replaceAll(RegExp(r'[_]+'), ' ')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
-
-  name = name.replaceAllMapped(
-    RegExp(r'(\d+(?:\.\d+)?)\s*(GB|MB|TB)\b', caseSensitive: false),
-    (match) => '${match.group(1)} ${match.group(2)!.toUpperCase()}',
-  );
-
-  name = name.replaceAllMapped(
-    RegExp(r'(\d+)\s*(days?|d)\b', caseSensitive: false),
-    (match) => '${match.group(1)} Days',
-  );
-
-  if (name.isNotEmpty) {
-    final data = package.dataLabel.trim();
-    final validity = package.validityLabel.trim();
-
-    final normalizedName = name.toLowerCase().replaceAll(' ', '');
-    final hasData = normalizedName.contains(
-      data.toLowerCase().replaceAll(' ', ''),
-    );
-    final hasValidity = normalizedName.contains(
-      validity.toLowerCase().replaceAll(' ', ''),
-    );
-
-    return [
-      name,
-      if (!hasData && data.isNotEmpty) data,
-      if (!hasValidity && validity.isNotEmpty) validity,
-    ].join(' · ');
-  }
-
-  return [
-    package.destination.trim(),
-    package.dataLabel.trim(),
-    package.validityLabel.trim(),
-  ].where((value) => value.isNotEmpty).join(' · ');
-}
-
 String _checkoutPlanTitle(MobilePackage package) {
   var name = package.name
       .replaceAll(RegExp(r'\[\s*esim\s*\]', caseSensitive: false), '')
