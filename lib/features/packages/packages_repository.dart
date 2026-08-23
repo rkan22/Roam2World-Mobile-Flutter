@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/cache/timed_cache.dart';
@@ -8,6 +10,7 @@ class PackagesRepository {
     : _apiClient = apiClient ?? ApiClient();
 
   static final Map<String, TimedCache<PackageCatalog>> _caches = {};
+  static final ValueNotifier<int> catalogRevision = ValueNotifier<int>(0);
   final ApiClient _apiClient;
   bool lastFetchUsedStale = false;
 
@@ -164,6 +167,7 @@ class PackagesRepository {
       cache.clear();
     }
     _caches.clear();
+    catalogRevision.value++;
   }
 
   Future<PackageCatalog> _fetchWorldmoveCatalog() async {

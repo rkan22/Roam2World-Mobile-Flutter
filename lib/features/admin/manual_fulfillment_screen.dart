@@ -145,6 +145,19 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
     );
   }
 
+  Future<void> _toggleProductVisibility(ManualProductItem product) async {
+    final makeVisible = !product.active;
+    await _run(
+      () => _repository.updateProduct(
+        product.packageId,
+        ManualProductDraft.fromProduct(product, isActive: makeVisible),
+      ),
+      makeVisible
+          ? 'Product restored to catalog.'
+          : 'Product hidden from catalog.',
+    );
+  }
+
   Future<void> _addSims() async {
     final raw = await _ask(
       'Add blank SIM ICCIDs',
@@ -398,9 +411,48 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
   }
 
   Widget _products(List<ManualProductItem> products) {
+    final liveCount = products.where((product) => product.active).length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Catalog visibility',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Only live manual plans appear in the B2B catalog.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(B2BRadius.pill),
+              ),
+              child: Text(
+                '$liveCount live',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: B2BSpacing.md),
         FilledButton.icon(
           onPressed: _openProductForm,
           icon: const Icon(Icons.add_rounded),
@@ -414,49 +466,106 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
             message: 'Create the first manually fulfilled product.',
           )
         else
-          B2BSurface(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (var i = 0; i < products.length; i++) ...[
-                  ListTile(
-                    onTap: () => _openProductForm(products[i]),
-                    leading: Icon(
-                      products[i].type == 'sim'
-                          ? Icons.sim_card_outlined
-                          : Icons.qr_code_2_rounded,
+          for (final product in products) ...[
+            B2BSurface(
+              padding: const EdgeInsets.all(B2BSpacing.md),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(B2BRadius.lg),
+                onTap: () => _openProductForm(product),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: .08),
+                        borderRadius: BorderRadius.circular(B2BRadius.md),
+                      ),
+                      child: Icon(
+                        product.type == 'sim'
+                            ? Icons.sim_card_outlined
+                            : Icons.qr_code_2_rounded,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            products[i].name,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                    const SizedBox(width: B2BSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  product.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: product.active
+                                      ? const Color(0xFFE8F8EE)
+                                      : const Color(0xFFF0F2F5),
+                                  borderRadius: BorderRadius.circular(
+                                    B2BRadius.pill,
+                                  ),
+                                ),
+                                child: Text(
+                                  product.active ? 'Live' : 'Hidden',
+                                  style: TextStyle(
+                                    color: product.active
+                                        ? const Color(0xFF18A957)
+                                        : AppColors.textPrimary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        _pill(products[i].active ? 'Active' : 'Inactive'),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            '${product.operatorName} · ${product.packageId}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${product.type == 'sim' ? 'Physical SIM' : 'eSIM'}'
+                            ' · ${product.currency} '
+                            '${product.providerCost.toStringAsFixed(2)}'
+                            ' · Tap to edit',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                    subtitle: Text(
-                      '${products[i].operatorName} · '
-                      '${products[i].packageId}\n'
-                      '${products[i].type == 'sim' ? 'Physical SIM' : 'eSIM'}'
-                      ' · ${products[i].currency} '
-                      '${products[i].providerCost.toStringAsFixed(2)}'
-                      ' · Tap to edit',
-                    ),
-                    isThreeLine: true,
-                    trailing: PopupMenuButton<String>(
+                    PopupMenuButton<String>(
                       tooltip: 'Product actions',
                       onSelected: (action) {
                         if (action == 'edit') {
-                          _openProductForm(products[i]);
+                          _openProductForm(product);
+                        } else if (action == 'visibility') {
+                          _toggleProductVisibility(product);
                         } else if (action == 'delete') {
-                          _deleteProduct(products[i]);
+                          _deleteProduct(product);
                         }
                       },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
                           value: 'edit',
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -465,6 +574,22 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
                           ),
                         ),
                         PopupMenuItem(
+                          value: 'visibility',
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              product.active
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            title: Text(
+                              product.active
+                                  ? 'Hide from catalog'
+                                  : 'Restore to catalog',
+                            ),
+                          ),
+                        ),
+                        const PopupMenuItem(
                           value: 'delete',
                           child: ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -480,12 +605,12 @@ class _ManualFulfillmentScreenState extends State<ManualFulfillmentScreen> {
                         ),
                       ],
                     ),
-                  ),
-                  if (i != products.length - 1) const Divider(height: 1),
-                ],
-              ],
+                  ],
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: B2BSpacing.sm),
+          ],
       ],
     );
   }

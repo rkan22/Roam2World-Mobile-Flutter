@@ -67,11 +67,17 @@ class _PackagesScreenState extends State<PackagesScreen> {
   @override
   void initState() {
     super.initState();
+    PackagesRepository.catalogRevision.addListener(_onCatalogInvalidated);
     _load();
+  }
+
+  void _onCatalogInvalidated() {
+    if (mounted) _load(forceRefresh: true);
   }
 
   @override
   void dispose() {
+    PackagesRepository.catalogRevision.removeListener(_onCatalogInvalidated);
     _searchTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -246,6 +252,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
     return Column(
       children: [
+        _LiveCatalogBanner(count: visible.length),
+        const SizedBox(height: 14),
         for (var index = 0; index < visible.length; index++) ...[
           StaggeredEntrance(
             key: ValueKey('${visible[index].provider}-${visible[index].id}'),
@@ -595,6 +603,60 @@ class _StaleDataBanner extends StatelessWidget {
   );
 }
 
+class _LiveCatalogBanner extends StatelessWidget {
+  const _LiveCatalogBanner({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primaryLight),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Only live plans are shown in the catalog.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColors.primary),
+            ),
+            child: Text(
+              '$count live ${count == 1 ? 'plan' : 'plans'}',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _OperatorPlanCard extends StatelessWidget {
   const _OperatorPlanCard({required this.package, required this.onTap});
 
@@ -604,128 +666,211 @@ class _OperatorPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final manual = package.provider.toLowerCase() == 'manual';
+    final manual = package.provider.trim().toLowerCase() == 'manual';
     final typeLabel = package.packageType == 'simcard' ? 'SIM Card' : 'eSIM';
+    final providerLabel = package.displayProvider.trim();
+    final identifier = package.id.trim();
 
     return B2BSurface(
       onTap: package.isPriceAvailable ? onTap : null,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      radius: 22,
+      padding: const EdgeInsets.all(16),
+      radius: 20,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      package.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.35,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      package.destination,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+              PackageTypeChip(
+                packageType: package.packageType,
+                size: 42,
+                iconSize: 23,
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (package.badgeLabel != null) ...[
-                    _PackageBadge(label: package.badgeLabel!),
-                    const SizedBox(height: 8),
-                  ],
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      SizedBox.square(
-                        dimension: 64,
-                        child: Center(
-                          child: PackageDestinationVisual(
-                            code: package.countryCode,
-                            destinationKey: package.destinationKey,
-                            size: 56,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: -4,
-                        bottom: -4,
-                        child: PackageTypeChip(
-                          packageType: package.packageType,
-                          size: 32,
-                          iconSize: 18,
-                        ),
-                      ),
-                    ],
+              Expanded(
+                child: Text(
+                  package.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.25,
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'Live',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            manual
-                ? '${package.displayProvider} · manual delivery'
-                : package.displayProvider,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w800,
+          if (providerLabel.isNotEmpty || identifier.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              [
+                if (providerLabel.isNotEmpty) providerLabel,
+                if (identifier.isNotEmpty) identifier,
+              ].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+          ],
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text(
+                typeLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (manual) ...[
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 7),
+                  child: Text(
+                    '·',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                Text(
+                  'Manual Delivery',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              Text(
+                package.isPriceAvailable
+                    ? package.formattedPrice
+                    : 'Contact Admin',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: package.isPriceAvailable
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
           if (package.supportedCountries.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _CoveragePreview(countries: package.supportedCountries),
           ],
-          const SizedBox(height: 22),
-          _PlanDetailRow(label: 'Region', value: package.destination),
-          _PlanDetailRow(label: 'Type', value: typeLabel),
-          _PlanDetailRow(label: 'Data', value: package.dataLabel),
-          _PlanDetailRow(label: 'Validity', value: package.validityLabel),
-          _PlanDetailRow(
-            label: 'Price',
-            value: package.formattedPrice,
-            emphasize: true,
+          const SizedBox(height: 14),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _CompactPlanMetric(
+                      icon: package.packageType == 'simcard'
+                          ? Icons.sim_card_outlined
+                          : Icons.memory_rounded,
+                      label: 'Type',
+                      value: typeLabel,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: _CompactPlanMetric(
+                      icon: Icons.storage_rounded,
+                      label: 'Data',
+                      value: package.dataLabel,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: _CompactPlanMetric(
+                      icon: Icons.calendar_month_outlined,
+                      label: 'Validity',
+                      value: package.validityLabel,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: _CompactPlanMetric(
+                      icon: Icons.sell_outlined,
+                      label: 'Price',
+                      value: package.isPriceAvailable
+                          ? package.formattedPrice
+                          : 'Request',
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: FilledButton(
-              onPressed: package.isPriceAvailable ? onTap : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                package.isPriceAvailable
-                    ? (manual ? 'Review request' : 'Order')
-                    : 'Contact Admin',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactPlanMetric extends StatelessWidget {
+  const _CompactPlanMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 11),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: AppColors.textSecondary),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            maxLines: 1,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
