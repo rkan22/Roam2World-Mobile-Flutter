@@ -1,9 +1,12 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/r2w_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_colors.dart';
@@ -14,6 +17,7 @@ import 'esims_repository.dart';
 import 'lpa_install_screen.dart';
 import 'provider_lifecycle_repository.dart';
 import 'provider_status_sheet.dart';
+import 'widgets/esim_display_helpers.dart';
 import '../packages/package_catalog.dart';
 import '../packages/packages_repository.dart';
 
@@ -73,6 +77,51 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
     R2WToast.info(context, '$label copied.');
+  }
+
+  Future<void> _shareQr() async {
+    final qrData = _esim.qrCode.isNotEmpty
+        ? _esim.qrCode
+        : _esim.activationCode;
+    if (qrData.isEmpty) return;
+
+    try {
+      final painter = QrPainter(
+        data: qrData,
+        version: QrVersions.auto,
+        gapless: true,
+      );
+      final imageData = await painter.toImageData(
+        1024,
+        format: ui.ImageByteFormat.png,
+      );
+      if (imageData == null || !mounted) {
+        throw StateError('QR image could not be created.');
+      }
+
+      final renderBox = context.findRenderObject() as RenderBox?;
+      final origin = renderBox == null
+          ? null
+          : renderBox.localToGlobal(Offset.zero) & renderBox.size;
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(
+              imageData.buffer.asUint8List(),
+              mimeType: 'image/png',
+              name: 'roam2world-esim-qr.png',
+            ),
+          ],
+          subject: 'Roam2World eSIM installation',
+          text: 'Scan this QR code to install the customer eSIM.',
+          sharePositionOrigin: origin,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      R2WToast.error(context, 'QR code could not be shared.');
+    }
   }
 
   Future<void> _openLpa() async {
@@ -157,7 +206,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                                     ),
                                     const SizedBox(height: 5),
                                     Text(
-                                      option.displayProvider,
+                                      'Renewal option',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodyMedium
@@ -349,47 +398,6 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
   }
 
-  String _displayPackageName(String rawName) {
-    var name = rawName.trim();
-    if (name.isEmpty) return 'eSIM package';
-
-    name = name.replaceAll('_', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-
-    const providerPrefixes = <String>[
-      'Orange Big Data',
-      'Orange Balkans',
-      'Orange Europe',
-      'Orange World',
-      'T.T Turkey',
-      'KPN Europe',
-      'Roam2World',
-      'Worldmove',
-      'Vodafone',
-      'Flexnet',
-      'Airhub',
-      'TGT',
-    ];
-    for (final prefix in providerPrefixes) {
-      name = name.replaceFirst(
-        RegExp(
-          '^${RegExp.escape(prefix)}\\s*[-–—|:]\\s*',
-          caseSensitive: false,
-        ),
-        '',
-      );
-    }
-
-    name = name.replaceFirst(
-      RegExp(
-        r'^[A-Z0-9]{2,}(?:-[A-Z0-9]{2,})+\s*[-–—|:]\s*',
-        caseSensitive: false,
-      ),
-      '',
-    );
-    name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
-    return name.isEmpty ? rawName.trim() : name;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -421,7 +429,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                         ),
                         const SizedBox(height: B2BSpacing.xxs),
                         Text(
-                          _esim.provider,
+                          'Customer provisioning and installation',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium,
@@ -475,7 +483,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _displayPackageName(_esim.packageName),
+                                  esimDisplayPackageName(_esim.packageName),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.titleLarge?.copyWith(
@@ -608,25 +616,40 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                       ),
                       if (_esim.hasQr) ...[
                         const SizedBox(height: B2BSpacing.md),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _copy(
-                              _esim.qrCode.isNotEmpty
-                                  ? _esim.qrCode
-                                  : _esim.activationCode,
-                              'QR data',
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _copy(
+                                  _esim.qrCode.isNotEmpty
+                                      ? _esim.qrCode
+                                      : _esim.activationCode,
+                                  'QR data',
+                                ),
+                                icon: const Icon(Icons.copy_rounded),
+                                label: const Text('Copy data'),
+                              ),
                             ),
-                            icon: const Icon(Icons.copy_rounded),
-                            label: const Text('Copy QR data'),
-                          ),
+                            const SizedBox(width: B2BSpacing.sm),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _shareQr,
+                                icon: const Icon(Icons.ios_share_rounded),
+                                label: const Text('Share QR'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],
                   ),
                 ),
                 const SizedBox(height: B2BSpacing.lg),
-                _InfoCard(esim: _esim, expiryLabel: _date(_esim.expiresAt)),
+                _InfoCard(
+                  esim: _esim,
+                  expiryLabel: _date(_esim.expiresAt),
+                  onCopyIccid: () => _copy(_esim.iccid, 'ICCID'),
+                ),
                 const SizedBox(height: B2BSpacing.lg),
                 Text('Actions', style: theme.textTheme.titleLarge),
                 const SizedBox(height: B2BSpacing.sm),
@@ -642,7 +665,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                   _ActionButton(
                     onPressed: _renewing ? null : _renewWithBackendOptions,
                     icon: Icons.autorenew_rounded,
-                    label: _renewing ? 'Renewing...' : 'Renew TGT eSIM',
+                    label: _renewing ? 'Renewing...' : 'Renew eSIM',
                     filled: true,
                     loading: _renewing,
                   ),
@@ -652,7 +675,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                   _ActionButton(
                     onPressed: _operating ? null : _topUpWorldmove,
                     icon: Icons.add_card_rounded,
-                    label: 'Top up Worldmove SIM',
+                    label: 'Top up SIM',
                     filled: false,
                   ),
                 ],
@@ -662,7 +685,7 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                   _ActionButton(
                     onPressed: _renewing ? null : _renewWithBackendOptions,
                     icon: Icons.autorenew_rounded,
-                    label: _renewing ? 'Renewing...' : 'Renew Vodafone eSIM',
+                    label: _renewing ? 'Renewing...' : 'Renew eSIM',
                     filled: true,
                     loading: _renewing,
                   ),
@@ -760,10 +783,15 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.esim, required this.expiryLabel});
+  const _InfoCard({
+    required this.esim,
+    required this.expiryLabel,
+    required this.onCopyIccid,
+  });
 
   final MobileEsim esim;
   final String expiryLabel;
+  final VoidCallback onCopyIccid;
 
   @override
   Widget build(BuildContext context) {
@@ -794,11 +822,12 @@ class _InfoCard extends StatelessWidget {
           _InfoRow(
             label: 'ICCID',
             value: esim.iccid.isEmpty ? 'Pending' : esim.iccid,
+            icon: esim.iccid.isEmpty ? null : Icons.copy_rounded,
+            onTap: esim.iccid.isEmpty ? null : onCopyIccid,
           ),
-          _InfoRow(label: 'Provider', value: esim.provider),
           _InfoRow(
             label: 'Install status',
-            value: esim.installStatus.isEmpty ? 'Unknown' : esim.installStatus,
+            value: esimDisplayStatus(esim.installStatus),
           ),
           _InfoRow(label: 'Expires', value: expiryLabel, last: true),
         ],
@@ -808,39 +837,58 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value, this.last = false});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.last = false,
+    this.icon,
+    this.onTap,
+  });
 
   final String label;
   final String value;
   final bool last;
+  final IconData? icon;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 13),
-    decoration: BoxDecoration(
-      border: last
-          ? null
-          : const Border(bottom: BorderSide(color: AppColors.border)),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 92,
-          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(B2BRadius.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.border)),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 92,
+              child: Text(label, style: Theme.of(context).textTheme.bodySmall),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (icon != null) ...[
+              const SizedBox(width: 8),
+              Icon(icon, size: 18, color: AppColors.primary),
+            ],
+          ],
         ),
-      ],
+      ),
     ),
   );
 }

@@ -51,6 +51,7 @@ dependencies:
     path: packages/roam_lpa_core
   local_auth: ^3.0.2
   firebase_crashlytics: ^5.2.7
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:
