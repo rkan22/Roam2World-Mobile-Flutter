@@ -34,7 +34,8 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
 
   static const _providerLabels = <String, String>{
     'airhub': 'Vodafone',
-    'movistar': 'Movistar',
+    // Legacy backend allocation key used for manually fulfilled orders.
+    'movistar': 'Manual Fulfillment',
     'worldmove': 'Orange Europe',
     'flexnet': 'Orange Big Data',
     'tgt': 'Orange Balkans',
