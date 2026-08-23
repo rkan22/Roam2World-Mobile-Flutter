@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
@@ -8,8 +9,10 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../../shared/widgets/r2w_toast.dart';
 import 'esim_catalog.dart';
 import 'esims_repository.dart';
+import 'widgets/esim_display_helpers.dart';
 
 class EsimsScreen extends StatefulWidget {
   const EsimsScreen({super.key});
@@ -335,7 +338,7 @@ class _EsimCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          esim.packageName,
+                          esimDisplayPackageName(esim.packageName),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -345,7 +348,7 @@ class _EsimCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           esim.customerName.isEmpty
-                              ? esim.provider
+                              ? 'Customer not assigned'
                               : esim.customerName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -364,7 +367,9 @@ class _EsimCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      esim.status,
+                      esimDisplayStatus(
+                        esim.hasQr ? 'ready_to_install' : esim.status,
+                      ),
                       style: TextStyle(
                         color: color,
                         fontWeight: FontWeight.w800,
@@ -388,13 +393,16 @@ class _EsimCard extends StatelessWidget {
                       value: esim.iccid.isEmpty
                           ? 'Pending provisioning'
                           : esim.iccid,
-                    ),
-                    const SizedBox(height: 9),
-                    _InfoLine(
-                      label: 'Provider',
-                      value: esim.provider.isEmpty
-                          ? 'Roam2World'
-                          : esim.provider,
+                      icon: esim.iccid.isEmpty ? null : Icons.copy_rounded,
+                      onTap: esim.iccid.isEmpty
+                          ? null
+                          : () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: esim.iccid),
+                              );
+                              if (!context.mounted) return;
+                              R2WToast.info(context, 'ICCID copied.');
+                            },
                     ),
                   ],
                 ),
@@ -453,30 +461,52 @@ class _EsimCard extends StatelessWidget {
 }
 
 class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.label, required this.value});
+  const _InfoLine({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.onTap,
+  });
+
   final String label;
   final String value;
+  final IconData? icon;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      SizedBox(
-        width: 64,
-        child: Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.right,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(B2BRadius.sm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 64,
+              child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            if (icon != null) ...[
+              const SizedBox(width: 8),
+              Icon(icon, size: 17, color: AppColors.primary),
+            ],
+          ],
         ),
       ),
-    ],
+    ),
   );
 }
