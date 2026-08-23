@@ -669,7 +669,6 @@ class _OperatorPlanCard extends StatelessWidget {
     final manual = package.provider.trim().toLowerCase() == 'manual';
     final typeLabel = package.packageType == 'simcard' ? 'SIM Card' : 'eSIM';
     final providerLabel = package.displayProvider.trim();
-    final identifier = package.id.trim();
 
     return B2BSurface(
       onTap: package.isPriceAvailable ? onTap : null,
@@ -719,13 +718,10 @@ class _OperatorPlanCard extends StatelessWidget {
               ),
             ],
           ),
-          if (providerLabel.isNotEmpty || identifier.isNotEmpty) ...[
-            const SizedBox(height: 10),
+          if (providerLabel.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Text(
-              [
-                if (providerLabel.isNotEmpty) providerLabel,
-                if (identifier.isNotEmpty) identifier,
-              ].join(' · '),
+              manual ? '$providerLabel · Manual Delivery' : providerLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -744,22 +740,7 @@ class _OperatorPlanCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (manual) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 7),
-                  child: Text(
-                    '·',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-                Text(
-                  'Manual Delivery',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+
               const Spacer(),
               Text(
                 package.isPriceAvailable
@@ -871,111 +852,6 @@ class _CompactPlanMetric extends StatelessWidget {
             style: theme.textTheme.labelMedium?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PackageBadge extends StatelessWidget {
-  const _PackageBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final (icon, foreground, background) = switch (label) {
-      'Best Seller' => (
-        Icons.local_fire_department_rounded,
-        const Color(0xFFB42318),
-        const Color(0xFFFFE8E5),
-      ),
-      'Best Value' => (
-        Icons.bolt_rounded,
-        const Color(0xFF7A4E00),
-        const Color(0xFFFFF0C7),
-      ),
-      'New' => (
-        Icons.auto_awesome_rounded,
-        const Color(0xFF075985),
-        const Color(0xFFE0F5FF),
-      ),
-      _ => (
-        Icons.star_rounded,
-        const Color(0xFF5B21B6),
-        const Color(0xFFF0E8FF),
-      ),
-    };
-
-    return Semantics(
-      label: '$label package',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(B2BRadius.full),
-          border: Border.all(color: foreground.withValues(alpha: .18)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: foreground),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: foreground,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w900,
-                letterSpacing: .15,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PlanDetailRow extends StatelessWidget {
-  const _PlanDetailRow({
-    required this.label,
-    required this.value,
-    this.emphasize = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasize;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: emphasize ? AppColors.primary : AppColors.textPrimary,
-              ),
             ),
           ),
         ],
