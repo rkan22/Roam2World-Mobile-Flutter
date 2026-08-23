@@ -11,6 +11,7 @@ import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../auth/auth_repository.dart';
+import '../dashboard/dashboard_topup_sheet.dart';
 import 'wallet_data.dart';
 import 'wallet_repository.dart';
 import 'wallet_request.dart';
@@ -31,13 +32,60 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   final _repository = WalletRepository();
   final Map<String, TextEditingController> _allocationControllers = {};
 
-  static const _providers = <String, String>{
+  static const _providerLabels = <String, String>{
     'airhub': 'Vodafone',
     'movistar': 'Movistar',
     'worldmove': 'Orange Europe',
     'flexnet': 'Orange Big Data',
     'tgt': 'Orange Balkans',
   };
+
+  bool _isHiddenProviderKey(String key) {
+    final normalized = key.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
+    return normalized == 'esimcard';
+  }
+
+  List<String> get _providerKeys {
+    final backendKeys =
+        _allocation?.allocations.keys
+            .where((key) => !_isHiddenProviderKey(key))
+            .toList() ??
+        const <String>[];
+
+    return backendKeys.isNotEmpty
+        ? backendKeys
+        : _providerLabels.keys
+              .where((key) => !_isHiddenProviderKey(key))
+              .toList();
+  }
+
+  String _providerLabel(String key) {
+    final normalized = key.trim().toLowerCase();
+    final knownLabel = _providerLabels[normalized];
+    if (knownLabel != null) return knownLabel;
+
+    final spaced = key
+        .replaceAll(RegExp(r'[_-]+'), ' ')
+        .replaceAllMapped(
+          RegExp(r'([a-z])([A-Z])'),
+          (match) => '${match.group(1)} ${match.group(2)}',
+        )
+        .trim();
+
+    if (spaced.isEmpty) return 'Provider';
+
+    return spaced
+        .split(RegExp(r'\s+'))
+        .map(
+          (part) => part.isEmpty
+              ? part
+              : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
 
   AppRole? _role;
   WalletData? _wallet;
@@ -109,7 +157,11 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   }
 
   void _syncAllocationControllers(ProviderAllocationData allocation) {
-    for (final key in _providers.keys) {
+    final keys = allocation.allocations.isNotEmpty
+        ? allocation.allocations.keys.where((key) => !_isHiddenProviderKey(key))
+        : _providerLabels.keys.where((key) => !_isHiddenProviderKey(key));
+
+    for (final key in keys) {
       final controller = _allocationControllers.putIfAbsent(
         key,
         () => TextEditingController(),
@@ -119,8 +171,12 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   }
 
   Map<String, double>? _currentAllocations() {
-    final values = <String, double>{};
-    for (final key in _providers.keys) {
+    // Hidden legacy providers are preserved in the payload so an existing
+    // allocation cannot be deleted accidentally while the provider is
+    // removed from the mobile interface.
+    final values = <String, double>{...?_allocation?.allocations};
+
+    for (final key in _providerKeys) {
       final value = double.tryParse(
         _allocationControllers[key]?.text.trim() ?? '',
       );
@@ -165,112 +221,17 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
   Future<void> _showTopUpRequest() async {
     final wallet = _wallet;
     if (wallet == null) return;
-    final amountController = TextEditingController();
-    final noteController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    var submitting = false;
-    String? submitError;
 
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            B2BSpacing.lg,
-            B2BSpacing.xs,
-            B2BSpacing.lg,
-            MediaQuery.viewInsetsOf(context).bottom + B2BSpacing.xl,
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Request balance',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: B2BSpacing.md),
-                TextFormField(
-                  controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Amount',
-                    prefixText: '${wallet.currency} ',
-                  ),
-                  validator: (value) {
-                    final amount = double.tryParse(value?.trim() ?? '');
-                    return amount == null || amount <= 0
-                        ? 'Enter an amount greater than zero.'
-                        : null;
-                  },
-                ),
-                const SizedBox(height: B2BSpacing.md),
-                TextFormField(
-                  controller: noteController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (optional)',
-                  ),
-                ),
-                if (submitError != null) ...[
-                  const SizedBox(height: B2BSpacing.sm),
-                  Text(
-                    submitError!,
-                    style: const TextStyle(color: AppColors.danger),
-                  ),
-                ],
-                const SizedBox(height: B2BSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: submitting
-                        ? null
-                        : () async {
-                            if (!(formKey.currentState?.validate() ?? false)) {
-                              return;
-                            }
-                            setSheetState(() {
-                              submitting = true;
-                              submitError = null;
-                            });
-                            try {
-                              await _repository.createTopUpRequest(
-                                amount: double.parse(
-                                  amountController.text.trim(),
-                                ),
-                                currency: wallet.currency,
-                                note: noteController.text,
-                              );
-                              if (!mounted || !sheetContext.mounted) return;
-                              Navigator.of(sheetContext).pop();
-                              _message('Balance request created.');
-                              await _load(forceRefresh: true);
-                            } on ApiException catch (error) {
-                              setSheetState(() => submitError = error.message);
-                            } finally {
-                              if (sheetContext.mounted) {
-                                setSheetState(() => submitting = false);
-                              }
-                            }
-                          },
-                    icon: const Icon(Icons.add_card_rounded),
-                    label: Text(submitting ? 'Sending...' : 'Send request'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final submitted = await showDashboardTopUpSheet(
+      context,
+      currency: wallet.currency,
+      repository: _repository,
     );
-    amountController.dispose();
-    noteController.dispose();
+
+    if (submitted == true && mounted) {
+      _message('Balance request created.');
+      await _load(forceRefresh: true);
+    }
   }
 
   void _message(String value) {
@@ -408,12 +369,12 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
               const SizedBox(height: B2BSpacing.md),
               LinearProgressIndicator(value: progress),
               const SizedBox(height: B2BSpacing.md),
-              for (final entry in _providers.entries) ...[
+              for (final key in _providerKeys) ...[
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        entry.value,
+                        _providerLabel(key),
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -421,7 +382,7 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                     SizedBox(
                       width: 140,
                       child: TextField(
-                        controller: _allocationControllers[entry.key],
+                        controller: _allocationControllers[key],
                         enabled: !_savingAllocation && allocation != null,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
@@ -435,7 +396,7 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                     ),
                   ],
                 ),
-                if (entry.key != _providers.keys.last)
+                if (key != _providerKeys.last)
                   const SizedBox(height: B2BSpacing.sm),
               ],
               const SizedBox(height: B2BSpacing.md),
