@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../../shared/widgets/package_type_chip.dart';
 import 'package_catalog.dart';
 
 class PackageDetailScreen extends StatelessWidget {
@@ -273,24 +274,7 @@ class _PlanSummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  typeLabel,
-                  style: const TextStyle(
-                    color: Color(0xFF334155),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
+              PackageTypeChip(packageType: package.packageType),
             ],
           ),
           const SizedBox(height: 18),
