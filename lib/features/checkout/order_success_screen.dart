@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../orders/order_result.dart';
+import 'widgets/checkout_progress.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
   const OrderSuccessScreen({super.key, required this.result});
@@ -82,6 +83,10 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
         (result.activationCode?.isNotEmpty ?? false);
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Checkout'),
+      ),
       body: SafeArea(
         child: FadeTransition(
           key: const Key('success-content'),
@@ -96,6 +101,8 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                 B2BSpacing.xxl,
               ),
               children: [
+                const CheckoutProgress(currentStep: 3),
+                const SizedBox(height: B2BSpacing.xl),
                 Container(
                   padding: const EdgeInsets.all(B2BSpacing.xl),
                   decoration: BoxDecoration(
