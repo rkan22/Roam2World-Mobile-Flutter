@@ -10,6 +10,7 @@ import '../orders/orders_repository.dart';
 import '../packages/package_catalog.dart';
 import '../wallet/wallet_data.dart';
 import '../wallet/wallet_repository.dart';
+import 'widgets/checkout_progress.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, required this.package});
@@ -31,6 +32,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   late Future<WalletData> _walletFuture;
 
+  int _currentStep = 0;
   bool _accepted = false;
   bool _submitting = false;
   String? _error;
@@ -48,6 +50,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _phoneController.dispose();
     _simNumberController.dispose();
     super.dispose();
+  }
+
+  void _goBack() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep -= 1;
+        _error = null;
+      });
+      return;
+    }
+    context.pop();
+  }
+
+  void _continueCheckout() {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    if (_currentStep == 0) {
+      setState(() {
+        _currentStep = 1;
+        _error = null;
+      });
+      return;
+    }
+
+    if (_currentStep == 1) {
+      if (!(_formKey.currentState?.validate() ?? false)) return;
+      setState(() {
+        _currentStep = 2;
+        _error = null;
+      });
+      return;
+    }
+
+    _submit();
   }
 
   Future<void> _submit() async {
@@ -113,16 +150,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final media = MediaQuery.of(context);
     final keyboardInset = media.viewInsets.bottom;
     final keyboardOpen = keyboardInset > 0;
-    final bottomOffset = media.padding.bottom + 12;
+    final bottomOffset = keyboardOpen
+        ? keyboardInset + 8
+        : media.padding.bottom + 12;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
-          onPressed: _submitting ? null : () => context.pop(),
+          onPressed: _submitting ? null : _goBack,
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: const Text('B2B checkout'),
+        title: const Text('Checkout'),
       ),
       body: Stack(
         children: [
@@ -141,215 +180,235 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   keyboardInset + (keyboardOpen ? 24 : 126),
                 ),
                 children: [
-                  Text(
-                    'Review your order',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+                  CheckoutProgress(currentStep: _currentStep),
+                  const SizedBox(height: 24),
+                  Text(switch (_currentStep) {
+                    0 => 'Your cart',
+                    1 => 'Customer details',
+                    _ => 'Review your order',
+                  }, style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 5),
-                  Text(
-                    'Assign the package to your end customer and confirm the wallet charge.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  Text(switch (_currentStep) {
+                    0 => 'Review the selected B2B package before continuing.',
+                    1 => 'Assign this package to your end customer.',
+                    _ => 'Confirm the customer, package and wallet charge.',
+                  }, style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 18),
-                  _PackageSummary(package: package),
-                  const SizedBox(height: 16),
-                  _SectionCard(
-                    step: '1',
-                    title: 'End customer',
-                    subtitle:
-                        'These details will be attached to the B2B order.',
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _firstNameController,
-                                enabled: !_submitting,
-                                textInputAction: TextInputAction.next,
-                                textCapitalization: TextCapitalization.words,
-                                autofillHints: const [AutofillHints.givenName],
-                                decoration: const InputDecoration(
-                                  labelText: 'First name',
+                  if (_currentStep == 0 || _currentStep == 2)
+                    _PackageSummary(package: package),
+                  if (_currentStep == 0) ...[
+                    const SizedBox(height: 14),
+                    _CartSummary(package: package),
+                  ],
+                  if (_currentStep == 1) ...[
+                    const SizedBox(height: 16),
+                    _SectionCard(
+                      step: '1',
+                      title: 'End customer',
+                      subtitle:
+                          'These details will be attached to the B2B order.',
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _firstNameController,
+                                  enabled: !_submitting,
+                                  textInputAction: TextInputAction.next,
+                                  textCapitalization: TextCapitalization.words,
+                                  autofillHints: const [
+                                    AutofillHints.givenName,
+                                  ],
+                                  decoration: const InputDecoration(
+                                    labelText: 'First name',
+                                  ),
+                                  validator: _required,
                                 ),
-                                validator: _required,
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _lastNameController,
-                                enabled: !_submitting,
-                                textInputAction: TextInputAction.next,
-                                textCapitalization: TextCapitalization.words,
-                                autofillHints: const [AutofillHints.familyName],
-                                decoration: const InputDecoration(
-                                  labelText: 'Last name',
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _lastNameController,
+                                  enabled: !_submitting,
+                                  textInputAction: TextInputAction.next,
+                                  textCapitalization: TextCapitalization.words,
+                                  autofillHints: const [
+                                    AutofillHints.familyName,
+                                  ],
+                                  decoration: const InputDecoration(
+                                    labelText: 'Last name',
+                                  ),
+                                  validator: _required,
                                 ),
-                                validator: _required,
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _phoneController,
-                          enabled: !_submitting,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: requiresSimIdentifier
-                              ? TextInputAction.next
-                              : TextInputAction.done,
-                          autofillHints: const [AutofillHints.telephoneNumber],
-                          onFieldSubmitted: (_) {
-                            if (!requiresSimIdentifier) {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            labelText: 'Customer phone',
-                            hintText: '+90 5xx xxx xx xx',
-                            prefixIcon: Icon(Icons.phone_outlined),
+                            ],
                           ),
-                          validator: (value) {
-                            final normalized = (value ?? '').replaceAll(
-                              RegExp(r'[^0-9+]'),
-                              '',
-                            );
-                            final digits = normalized.replaceAll(
-                              RegExp(r'\D'),
-                              '',
-                            );
-                            if (digits.isEmpty) {
-                              return 'Enter the customer phone number';
-                            }
-                            if (digits.length < 7) {
-                              return 'Enter a valid phone number';
-                            }
-                            return null;
-                          },
-                        ),
-                        if (requiresSimIdentifier) ...[
                           const SizedBox(height: 12),
                           TextFormField(
-                            controller: _simNumberController,
+                            controller: _phoneController,
                             enabled: !_submitting,
-                            keyboardType: requiresTgtIccid
-                                ? TextInputType.text
-                                : TextInputType.number,
-                            textCapitalization: TextCapitalization.characters,
-                            textInputAction: TextInputAction.done,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            maxLength: requiresTgtIccid ? 22 : 20,
+                            keyboardType: TextInputType.phone,
+                            textInputAction: requiresSimIdentifier
+                                ? TextInputAction.next
+                                : TextInputAction.done,
+                            autofillHints: const [
+                              AutofillHints.telephoneNumber,
+                            ],
                             onFieldSubmitted: (_) {
-                              FocusManager.instance.primaryFocus?.unfocus();
+                              if (!requiresSimIdentifier) {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                              }
                             },
-                            decoration: InputDecoration(
-                              labelText: requiresTgtIccid
-                                  ? 'SIM ICCID / barcode'
-                                  : '20-digit SIM number',
-                              helperText: requiresTgtIccid
-                                  ? 'Enter or paste the complete ICCID, including its final letter.'
-                                  : 'Enter the number printed on the physical SIM.',
-                              prefixIcon: const Icon(Icons.sim_card_outlined),
+                            decoration: const InputDecoration(
+                              labelText: 'Customer phone',
+                              hintText: '+90 5xx xxx xx xx',
+                              prefixIcon: Icon(Icons.phone_outlined),
                             ),
                             validator: (value) {
-                              if (requiresTgtIccid) {
-                                final normalized = _normalizeTgtIccid(
-                                  value ?? '',
-                                );
-                                if (normalized.length < 19 ||
-                                    normalized.length > 22) {
-                                  return 'Enter a valid 19–22 character ICCID';
-                                }
-                                return null;
-                              }
-
-                              final digits = (value ?? '').replaceAll(
+                              final normalized = (value ?? '').replaceAll(
+                                RegExp(r'[^0-9+]'),
+                                '',
+                              );
+                              final digits = normalized.replaceAll(
                                 RegExp(r'\D'),
                                 '',
                               );
-                              if (digits.length != 20) {
-                                return 'Enter the 20-digit SIM number';
+                              if (digits.isEmpty) {
+                                return 'Enter the customer phone number';
+                              }
+                              if (digits.length < 7) {
+                                return 'Enter a valid phone number';
                               }
                               return null;
                             },
                           ),
+                          if (requiresSimIdentifier) ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _simNumberController,
+                              enabled: !_submitting,
+                              keyboardType: requiresTgtIccid
+                                  ? TextInputType.text
+                                  : TextInputType.number,
+                              textCapitalization: TextCapitalization.characters,
+                              textInputAction: TextInputAction.done,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              maxLength: requiresTgtIccid ? 22 : 20,
+                              onFieldSubmitted: (_) {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                              },
+                              decoration: InputDecoration(
+                                labelText: requiresTgtIccid
+                                    ? 'SIM ICCID / barcode'
+                                    : '20-digit SIM number',
+                                helperText: requiresTgtIccid
+                                    ? 'Enter or paste the complete ICCID, including its final letter.'
+                                    : 'Enter the number printed on the physical SIM.',
+                                prefixIcon: const Icon(Icons.sim_card_outlined),
+                              ),
+                              validator: (value) {
+                                if (requiresTgtIccid) {
+                                  final normalized = _normalizeTgtIccid(
+                                    value ?? '',
+                                  );
+                                  if (normalized.length < 19 ||
+                                      normalized.length > 22) {
+                                    return 'Enter a valid 19–22 character ICCID';
+                                  }
+                                  return null;
+                                }
+
+                                final digits = (value ?? '').replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                );
+                                if (digits.length != 20) {
+                                  return 'Enter the 20-digit SIM number';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  FutureBuilder<WalletData>(
-                    future: _walletFuture,
-                    builder: (context, snapshot) {
-                      return _WalletSummary(
-                        package: package,
-                        wallet: snapshot.data,
-                        loading:
-                            snapshot.connectionState == ConnectionState.waiting,
-                        failed: snapshot.hasError,
-                        onRetry: () {
-                          setState(() {
-                            _walletFuture = _walletRepository
-                                .fetchSmartWalletStatus();
-                          });
-                        },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  _SectionCard(
-                    step: '3',
-                    title: 'Final confirmation',
-                    subtitle:
-                        'Provisioning starts after the backend accepts this order.',
-                    child: CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      value: _accepted,
-                      onChanged: _submitting
-                          ? null
-                          : (value) {
-                              setState(() {
-                                _accepted = value ?? false;
-                                if (_accepted) _error = null;
-                              });
-                            },
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text(
-                        'Customer and package information is correct',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      subtitle: const Text(
-                        'The package price will be deducted from the business wallet.',
                       ),
                     ),
-                  ),
-                  if (_error != null) ...[
+                  ],
+                  if (_currentStep == 2) ...[
                     const SizedBox(height: 14),
-                    _CheckoutError(message: _error!),
+                    FutureBuilder<WalletData>(
+                      future: _walletFuture,
+                      builder: (context, snapshot) {
+                        return _WalletSummary(
+                          package: package,
+                          wallet: snapshot.data,
+                          loading:
+                              snapshot.connectionState ==
+                              ConnectionState.waiting,
+                          failed: snapshot.hasError,
+                          onRetry: () {
+                            setState(() {
+                              _walletFuture = _walletRepository
+                                  .fetchSmartWalletStatus();
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _SectionCard(
+                      step: '3',
+                      title: 'Final confirmation',
+                      subtitle:
+                          'Provisioning starts after the backend accepts this order.',
+                      child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        value: _accepted,
+                        onChanged: _submitting
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _accepted = value ?? false;
+                                  if (_accepted) _error = null;
+                                });
+                              },
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: const Text(
+                          'Customer and package information is correct',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: const Text(
+                          'The package price will be deducted from the business wallet.',
+                        ),
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 14),
+                      _CheckoutError(message: _error!),
+                    ],
                   ],
                 ],
               ),
             ),
           ),
-          if (!keyboardOpen)
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: bottomOffset,
-              child: _CheckoutAction(
-                package: package,
-                keyboardOpen: keyboardOpen,
-                accepted: _accepted,
-                submitting: _submitting,
-                onCloseKeyboard: () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                },
-                onSubmit: _submit,
-              ),
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: bottomOffset,
+            child: _CheckoutAction(
+              package: package,
+              keyboardOpen: keyboardOpen,
+              currentStep: _currentStep,
+              accepted: _accepted,
+              submitting: _submitting,
+              onCloseKeyboard: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              onSubmit: _continueCheckout,
             ),
+          ),
         ],
       ),
     );
@@ -357,6 +416,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   static String? _required(String? value) {
     return (value?.trim().isEmpty ?? true) ? 'Required' : null;
+  }
+}
+
+class _CartSummary extends StatelessWidget {
+  const _CartSummary({required this.package});
+
+  final MobilePackage package;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(B2BRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          const _SummaryRow(label: 'Quantity', value: '1', emphasized: true),
+          const Divider(height: 26),
+          _SummaryRow(label: 'Subtotal', value: package.formattedPrice),
+          const _SummaryRow(label: 'Delivery', value: 'Free'),
+          const Divider(height: 26),
+          _SummaryRow(
+            label: 'Total',
+            value: package.formattedPrice,
+            emphasized: true,
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -612,6 +705,7 @@ class _CheckoutAction extends StatelessWidget {
   const _CheckoutAction({
     required this.package,
     required this.keyboardOpen,
+    required this.currentStep,
     required this.accepted,
     required this.submitting,
     required this.onCloseKeyboard,
@@ -620,6 +714,7 @@ class _CheckoutAction extends StatelessWidget {
 
   final MobilePackage package;
   final bool keyboardOpen;
+  final int currentStep;
   final bool accepted;
   final bool submitting;
   final VoidCallback onCloseKeyboard;
@@ -646,7 +741,10 @@ class _CheckoutAction extends StatelessWidget {
             ],
             Expanded(
               child: FilledButton.icon(
-                onPressed: package.isPriceAvailable && accepted && !submitting
+                onPressed:
+                    package.isPriceAvailable &&
+                        !submitting &&
+                        (currentStep < 2 || accepted)
                     ? onSubmit
                     : null,
                 icon: submitting
@@ -655,11 +753,19 @@ class _CheckoutAction extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2.3),
                       )
-                    : const Icon(Icons.lock_outline_rounded),
+                    : Icon(
+                        currentStep == 2
+                            ? Icons.lock_outline_rounded
+                            : Icons.arrow_forward_rounded,
+                      ),
                 label: Text(
                   submitting
                       ? 'Creating B2B order...'
-                      : 'Confirm order · ${package.formattedPrice}',
+                      : switch (currentStep) {
+                          0 => 'Continue',
+                          1 => 'Review order',
+                          _ => 'Place order · ${package.formattedPrice}',
+                        },
                 ),
               ),
             ),

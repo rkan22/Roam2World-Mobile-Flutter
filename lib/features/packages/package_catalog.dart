@@ -128,6 +128,8 @@ class MobilePackage {
     this.badgeLabel,
     this.description = '',
     this.supportedCountries = const [],
+    this.renewalLabel = 'Not specified',
+    this.voiceSmsLabel = 'Not specified',
   });
 
   final String id,
@@ -141,7 +143,9 @@ class MobilePackage {
       currency,
       packageType,
       countryCode,
-      description;
+      description,
+      renewalLabel,
+      voiceSmsLabel;
   final double price;
   final bool isFeatured;
   final bool isPriceVisible;
@@ -180,6 +184,9 @@ class MobilePackage {
           '${_first([json['final_price'], json['finalPrice'], json['price'], json['sale_price'], json['salePrice'], json['reseller_price'], json['resellerPrice'], 0])}',
         ) ??
         0;
+
+    final renewalLabel = _text(json, ['renewal_label', 'renewalLabel']);
+    final voiceSmsLabel = _text(json, ['voice_sms_label', 'voiceSmsLabel']);
 
     final rawDestination = _text(json, [
       'destination_label',
@@ -254,6 +261,8 @@ class MobilePackage {
       badgeLabel: _badgeLabel(json),
       description: _description(json),
       supportedCountries: countries,
+      renewalLabel: renewalLabel.isEmpty ? 'Not specified' : renewalLabel,
+      voiceSmsLabel: voiceSmsLabel.isEmpty ? 'Not specified' : voiceSmsLabel,
     );
   }
 
@@ -302,6 +311,8 @@ class MobilePackage {
     badgeLabel: badgeLabel,
     description: description,
     supportedCountries: supportedCountries,
+    renewalLabel: renewalLabel,
+    voiceSmsLabel: voiceSmsLabel,
   );
 
   String get operatorKey {

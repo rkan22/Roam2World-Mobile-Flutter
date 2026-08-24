@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
+import '../../shared/widgets/package_destination_visual.dart';
 import '../../shared/widgets/package_type_chip.dart';
 import 'package_catalog.dart';
 
@@ -13,188 +14,394 @@ class PackageDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final typeLabel = package.packageType == 'simcard' ? 'SIM Card' : 'eSIM';
+    final isPhysical = package.packageType.toLowerCase() == 'simcard';
+    final typeLabel = isPhysical ? 'SIM Card' : 'eSIM';
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Plan Details'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            tooltip: 'More',
+            icon: const Icon(Icons.more_horiz_rounded),
+          ),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 14),
         child: SizedBox(
           height: 58,
           child: FilledButton.icon(
             onPressed: package.isPriceAvailable
                 ? () => context.push('/checkout', extra: package)
                 : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-            icon: const Icon(Icons.shopping_bag_outlined, size: 20),
-            label: Text(
+            icon: Icon(
               package.isPriceAvailable
-                  ? 'Continue to checkout  •  ${package.formattedPrice}'
-                  : 'Contact Admin',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+                  ? Icons.shopping_cart_outlined
+                  : Icons.support_agent_rounded,
+            ),
+            label: Text(
+              package.isPriceAvailable ? 'Add to cart' : 'Contact Admin',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
           ),
         ),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => context.pop(),
-                  style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    side: BorderSide(color: theme.colorScheme.outlineVariant),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+        children: [
+          _ProductCard(package: package, typeLabel: typeLabel),
+          const SizedBox(height: 14),
+          _OverviewCard(package: package, isPhysical: isPhysical),
+          const SizedBox(height: 14),
+          _PlanInformationCard(package: package, typeLabel: typeLabel),
+          const SizedBox(height: 14),
+          _ImportantNotesCard(package: package, isPhysical: isPhysical),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  const _ProductCard({required this.package, required this.typeLabel});
+
+  final MobilePackage package;
+  final String typeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return _DetailCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  package.name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.15,
                   ),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                Expanded(
-                  child: Text(
-                    'Plan details',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 48),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _PlanSummaryCard(package: package, typeLabel: typeLabel),
-            const SizedBox(height: 14),
-            _MetricsCard(package: package),
-            if (package.description.isNotEmpty) ...[
-              const SizedBox(height: 22),
-              Text(
-                'About this plan',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: 10),
-              _SurfaceCard(
-                child: Text(
-                  package.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.55,
-                  ),
-                ),
+              const SizedBox(width: 10),
+              const _LiveBadge(),
+              const SizedBox(width: 10),
+              PackageDestinationVisual(
+                code: package.countryCode,
+                destinationKey: '',
+                size: 38,
               ),
             ],
-            const SizedBox(height: 22),
-            Text(
-              'Plan information',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            package.displayProvider,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 10),
-            _SurfaceCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _InfoRow(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Package',
-                    body: package.name,
-                    tone: const Color(0xFF334155),
-                    soft: const Color(0xFFF1F5F9),
-                  ),
-                  const Divider(height: 1),
-                  _InfoRow(
-                    icon: Icons.public_rounded,
-                    title: 'Coverage',
-                    body: package.destination,
-                    tone: const Color(0xFF7C3AED),
-                    soft: const Color(0xFFF5F3FF),
-                  ),
-                  const Divider(height: 1),
-                  _InfoRow(
-                    icon: Icons.sim_card_outlined,
-                    title: 'Type',
-                    body: typeLabel,
-                    tone: const Color(0xFFEA580C),
-                    soft: const Color(0xFFFFF7ED),
-                  ),
-                  if (package.supportedCountries.isNotEmpty) ...[
-                    const Divider(height: 1),
-                    _SupportedCountriesRow(
-                      countries: package.supportedCountries,
-                    ),
-                  ],
-                  const Divider(height: 1),
-                  const _InfoRow(
-                    icon: Icons.bolt_rounded,
-                    title: 'Activation',
-                    body:
-                        'QR and activation details appear after provisioning.',
-                    tone: Color(0xFF475569),
-                    soft: Color(0xFFF1F5F9),
-                  ),
-                  const Divider(height: 1),
-                  const _InfoRow(
-                    icon: Icons.phone_iphone_rounded,
-                    title: 'Compatibility',
-                    body: 'Unlocked eSIM-compatible devices are required.',
-                    tone: Color(0xFF166534),
-                    soft: Color(0xFFF0FDF4),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              PackageTypeChip(packageType: package.packageType),
+              _ValueChip(icon: Icons.storage_rounded, label: package.dataLabel),
+              _ValueChip(
+                icon: Icons.calendar_month_outlined,
+                label: package.validityLabel,
               ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F8FF),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFB9E1FF)),
             ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(B2BRadius.lg),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.business_center_outlined,
-                    color: Color(0xFF475569),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'B2B fulfilment',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w900,
-                          ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Price',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Complete checkout to provision this package to your customer and manage it from the eSIM workspace.',
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        package.isPriceAvailable
+                            ? package.formattedPrice
+                            : 'On request',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (!package.isPriceAvailable) ...[
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Central pricing required',
                           style: TextStyle(
                             color: AppColors.textSecondary,
-                            height: 1.4,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: package.isPriceAvailable
+                      ? () => context.push('/checkout', extra: package)
+                      : null,
+                  icon: Icon(
+                    package.isPriceAvailable
+                        ? Icons.shopping_cart_outlined
+                        : Icons.chat_bubble_outline_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    package.isPriceAvailable ? 'Add to cart' : 'Contact Admin',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewCard extends StatelessWidget {
+  const _OverviewCard({required this.package, required this.isPhysical});
+
+  final MobilePackage package;
+  final bool isPhysical;
+
+  @override
+  Widget build(BuildContext context) {
+    final fallback =
+        '${package.name} provides ${package.dataLabel} of high-speed data '
+        'for ${package.validityLabel} across ${package.destination}.';
+
+    return _DetailCard(
+      title: 'Overview',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            package.description.trim().isEmpty ? fallback : package.description,
+            style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F8FF),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: const Color(0xFFB9E1FF)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isPhysical
+                        ? 'This SIM Card is available for B2B ordering.'
+                        : 'This eSIM can be provisioned after checkout.',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanInformationCard extends StatelessWidget {
+  const _PlanInformationCard({required this.package, required this.typeLabel});
+
+  final MobilePackage package;
+  final String typeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return _DetailCard(
+      title: 'Plan Information',
+      child: Column(
+        children: [
+          _IconDataRow(
+            icon: Icons.sim_card_outlined,
+            label: 'Type',
+            value: typeLabel,
+          ),
+          const Divider(height: 1),
+          _IconDataRow(
+            icon: Icons.storage_rounded,
+            label: 'Data',
+            value: package.dataLabel,
+          ),
+          const Divider(height: 1),
+          _IconDataRow(
+            icon: Icons.calendar_month_outlined,
+            label: 'Validity',
+            value: package.validityLabel,
+          ),
+          const Divider(height: 1),
+          _CoverageInformationRow(package: package),
+          const Divider(height: 1),
+          _IconDataRow(
+            icon: Icons.autorenew_rounded,
+            label: 'Renewal',
+            value: package.renewalLabel,
+          ),
+          const Divider(height: 1),
+          _IconDataRow(
+            icon: Icons.phone_in_talk_outlined,
+            label: 'Voice / SMS',
+            value: package.voiceSmsLabel,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoverageInformationRow extends StatelessWidget {
+  const _CoverageInformationRow({required this.package});
+
+  final MobilePackage package;
+
+  @override
+  Widget build(BuildContext context) {
+    const previewLimit = 7;
+    final countries = package.supportedCountries;
+    final visible = countries.take(previewLimit).toList(growable: false);
+    final remaining = countries.length - visible.length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.language_rounded,
+            size: 20,
+            color: Color(0xFF475569),
+          ),
+          const SizedBox(width: 11),
+          const Expanded(
+            child: Text(
+              'Coverage',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  package.destination,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if (visible.isNotEmpty) ...[
+                  const SizedBox(height: 9),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 5,
+                    runSpacing: 5,
+                    children: [
+                      for (final country in visible)
+                        PackageDestinationVisual(
+                          code: country.code,
+                          destinationKey: '',
+                          size: 26,
+                        ),
+                      if (remaining > 0) _CountBadge(count: remaining),
+                    ],
+                  ),
                 ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportantNotesCard extends StatelessWidget {
+  const _ImportantNotesCard({required this.package, required this.isPhysical});
+
+  final MobilePackage package;
+  final bool isPhysical;
+
+  @override
+  Widget build(BuildContext context) {
+    final voiceSmsIncluded =
+        package.voiceSmsLabel.trim().toLowerCase() == 'included';
+
+    return _DetailCard(
+      title: 'Important notes',
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFF6D98B)),
+        ),
+        child: Column(
+          children: [
+            if (!voiceSmsIncluded) ...[
+              const _NoteLine(
+                icon: Icons.warning_amber_rounded,
+                color: Color(0xFFF59E0B),
+                text:
+                    'This is a data-only plan. Voice calls and SMS are not included.',
               ),
+              const Divider(height: 24),
+            ],
+            _NoteLine(
+              icon: Icons.info_outline_rounded,
+              color: AppColors.primary,
+              text: isPhysical
+                  ? 'The physical SIM identifier may be required during checkout.'
+                  : 'Installation details become available after provisioning.',
             ),
           ],
         ),
@@ -203,193 +410,18 @@ class PackageDetailScreen extends StatelessWidget {
   }
 }
 
-class _PlanSummaryCard extends StatelessWidget {
-  const _PlanSummaryCard({required this.package, required this.typeLabel});
-
-  final MobilePackage package;
-  final String typeLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light
-            ? const [
-                BoxShadow(
-                  color: Color(0x12020817),
-                  blurRadius: 24,
-                  offset: Offset(0, 10),
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: _CountryFlag(code: package.countryCode),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      package.displayProvider,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      package.destination,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.6,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              PackageTypeChip(packageType: package.packageType),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            package.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w900,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.verified_outlined,
-                  size: 18,
-                  color: Color(0xFF475569),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    package.isPriceAvailable
-                        ? 'Ready for B2B checkout'
-                        : 'Central pricing required',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                Text(
-                  package.formattedPrice,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricsCard extends StatelessWidget {
-  const _MetricsCard({required this.package});
-
-  final MobilePackage package;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SurfaceCard(
-      child: Row(
-        children: [
-          Expanded(
-            child: _PlanMetric(
-              label: 'Data',
-              value: package.dataLabel,
-              icon: Icons.data_usage_rounded,
-              tone: const Color(0xFF334155),
-              soft: const Color(0xFFF1F5F9),
-            ),
-          ),
-          const _MetricDivider(),
-          Expanded(
-            child: _PlanMetric(
-              label: 'Validity',
-              value: package.validityLabel,
-              icon: Icons.schedule_rounded,
-              tone: const Color(0xFF7C3AED),
-              soft: const Color(0xFFF5F3FF),
-            ),
-          ),
-          const _MetricDivider(),
-          Expanded(
-            child: _PlanMetric(
-              label: 'Price',
-              value: package.formattedPrice,
-              icon: Icons.payments_outlined,
-              tone: const Color(0xFFEA580C),
-              soft: const Color(0xFFFFF7ED),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({
-    required this.child,
-    this.padding = const EdgeInsets.all(18),
-  });
+class _DetailCard extends StatelessWidget {
+  const _DetailCard({required this.child, this.title});
 
   final Widget child;
-  final EdgeInsets padding;
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Container(
-      padding: padding,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(B2BRadius.xl),
@@ -398,200 +430,55 @@ class _SurfaceCard extends StatelessWidget {
             ? B2BShadows.card
             : null,
       ),
-      child: child,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title!,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+          ],
+          child,
+        ],
+      ),
     );
   }
 }
 
-class _MetricDivider extends StatelessWidget {
-  const _MetricDivider();
+class _ValueChip extends StatelessWidget {
+  const _ValueChip({required this.icon, required this.label});
 
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 1,
-    height: 62,
-    color: Theme.of(context).colorScheme.outlineVariant,
-  );
-}
-
-class _PlanMetric extends StatelessWidget {
-  const _PlanMetric({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.tone,
-    required this.soft,
-  });
-
+  final IconData icon;
   final String label;
-  final String value;
-  final IconData icon;
-  final Color tone;
-  final Color soft;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Container(
-        width: 34,
-        height: 34,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: soft,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(icon, size: 18, color: tone),
-      ),
-      const SizedBox(height: 7),
-      Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    ],
-  );
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.tone,
-    required this.soft,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-  final Color tone;
-  final Color soft;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(16),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 42,
-          width: 42,
-          decoration: BoxDecoration(
-            color: soft,
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Icon(icon, color: tone, size: 21),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                body,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _SupportedCountriesRow extends StatelessWidget {
-  const _SupportedCountriesRow({required this.countries});
-
-  final List<PackageCountry> countries;
 
   @override
   Widget build(BuildContext context) {
-    const visibleCount = 6;
-    final visible = countries.take(visibleCount).toList(growable: false);
-    final remaining = countries.length - visible.length;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(11),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: 42,
-            width: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: const Icon(
-              Icons.language_rounded,
-              color: Color(0xFF2563EB),
-              size: 21,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Supported countries',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final country in visible)
-                      _CircularCountryFlag(code: country.code),
-                    if (remaining > 0)
-                      Container(
-                        height: 30,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '+$remaining',
-                          style: const TextStyle(
-                            color: Color(0xFF475569),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
+          Icon(icon, size: 17, color: const Color(0xFF334155)),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
@@ -600,100 +487,116 @@ class _SupportedCountriesRow extends StatelessWidget {
   }
 }
 
-class _CircularCountryFlag extends StatelessWidget {
-  const _CircularCountryFlag({required this.code});
-
-  final String code;
+class _LiveBadge extends StatelessWidget {
+  const _LiveBadge();
 
   @override
   Widget build(BuildContext context) {
-    final normalized = code.trim().toUpperCase();
-    if (normalized.length != 2) {
-      return Container(
-        width: 30,
-        height: 30,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF1F5F9),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.public_rounded,
-          size: 16,
-          color: Color(0xFF475569),
-        ),
-      );
-    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE2F8E9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'Live',
+        style: TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
 
-    return ClipOval(
-      child: Image.network(
-        'https://flagsapi.com/$normalized/flat/64.png',
-        width: 30,
-        height: 30,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 30,
-          height: 30,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF1F5F9),
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            normalized,
-            style: const TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+class _CountBadge extends StatelessWidget {
+  const _CountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '+$count',
+        style: const TextStyle(
+          color: Color(0xFF475569),
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
   }
 }
 
-class _CountryFlag extends StatelessWidget {
-  const _CountryFlag({required this.code});
+class _IconDataRow extends StatelessWidget {
+  const _IconDataRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
-  final String code;
+  final IconData icon;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    const width = 40.0;
-    if (code.length != 2) {
-      return const Icon(
-        Icons.public_rounded,
-        color: Color(0xFF475569),
-        size: 29,
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        'https://flagsapi.com/${code.toUpperCase()}/flat/64.png',
-        width: width,
-        height: width * .7,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: width,
-          height: width * .7,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Text(
-            code.toUpperCase(),
-            style: const TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF475569)),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _NoteLine extends StatelessWidget {
+  const _NoteLine({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(color: AppColors.textPrimary, height: 1.45),
+          ),
+        ),
+      ],
     );
   }
 }
