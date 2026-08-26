@@ -33,7 +33,7 @@ void main() {
     final package = _package(price: 25);
 
     expect(package.isPriceAvailable, isTrue);
-    expect(package.formattedPrice, 'USD 25.00');
+    expect(package.formattedPrice, r'$25.00');
   });
 
   testWidgets('unpriced package cannot continue to checkout', (tester) async {
