@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roam2world_mobile_flutter/core/routing/app_role.dart';
 import 'package:roam2world_mobile_flutter/features/packages/package_catalog.dart';
 import 'package:roam2world_mobile_flutter/features/packages/package_detail_screen.dart';
 
@@ -50,5 +51,27 @@ void main() {
       find.byType(FilledButton).first,
     );
     expect(checkoutButton.onPressed, isNull);
+  });
+
+  testWidgets('admin is directed to configure missing pricing', (tester) async {
+    final package = _package(price: 0);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PackageDetailScreen(
+          package: package,
+          roleOverride: AppRole.admin,
+        ),
+      ),
+    );
+
+    expect(find.text('Contact Admin'), findsNothing);
+    expect(find.text('Configure pricing'), findsNWidgets(2));
+    expect(find.text('Central pricing required'), findsOneWidget);
+
+    final pricingButton = tester.widget<FilledButton>(
+      find.byType(FilledButton).first,
+    );
+    expect(pricingButton.onPressed, isNotNull);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -12,6 +13,7 @@ import '../../shared/widgets/package_type_chip.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import '../../shared/widgets/staggered_entrance.dart';
+import '../auth/auth_repository.dart';
 import 'package_catalog.dart';
 import 'packages_repository.dart';
 import 'widgets/catalog_filter_sheet.dart';
@@ -25,6 +27,7 @@ class PackagesScreen extends StatefulWidget {
 
 class _PackagesScreenState extends State<PackagesScreen> {
   final _repository = PackagesRepository();
+  final _authRepository = AuthRepository();
   final _searchController = TextEditingController();
   final _operators = const [
     ('All Operators', ''),
@@ -44,12 +47,20 @@ class _PackagesScreenState extends State<PackagesScreen> {
   bool _loading = true;
   bool _showingStaleData = false;
   String? _error;
+  AppRole _role = AppRole.unknown;
 
   @override
   void initState() {
     super.initState();
     PackagesRepository.catalogRevision.addListener(_onCatalogInvalidated);
+    _loadRole();
     _load();
+  }
+
+  Future<void> _loadRole() async {
+    final profile = await _authRepository.readStoredProfile();
+    if (!mounted) return;
+    setState(() => _role = parseAppRole(profile?.role));
   }
 
   void _onCatalogInvalidated() {
@@ -289,6 +300,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             index: index,
             child: _OperatorPlanCard(
               package: visible[index],
+              isAdmin: _role == AppRole.admin,
               onTap: () =>
                   context.push('/packages/detail', extra: visible[index]),
             ),
@@ -510,9 +522,14 @@ class _LiveCatalogBanner extends StatelessWidget {
 }
 
 class _OperatorPlanCard extends StatelessWidget {
-  const _OperatorPlanCard({required this.package, required this.onTap});
+  const _OperatorPlanCard({
+    required this.package,
+    required this.isAdmin,
+    required this.onTap,
+  });
 
   final MobilePackage package;
+  final bool isAdmin;
   final VoidCallback onTap;
 
   @override
@@ -523,7 +540,7 @@ class _OperatorPlanCard extends StatelessWidget {
     final providerLabel = package.displayProvider.trim();
 
     return B2BSurface(
-      onTap: package.isPriceAvailable ? onTap : null,
+      onTap: package.isPriceAvailable || isAdmin ? onTap : null,
       padding: const EdgeInsets.all(16),
       radius: 20,
       child: Column(
@@ -597,6 +614,8 @@ class _OperatorPlanCard extends StatelessWidget {
               Text(
                 package.isPriceAvailable
                     ? package.formattedPrice
+                    : isAdmin
+                    ? 'Pricing rule required'
                     : 'Contact Admin',
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: package.isPriceAvailable

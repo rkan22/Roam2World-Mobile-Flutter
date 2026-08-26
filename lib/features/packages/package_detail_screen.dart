@@ -1,21 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_role.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/package_destination_visual.dart';
 import '../../shared/widgets/package_type_chip.dart';
+import '../auth/auth_repository.dart';
 import 'package_catalog.dart';
 
-class PackageDetailScreen extends StatelessWidget {
-  const PackageDetailScreen({super.key, required this.package});
+class PackageDetailScreen extends StatefulWidget {
+  const PackageDetailScreen({
+    super.key,
+    required this.package,
+    this.roleOverride,
+  });
 
   final MobilePackage package;
+  final AppRole? roleOverride;
+
+  @override
+  State<PackageDetailScreen> createState() => _PackageDetailScreenState();
+}
+
+class _PackageDetailScreenState extends State<PackageDetailScreen> {
+  final _authRepository = AuthRepository();
+  AppRole _role = AppRole.unknown;
+
+  MobilePackage get package => widget.package;
+
+  @override
+  void initState() {
+    super.initState();
+    _role = widget.roleOverride ?? AppRole.unknown;
+    if (widget.roleOverride == null) _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final profile = await _authRepository.readStoredProfile();
+    if (!mounted) return;
+    setState(() => _role = parseAppRole(profile?.role));
+  }
 
   @override
   Widget build(BuildContext context) {
     final isPhysical = package.packageType.toLowerCase() == 'simcard';
     final typeLabel = isPhysical ? 'SIM Card' : 'eSIM';
+    final isAdmin = _role == AppRole.admin;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,6 +67,8 @@ class PackageDetailScreen extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: package.isPriceAvailable
                 ? () => context.push('/checkout', extra: package)
+                : isAdmin
+                ? () => context.push('/pricing/rules')
                 : null,
             icon: Icon(
               package.isPriceAvailable
@@ -43,7 +76,11 @@ class PackageDetailScreen extends StatelessWidget {
                   : Icons.support_agent_rounded,
             ),
             label: Text(
-              package.isPriceAvailable ? 'Add to cart' : 'Contact Admin',
+              package.isPriceAvailable
+                  ? 'Add to cart'
+                  : isAdmin
+                  ? 'Configure pricing'
+                  : 'Contact Admin',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
           ),
@@ -52,7 +89,11 @@ class PackageDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
         children: [
-          _ProductCard(package: package, typeLabel: typeLabel),
+          _ProductCard(
+            package: package,
+            typeLabel: typeLabel,
+            isAdmin: isAdmin,
+          ),
           const SizedBox(height: 14),
           _OverviewCard(package: package, isPhysical: isPhysical),
           const SizedBox(height: 14),
@@ -66,10 +107,15 @@ class PackageDetailScreen extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({required this.package, required this.typeLabel});
+  const _ProductCard({
+    required this.package,
+    required this.typeLabel,
+    required this.isAdmin,
+  });
 
   final MobilePackage package;
   final String typeLabel;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -171,6 +217,8 @@ class _ProductCard extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: package.isPriceAvailable
                       ? () => context.push('/checkout', extra: package)
+                      : isAdmin
+                      ? () => context.push('/pricing/rules')
                       : null,
                   icon: Icon(
                     package.isPriceAvailable
@@ -179,7 +227,11 @@ class _ProductCard extends StatelessWidget {
                     size: 18,
                   ),
                   label: Text(
-                    package.isPriceAvailable ? 'Add to cart' : 'Contact Admin',
+                    package.isPriceAvailable
+                        ? 'Add to cart'
+                        : isAdmin
+                        ? 'Configure pricing'
+                        : 'Contact Admin',
                   ),
                 ),
               ],
