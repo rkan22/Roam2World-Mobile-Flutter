@@ -1,3 +1,5 @@
+import '../../core/currency/display_currency_controller.dart';
+
 class EsimCatalog {
   const EsimCatalog({required this.esims, required this.count});
 
@@ -78,7 +80,7 @@ class MobileRenewalOption {
     );
   }
 
-  String get formattedPrice => '$currency ${price.toStringAsFixed(2)}';
+  String get formattedPrice => DisplayCurrencyController.formatUsd(price);
 }
 
 class MobileEsim {

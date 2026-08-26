@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/routing/app_router.dart';
+import 'core/currency/display_currency_controller.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
@@ -41,7 +42,9 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.mode,
       builder: (context, themeMode, child) {
-        return MaterialApp.router(
+        return ValueListenableBuilder<DisplayCurrency>(
+          valueListenable: DisplayCurrencyController.selected,
+          builder: (context, displayCurrency, child) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'Roam2World B2B',
           theme: AppTheme.light(),
@@ -61,6 +64,7 @@ class _Roam2WorldAppState extends State<Roam2WorldApp> {
             ],
           ),
           routerConfig: router,
+          ),
         );
       },
     );

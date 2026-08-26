@@ -1,3 +1,5 @@
+import '../../core/currency/display_currency_controller.dart';
+
 class PackageCatalog {
   const PackageCatalog({required this.packages, required this.hasMore});
   final List<MobilePackage> packages;
@@ -284,7 +286,7 @@ class MobilePackage {
 
   bool get isPriceAvailable => isPriceVisible && price > 0;
   String get formattedPrice => isPriceAvailable
-      ? '$currency ${price.toStringAsFixed(2)}'
+      ? DisplayCurrencyController.formatUsd(price)
       : 'Contact Admin';
 
   num? get dataGb => num.tryParse(
