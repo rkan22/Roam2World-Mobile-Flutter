@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_exception.dart';
+import '../../core/currency/currency_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
@@ -11,6 +12,7 @@ import '../../shared/widgets/package_destination_visual.dart';
 import '../../shared/widgets/package_type_chip.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../../shared/widgets/currency_switcher_button.dart';
 import '../../shared/widgets/staggered_entrance.dart';
 import 'package_catalog.dart';
 import 'packages_repository.dart';
@@ -49,6 +51,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
   void initState() {
     super.initState();
     PackagesRepository.catalogRevision.addListener(_onCatalogInvalidated);
+    CurrencyController.instance.addListener(_onCurrencyChanged);
+    CurrencyController.instance.initialize();
     _load();
   }
 
@@ -56,9 +60,14 @@ class _PackagesScreenState extends State<PackagesScreen> {
     if (mounted) _load(forceRefresh: true);
   }
 
+  void _onCurrencyChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     PackagesRepository.catalogRevision.removeListener(_onCatalogInvalidated);
+    CurrencyController.instance.removeListener(_onCurrencyChanged);
     _searchTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -213,6 +222,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 const _StaleDataBanner(),
                 const SizedBox(height: 14),
               ],
+              const Align(
+                alignment: Alignment.centerRight,
+                child: CurrencySwitcherButton(),
+              ),
+              const SizedBox(height: 10),
               const _CatalogHero(),
               const SizedBox(height: 18),
               CatalogFilterToolbar(
@@ -596,7 +610,10 @@ class _OperatorPlanCard extends StatelessWidget {
               const Spacer(),
               Text(
                 package.isPriceAvailable
-                    ? package.formattedPrice
+                    ? CurrencyController.instance.format(
+                          package.price,
+                          fromCurrency: package.currency,
+                        )
                     : 'Contact Admin',
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: package.isPriceAvailable
@@ -652,7 +669,10 @@ class _OperatorPlanCard extends StatelessWidget {
                       icon: Icons.sell_outlined,
                       label: 'Price',
                       value: package.isPriceAvailable
-                          ? package.formattedPrice
+                          ? CurrencyController.instance.format(
+                          package.price,
+                          fromCurrency: package.currency,
+                        )
                           : 'Request',
                     ),
                   ),

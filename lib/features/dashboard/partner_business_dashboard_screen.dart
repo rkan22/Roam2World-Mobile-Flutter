@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../../shared/widgets/currency_switcher_button.dart';
 import 'dashboard_data.dart';
 import 'dashboard_repository.dart';
 import 'dashboard_topup_sheet.dart';
@@ -213,6 +214,8 @@ class _PartnerBusinessDashboardScreenState
             ],
           ),
         ),
+        const SizedBox(width: 8),
+        const CurrencySwitcherButton(),
         const SizedBox(width: 8),
         _SquareIconButton(
           icon: Icons.refresh_rounded,

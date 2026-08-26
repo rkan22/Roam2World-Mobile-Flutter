@@ -14,6 +14,8 @@ class ApiEndpoints {
   static const String userProfile = '/api/v1/auth/profile/';
   static const String updateUserProfile = '/api/v1/auth/update-profile/';
   static const String mobileDashboard = '/api/v1/mobile/dashboard/';
+  static const String currencyExchangeRate =
+      '/api/v1/currency/exchange-rate/';
   static const String mobileAdminDashboard = '/api/v1/mobile/admin/dashboard/';
   static const String mobileAdminResellers = '/api/v1/mobile/admin/resellers/';
   static const String mobileAdminDealers = '/api/v1/mobile/admin/dealers/';
