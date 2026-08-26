@@ -35,7 +35,7 @@ void main() {
     expect(catalog.packages.first.id, 'turkey-10gb');
     expect(catalog.packages.first.displayProvider, 'Orange Turkey');
     expect(catalog.packages.first.dataLabel, '10 GB');
-    expect(catalog.packages.first.formattedPrice, 'USD 15.50');
+    expect(catalog.packages.first.formattedPrice, r'$15.50');
     expect(catalog.packages.first.countryCode, 'TR');
   });
 
