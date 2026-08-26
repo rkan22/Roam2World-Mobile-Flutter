@@ -50,7 +50,7 @@ void main() {
 
     expect(option.productCode, 'E-185-ES-AU-eO1-T-30D/60D-20GB');
     expect(option.dataGb, 20);
-    expect(option.formattedPrice, 'USD 14.75');
+    expect(option.formattedPrice, r'$14.75');
     expect(option.adminMarkupPercent, 10);
     expect(option.resellerMarkupPercent, 5);
     expect(option.dealerMarkupPercent, 2);
