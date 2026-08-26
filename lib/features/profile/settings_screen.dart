@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_controller.dart';
+import '../../core/currency/display_currency_controller.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 
@@ -57,6 +58,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: 'Light, dark, or follow this device',
                       trailing: ThemeController.label(mode),
                       onTap: _selectTheme,
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ValueListenableBuilder<DisplayCurrency>(
+                    valueListenable: DisplayCurrencyController.selected,
+                    builder: (context, currency, child) => _SettingsTile(
+                      icon: Icons.currency_exchange_rounded,
+                      title: 'Display currency',
+                      subtitle: 'Displayed prices only; billing stays in USD',
+                      trailing: DisplayCurrencyController.code(currency),
+                      onTap: _selectCurrency,
                     ),
                   ),
                 ],
@@ -189,6 +201,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : 'Always use ${ThemeController.label(mode).toLowerCase()} mode',
                     ),
                   ),
+                const SizedBox(height: B2BSpacing.sm),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _selectCurrency() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ValueListenableBuilder<DisplayCurrency>(
+          valueListenable: DisplayCurrencyController.selected,
+          builder: (context, selected, child) => RadioGroup<DisplayCurrency>(
+            groupValue: selected,
+            onChanged: (value) {
+              if (value == null) return;
+              DisplayCurrencyController.setCurrency(value);
+              Navigator.pop(sheetContext);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const RadioListTile<DisplayCurrency>(
+                  value: DisplayCurrency.usd,
+                  title: Text('USD (\$)'),
+                ),
+                RadioListTile<DisplayCurrency>(
+                  value: DisplayCurrency.eur,
+                  enabled: DisplayCurrencyController.hasEurRate,
+                  title: const Text('EUR (€)'),
+                  subtitle: Text(
+                    DisplayCurrencyController.hasEurRate
+                        ? 'Uses the automatic exchange rate'
+                        : 'Exchange rate is temporarily unavailable',
+                  ),
+                ),
                 const SizedBox(height: B2BSpacing.sm),
               ],
             ),
