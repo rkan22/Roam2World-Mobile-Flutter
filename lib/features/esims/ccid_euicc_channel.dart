@@ -32,11 +32,11 @@ class CcidEuiccChannel implements EuiccChannel {
   bool get isOpen => _card != null;
 
   static Future<CcidEuiccCapability> capability({Ccid? ccid}) async {
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       return const CcidEuiccCapability(
         available: false,
         readers: <String>[],
-        reason: 'USB CCID transport şu anda yalnızca Android’de kullanılabilir.',
+        reason: 'CCID transport yalnızca Android ve iOS mobil cihazlarda kullanılabilir.',
       );
     }
 
@@ -78,9 +78,9 @@ class CcidEuiccChannel implements EuiccChannel {
 
   @override
   Future<void> open() async {
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       throw UnsupportedError(
-        'USB CCID transport şu anda yalnızca Android’de kullanılabilir.',
+        'CCID transport yalnızca Android ve iOS mobil cihazlarda kullanılabilir.',
       );
     }
     if (_card != null) return;
