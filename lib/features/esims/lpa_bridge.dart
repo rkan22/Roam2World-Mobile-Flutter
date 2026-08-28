@@ -98,8 +98,6 @@ class LpaBridge {
     }
 
     final native = await _nativeCapability();
-    if (!Platform.isAndroid) return native;
-
     final ccid = await CcidEuiccChannel.capability();
     return native.withCcid(ccid);
   }
