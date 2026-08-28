@@ -7,6 +7,8 @@ import 'lpa_bridge.dart';
 
 const _ccidReaderAsset = 'assets/images/lpa/ccid_reader.png';
 const _euiccSimAsset = 'assets/images/lpa/euicc_sim.png';
+const _activeProfileAsset = 'assets/images/lpa/active_profile.png';
+const _simActivationGuideAsset = 'assets/images/lpa/sim_activation_guide.png';
 
 enum _InstallStage {
   compatibility,
@@ -456,6 +458,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   Widget _resultView({required bool success}) {
     return _StageCard(
       icon: success ? Icons.check_rounded : Icons.close_rounded,
+      imageAsset: success ? _activeProfileAsset : null,
       iconColor: success ? AppColors.success : AppColors.danger,
       iconBackground: success ? AppColors.successSoft : AppColors.dangerSoft,
       title: success ? 'Kurulum Başarılı' : 'Kurulum Başarısız',
@@ -476,24 +479,24 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 color: AppColors.success.withValues(alpha: .22),
               ),
             ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
               children: [
-                Icon(
-                  Icons.sim_card_rounded,
-                  color: AppColors.success,
-                  size: 21,
+                Image.asset(
+                  _simActivationGuideAsset,
+                  height: 132,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  semanticLabel: 'eUICC kartı reader’dan telefona takma',
                 ),
-                SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    'Kartı reader’dan çıkarıp telefonun SIM yuvasına takın. '
-                    'Ardından uçak modunu açıp kapatın veya telefonu yeniden başlatın.',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      height: 1.45,
-                      fontWeight: FontWeight.w700,
-                    ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Kartı reader’dan çıkarıp telefonun SIM yuvasına takın. '
+                  'Ardından uçak modunu açıp kapatın veya telefonu yeniden başlatın.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
