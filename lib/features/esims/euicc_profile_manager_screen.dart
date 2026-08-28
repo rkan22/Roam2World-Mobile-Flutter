@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nlpa2/models/euicc_profile.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/r2w_toast.dart';
 import 'ccid_profile_installer.dart';
 
@@ -194,12 +195,16 @@ class _ManagerState extends State<EuiccProfileManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final activeProfiles = _profiles.where((profile) => profile.enabled);
+    final activeProfile = activeProfiles.isEmpty ? null : activeProfiles.first;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         title: const Text(
-          'eUICC Profilleri',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          'eUICC Yönetimi',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
         ),
         actions: [
           IconButton(
@@ -215,8 +220,15 @@ class _ManagerState extends State<EuiccProfileManagerScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
           children: [
-            _ReaderBanner(reader: _reader, connected: _error == null),
-            const SizedBox(height: 18),
+            if (!_loading && _error == null)
+              _EuiccHero(
+                reader: _reader,
+                profileCount: _profiles.length,
+                activeProfile: activeProfile,
+              )
+            else
+              _ReaderBanner(reader: _reader, connected: _error == null),
+            const SizedBox(height: 24),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.only(top: 80),
@@ -230,22 +242,23 @@ class _ManagerState extends State<EuiccProfileManagerScreen> {
               Row(
                 children: [
                   Text(
-                    'Karttaki Profiller',
+                    'Yüklü Profiller',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    _profiles.length.toString() + ' profil',
+                    _profiles.length.toString().padLeft(2, '0'),
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               for (final profile in _profiles) ...[
                 _ProfileCard(
                   profile: profile,
@@ -256,6 +269,257 @@ class _ManagerState extends State<EuiccProfileManagerScreen> {
                 const SizedBox(height: 12),
               ],
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EuiccHero extends StatelessWidget {
+  const _EuiccHero({
+    required this.reader,
+    required this.profileCount,
+    required this.activeProfile,
+  });
+
+  final String? reader;
+  final int profileCount;
+  final EuiccProfile? activeProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF020817), Color(0xFF0B2742), Color(0xFF075F73)],
+        ),
+        borderRadius: BorderRadius.circular(B2BRadius.xxl),
+        boxShadow: B2BShadows.hero,
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -34,
+            top: -44,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withValues(alpha: .12),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .11),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: .14),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.sim_card_rounded,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'eUICC Kart',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Profil merkezi',
+                          style: TextStyle(color: Color(0xFF9FB4C8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: .18),
+                      borderRadius: BorderRadius.circular(B2BRadius.pill),
+                      border: Border.all(
+                        color: AppColors.success.withValues(alpha: .42),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Color(0xFF4ADE80),
+                          size: 8,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'BAĞLI',
+                          style: TextStyle(
+                            color: Color(0xFFBBF7D0),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: .7,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  _HeroMetric(
+                    value: profileCount.toString(),
+                    label: 'Profil',
+                  ),
+                  const SizedBox(width: 10),
+                  _HeroMetric(
+                    value: activeProfile == null ? '—' : '1',
+                    label: 'Aktif',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: .11),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      activeProfile == null ? _simAsset : _activeSimAsset,
+                      width: 54,
+                      height: 54,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            activeProfile?.displayName ?? 'Aktif profil yok',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            activeProfile == null
+                                ? 'Bir profil seçerek etkinleştirin'
+                                : (activeProfile!.serviceProviderName ??
+                                      'Kullanıma hazır'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF9FB4C8),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (activeProfile != null) const _ActiveBadge(dark: true),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.usb_rounded,
+                    color: Color(0xFF7DD3FC),
+                    size: 17,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      reader ?? 'USB CCID Reader',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF9FB4C8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .07),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 21,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF9FB4C8),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),
@@ -279,27 +543,31 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(20),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(B2BRadius.xl),
       child: InkWell(
         onTap: busy ? null : onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(17),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            gradient: profile.enabled
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFFFFF), Color(0xFFEAFBFF)],
+                  )
+                : null,
+            color: profile.enabled ? null : AppColors.card,
+            borderRadius: BorderRadius.circular(B2BRadius.xl),
             border: Border.all(
               color: profile.enabled
-                  ? AppColors.success.withValues(alpha: .35)
+                  ? AppColors.primary.withValues(alpha: .30)
                   : AppColors.border,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0D0F172A),
-                blurRadius: 18,
-                offset: Offset(0, 7),
-              ),
-            ],
+            boxShadow: profile.enabled
+                ? B2BShadows.elevated
+                : B2BShadows.card,
           ),
           child: Row(
             children: [
@@ -344,13 +612,18 @@ class _ProfileCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               busy
                   ? const SizedBox.square(
                       dimension: 24,
                       child: CircularProgressIndicator(strokeWidth: 2.4),
                     )
-                  : Switch(value: profile.enabled, onChanged: onToggle),
+                  : Switch(
+                      value: profile.enabled,
+                      onChanged: onToggle,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: AppColors.primaryDark,
+                    ),
             ],
           ),
         ),
@@ -384,36 +657,31 @@ class _ProfileDetailState extends State<_ProfileDetail> {
     final profile = widget.profile;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Profil Detayı')),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Profil Detayı',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
-          Center(child: _ProfileImage(profile: profile, size: 116)),
-          const SizedBox(height: 16),
-          Text(
-            profile.displayName,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: profile.enabled
-                ? const _ActiveBadge()
-                : const Text(
-                    'PASİF',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-          ),
+          _ProfileDetailHero(profile: profile),
           const SizedBox(height: 24),
+          const Text(
+            'Profil Bilgileri',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(B2BRadius.xl),
               border: Border.all(color: AppColors.border),
+              boxShadow: B2BShadows.card,
             ),
             child: Column(
               children: [
@@ -437,6 +705,12 @@ class _ProfileDetailState extends State<_ProfileDetail> {
           ),
           const SizedBox(height: 18),
           FilledButton.icon(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(17),
+              ),
+            ),
             onPressed: _busy
                 ? null
                 : () async {
@@ -455,6 +729,12 @@ class _ProfileDetailState extends State<_ProfileDetail> {
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(17),
+              ),
+            ),
             onPressed: _busy
                 ? null
                 : () async {
@@ -475,6 +755,113 @@ class _ProfileDetailState extends State<_ProfileDetail> {
                   },
             icon: const Icon(Icons.delete_outline_rounded),
             label: const Text('Profili Sil'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileDetailHero extends StatelessWidget {
+  const _ProfileDetailHero({required this.profile});
+
+  final EuiccProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF020817), Color(0xFF0B2742), Color(0xFF075F73)],
+        ),
+        borderRadius: BorderRadius.circular(B2BRadius.xxl),
+        boxShadow: B2BShadows.hero,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 136,
+            height: 136,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(38),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: .13),
+              ),
+            ),
+            child: Image.asset(
+              profile.enabled ? _activeSimAsset : _simAsset,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            profile.displayName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            profile.serviceProviderName ?? 'eUICC profili',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Color(0xFF9FB4C8)),
+          ),
+          const SizedBox(height: 13),
+          profile.enabled
+              ? const _ActiveBadge(dark: true)
+              : Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .08),
+                    borderRadius: BorderRadius.circular(B2BRadius.pill),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: .14),
+                    ),
+                  ),
+                  child: const Text(
+                    'PASİF',
+                    style: TextStyle(
+                      color: Color(0xFFCBD5E1),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: .7,
+                    ),
+                  ),
+                ),
+          const SizedBox(height: 18),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .07),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              _masked(profile.iccid),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFFBAE6FD),
+                fontFamily: 'monospace',
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: .5,
+              ),
+            ),
           ),
         ],
       ),
@@ -556,19 +943,26 @@ class _ReaderBanner extends StatelessWidget {
 }
 
 class _ActiveBadge extends StatelessWidget {
-  const _ActiveBadge();
+  const _ActiveBadge({this.dark = false});
+
+  final bool dark;
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.successSoft,
+        color: dark
+            ? AppColors.success.withValues(alpha: .18)
+            : AppColors.successSoft,
         borderRadius: BorderRadius.circular(99),
+        border: dark
+            ? Border.all(color: AppColors.success.withValues(alpha: .4))
+            : null,
       ),
       child: const Text(
         'AKTİF',
         style: TextStyle(
-          color: AppColors.success,
+          color: dark ? const Color(0xFFBBF7D0) : AppColors.success,
           fontSize: 10,
           fontWeight: FontWeight.w900,
           letterSpacing: .6,
