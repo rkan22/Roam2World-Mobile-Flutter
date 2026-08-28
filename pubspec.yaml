@@ -47,6 +47,8 @@ dependencies:
     path: vendor/NekokoLPA2/local_packages/ble
   ccid:
     path: vendor/NekokoLPA2/local_packages/ccid
+  nlpa2:
+    path: vendor/NekokoLPA2
   roam_lpa_core:
     path: packages/roam_lpa_core
   local_auth: ^3.0.2
