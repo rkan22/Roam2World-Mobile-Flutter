@@ -43,9 +43,7 @@ class CcidReaderConnection {
 /// Thin Roam2World adapter around NekokoLPA2's extracted CCID + SGP.22 core.
 /// No Nekoko screen, navigation or companion application is used.
 class CcidProfileInstaller {
-  CcidProfileInstaller()
-    : _adapter = CcidAdapter(),
-      _manager = ProfileManager(CcidAdapter());
+  CcidProfileInstaller() : _adapter = CcidAdapter();
 
   final CcidAdapter _adapter;
   late ProfileManager _manager;
