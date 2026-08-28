@@ -469,6 +469,10 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
 
   String _cleanError(String? value) {
     if (value == null || value.isEmpty) return 'Hata kodu: CCID-001';
+    if (value.contains('MissingPluginException')) {
+      return 'CCID native eklentisi bu kurulumda yüklenmemiş. '
+          'Uygulamayı cihazdan kaldırıp temiz derleme ile yeniden kurun.';
+    }
     return value.replaceFirst('Exception: ', '');
   }
 }
