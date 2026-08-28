@@ -12,6 +12,7 @@ import android.telephony.euicc.DownloadableSubscription
 import android.telephony.euicc.EuiccManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import im.nfc.ccid.CcidPlugin
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
@@ -55,6 +56,11 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Some cached/add-to-app engine states can skip generated plugin
+        // registration. Register CCID explicitly without adding it twice.
+        if (!flutterEngine.plugins.has(CcidPlugin::class.java)) {
+            flutterEngine.plugins.add(CcidPlugin())
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LPA_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
