@@ -459,7 +459,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   }
 
   String _groupAtr(String? atr) {
-    final value = (atr ?? '').replaceAll(RegExp(r'\\s+'), '').toUpperCase();
+    final value = (atr ?? '').replaceAll(RegExp(r'\s+'), '').toUpperCase();
     if (value.isEmpty) return '-';
     return [
       for (var i = 0; i < value.length; i += 2)
