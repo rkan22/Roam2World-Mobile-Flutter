@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-const _ccidReaderAsset = 'assets/images/lpa/ccid_reader.png';
-const _euiccSimAsset = 'assets/images/lpa/euicc_sim.png';
-
 import '../../core/theme/app_colors.dart';
 import 'ccid_profile_installer.dart';
 import 'esim_catalog.dart';
 import 'lpa_bridge.dart';
+
+const _ccidReaderAsset = 'assets/images/lpa/ccid_reader.png';
+const _euiccSimAsset = 'assets/images/lpa/euicc_sim.png';
 
 enum _InstallStage {
   compatibility,
