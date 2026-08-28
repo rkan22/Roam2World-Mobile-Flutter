@@ -7,7 +7,7 @@ import 'package:nlpa2/logic/profile_download_session.dart';
 import 'package:nlpa2/logic/profile_manager.dart';
 import 'package:nlpa2/models/activation_code.dart';
 import 'package:nlpa2/models/asn1/rsp_definitions.g.dart';
-import 'package:nlpa2/services/es9plus_service.dart';
+import 'package:roam_lpa_core/roam_lpa_core.dart';
 import 'package:nlpa2/utils/crypto_utils.dart';
 
 enum CcidInstallStage {
@@ -46,6 +46,7 @@ class CcidProfileInstaller {
   CcidProfileInstaller() : _adapter = CcidAdapter();
 
   final CcidAdapter _adapter;
+  final HttpEs9PlusClient _es9 = HttpEs9PlusClient();
   late ProfileManager _manager;
   Reader? _reader;
   bool _connected = false;
@@ -115,11 +116,10 @@ class CcidProfileInstaller {
         ..processEuiccChallenge(challenge);
 
       final initiateRequest = session.getInitiateAuthenticationRequest();
-      final initiate = await Es9PlusService().initiateAuthentication(
+      final initiate = await _es9.initiateAuthentication(
         smdpAddress: activation.smdpAddress,
         euiccChallenge: base64Encode(initiateRequest.euiccChallenge!),
         euiccInfo1: base64Encode(initiateRequest.euiccInfo1!.encode()),
-        clientTransactionId: '0',
       );
 
       final transactionText = _requiredString(initiate, 'transactionId');
@@ -147,7 +147,7 @@ class CcidProfileInstaller {
 
       final authenticateClientRequest =
           session.getAuthenticateClientRequest();
-      final authenticateClient = await Es9PlusService().authenticateClient(
+      final authenticateClient = await _es9.authenticateClient(
         smdpAddress: activation.smdpAddress,
         transactionId: transactionText,
         authenticateServerResponse: base64Encode(
@@ -206,7 +206,7 @@ class CcidProfileInstaller {
       );
 
       final packageResponse =
-          await Es9PlusService().getBoundProfilePackage(
+          await _es9.getBoundProfilePackage(
         smdpAddress: activation.smdpAddress,
         transactionId: transactionText,
         prepareDownloadResponse: base64Encode(prepare.encode()),
