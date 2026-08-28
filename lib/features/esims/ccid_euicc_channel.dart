@@ -19,15 +19,11 @@ class CcidEuiccCapability {
 }
 
 class CcidEuiccChannel implements EuiccChannel {
-  CcidEuiccChannel({String? readerName, Ccid? ccid})
-    : _readerName = readerName,
-      _ccid = ccid ?? Ccid();
+  CcidEuiccChannel({this.readerName, Ccid? ccid}) : _ccid = ccid ?? Ccid();
 
   final Ccid _ccid;
-  String? _readerName;
+  String? readerName;
   CcidCard? _card;
-
-  String? get readerName => _readerName;
   String? get atr => _card?.atr;
   bool get isOpen => _card != null;
 
@@ -47,7 +43,7 @@ class CcidEuiccChannel implements EuiccChannel {
           available: false,
           readers: <String>[],
           reason:
-              'USB CCID card reader bulunamadı. Reader’ı OTG ile bağlayıp tekrar kontrol edin.',
+              'CCID card reader bulunamadı. Uyumlu reader’ı bağlayıp tekrar kontrol edin.',
         );
       }
       return CcidEuiccCapability(
@@ -59,7 +55,7 @@ class CcidEuiccChannel implements EuiccChannel {
       return const CcidEuiccCapability(
         available: false,
         readers: <String>[],
-        reason: 'CCID Flutter eklentisi bu Android derlemesine eklenmemiş.',
+        reason: 'CCID Flutter eklentisi bu mobil derlemeye eklenmemiş.',
       );
     } on PlatformException catch (error) {
       return CcidEuiccCapability(
@@ -90,7 +86,7 @@ class CcidEuiccChannel implements EuiccChannel {
       throw StateError('USB CCID card reader bulunamadı.');
     }
 
-    final selected = _readerName ?? readers.first;
+    final selected = readerName ?? readers.first;
     if (!readers.contains(selected)) {
       throw StateError('Seçilen USB CCID reader artık bağlı değil: $selected');
     }
@@ -98,7 +94,7 @@ class CcidEuiccChannel implements EuiccChannel {
     // connect() requests Android USB permission when needed and only completes
     // after the card has been powered on and its ATR has been read.
     final card = await _ccid.connect(selected);
-    _readerName = selected;
+    readerName = selected;
     _card = card;
   }
 
@@ -114,7 +110,7 @@ class CcidEuiccChannel implements EuiccChannel {
 
     final responseHex = await card.transceive(_encodeHex(apdu));
     if (responseHex == null || responseHex.isEmpty) {
-      throw const PlatformException(
+      throw PlatformException(
         code: 'EMPTY_CCID_RESPONSE',
         message: 'CCID reader APDU yanıtı döndürmedi.',
       );
