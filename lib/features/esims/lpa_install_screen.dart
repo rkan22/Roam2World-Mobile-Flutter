@@ -198,7 +198,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     };
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.card,
       appBar: AppBar(
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
@@ -214,9 +214,18 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 240),
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
                 child: SingleChildScrollView(
                   key: ValueKey(_stage),
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
                   child: _stageBody(),
                 ),
               ),
@@ -282,12 +291,18 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         ),
         const SizedBox(height: 24),
         FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
           onPressed: _busy || !ready ? null : _continueFromCompatibility,
           child: Text(_busy ? 'Kontrol ediliyor…' : 'Devam'),
         ),
         if (!ready && !_busy) ...[
           const SizedBox(height: 10),
           OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+          ),
             onPressed: _checkCompatibility,
             child: const Text('Tekrar Kontrol Et'),
           ),
@@ -312,6 +327,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         ),
         const SizedBox(height: 18),
         FilledButton.icon(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
           onPressed: _busy ? null : _connectReader,
           icon: _busy
               ? const SizedBox.square(
@@ -353,6 +371,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         ),
         const SizedBox(height: 24),
         FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
           onPressed: _busy ? null : _installWithCcid,
           child: const Text('Profili İndir ve Yükle'),
         ),
@@ -442,6 +463,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
           ),
         const SizedBox(height: 24),
         FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
           onPressed: success
               ? () => Navigator.of(context).pop(true)
               : _retry,
@@ -450,6 +474,9 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         if (!success) ...[
           const SizedBox(height: 10),
           OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+          ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Destek'),
           ),
@@ -579,47 +606,35 @@ class _StageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A020817),
-            blurRadius: 24,
-            offset: Offset(0, 8),
+    return Column(
+      children: [
+        Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: iconBackground,
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(color: iconBackground, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 34),
+          child: Icon(icon, color: iconColor, size: 29),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            height: 1.4,
           ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 28),
-          ...children,
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        ...children,
+      ],
     );
   }
 }
