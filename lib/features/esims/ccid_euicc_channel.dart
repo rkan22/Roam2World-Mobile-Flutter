@@ -135,7 +135,7 @@ class CcidEuiccChannel implements EuiccChannel {
       .toUpperCase();
 
   static List<int> _decodeHex(String value) {
-    final hex = value.replaceAll(RegExp(r'\\s+'), '');
+    final hex = value.replaceAll(RegExp(r'\s+'), '');
     if (hex.length.isOdd || !RegExp(r'^[0-9a-fA-F]+$').hasMatch(hex)) {
       throw const FormatException('CCID reader geçersiz hexadecimal yanıt döndürdü.');
     }
