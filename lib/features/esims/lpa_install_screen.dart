@@ -452,12 +452,46 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
       iconBackground: success ? AppColors.successSoft : AppColors.dangerSoft,
       title: success ? 'Kurulum Başarılı' : 'Kurulum Başarısız',
       subtitle: success
-          ? 'eSIM profili başarıyla yüklendi.'
+          ? 'eSIM profili başarıyla yüklendi ve etkinleştirildi.'
           : 'Profil yüklenemedi. Reader bağlantısını kontrol edip tekrar deneyin.',
       children: [
-        if (success)
-          _PlanSummary(esim: widget.esim)
-        else
+        if (success) ...[
+          _PlanSummary(esim: widget.esim),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: AppColors.successSoft,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: .22),
+              ),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.sim_card_rounded,
+                  color: AppColors.success,
+                  size: 21,
+                ),
+                SizedBox(width: 11),
+                Expanded(
+                  child: Text(
+                    'Kartı reader’dan çıkarıp telefonun SIM yuvasına takın. '
+                    'Ardından uçak modunu açıp kapatın veya telefonu yeniden başlatın.',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      height: 1.45,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(15),
