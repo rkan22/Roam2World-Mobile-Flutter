@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+const _ccidReaderAsset = 'assets/images/lpa/ccid_reader.png';
+const _euiccSimAsset = 'assets/images/lpa/euicc_sim.png';
+
 import '../../core/theme/app_colors.dart';
 import 'ccid_profile_installer.dart';
 import 'esim_catalog.dart';
@@ -258,6 +261,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         ),
       _InstallStage.installing => _progressView(
           icon: Icons.sim_card_download_outlined,
+          imageAsset: _euiccSimAsset,
           title: 'Profil Yükleniyor',
           subtitle: _progressMessage,
           warning: 'Reader bağlantısını kesmeyin.',
@@ -326,6 +330,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     final reader = readers.isEmpty ? 'USB CCID Reader' : readers.first;
     return _StageCard(
       icon: Icons.usb_rounded,
+      imageAsset: _ccidReaderAsset,
       title: 'CCID Reader',
       subtitle: 'Kart okuyucu bağlantısı ve Android USB izni kontrol edilecek.',
       children: [
@@ -356,6 +361,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   Widget _cardView() {
     return _StageCard(
       icon: Icons.sim_card_outlined,
+      imageAsset: _euiccSimAsset,
       title: 'eUICC Kart',
       subtitle: 'Kart algılandı ve ATR başarıyla doğrulandı.',
       children: [
@@ -396,9 +402,11 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     required String title,
     required String subtitle,
     String? warning,
+    String? imageAsset,
   }) {
     return _StageCard(
       icon: icon,
+      imageAsset: imageAsset,
       title: title,
       subtitle: subtitle,
       children: [
@@ -608,6 +616,7 @@ class _StageCard extends StatelessWidget {
     required this.children,
     this.iconColor = AppColors.primary,
     this.iconBackground = AppColors.primaryLight,
+    this.imageAsset,
   });
 
   final IconData icon;
@@ -616,19 +625,29 @@ class _StageCard extends StatelessWidget {
   final List<Widget> children;
   final Color iconColor;
   final Color iconBackground;
+  final String? imageAsset;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          width: 58,
-          height: 58,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          width: imageAsset == null ? 58 : 112,
+          height: imageAsset == null ? 58 : 112,
+          padding: EdgeInsets.all(imageAsset == null ? 0 : 8),
           decoration: BoxDecoration(
             color: iconBackground,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: iconColor, size: 29),
+          child: imageAsset == null
+              ? Icon(icon, color: iconColor, size: 29)
+              : Image.asset(
+                  imageAsset!,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  semanticLabel: title,
+                ),
         ),
         const SizedBox(height: 16),
         Text(

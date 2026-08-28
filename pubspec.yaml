@@ -67,5 +67,6 @@ flutter:
     - assets/catalog/europe.png
     - assets/branding/
     - assets/onboarding/
+    - assets/images/lpa/
   config:
     enable-swift-package-manager: false
