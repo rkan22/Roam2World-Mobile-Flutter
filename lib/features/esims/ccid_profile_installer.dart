@@ -261,7 +261,7 @@ class CcidProfileInstaller {
       throw FormatException('SM-DP+ yanıtında $key bulunamadı.');
     }
     return Uint8List.fromList(
-      base64Decode(value.replaceAll(RegExp(r'\\s+'), '')),
+      base64Decode(value.replaceAll(RegExp(r'\s+'), '')),
     );
   }
 
