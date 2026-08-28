@@ -20,6 +20,8 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   bool _installing = false;
   bool _installed = false;
   bool _handedOff = false;
+  bool _ccidConnected = false;
+  String? _ccidAtr;
   String? _installError;
 
   @override
@@ -47,6 +49,33 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
 
   Future<void> _install() async {
     await _runOperation(() => _bridge.installActivationCode(_activationCode));
+  }
+
+  Future<void> _connectCcid() async {
+    setState(() {
+      _installing = true;
+      _installError = null;
+      _ccidConnected = false;
+      _ccidAtr = null;
+    });
+    try {
+      final result = await _bridge.connectCcidReader(
+        reader: _capability?.ccidReaders.firstOrNull,
+      );
+      if (!mounted) return;
+      setState(() {
+        _ccidConnected = true;
+        _ccidAtr = result.atr;
+      });
+    } on LpaBridgeException catch (error) {
+      if (!mounted) return;
+      setState(() => _installError = error.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _installError = 'USB CCID reader bağlantısı kurulamadı.');
+    } finally {
+      if (mounted) setState(() => _installing = false);
+    }
   }
 
   Future<void> _openRoamLpa() async {
@@ -99,6 +128,33 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 'Cihaz LPA desteği kontrol ediliyor…',
                 textAlign: TextAlign.center,
               ),
+            ] else if (_ccidConnected) ...[
+              const Icon(
+                Icons.usb_rounded,
+                size: 84,
+                color: Colors.green,
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'USB CCID reader bağlandı',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Kart başarıyla power-on edildi ve ATR alındı.\nATR: ${_ccidAtr ?? '-'}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: _checkCapability,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Yeniden Kontrol Et'),
+              ),
             ] else if (_installed) ...[
               const Icon(
                 Icons.check_circle_rounded,
@@ -149,17 +205,26 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
               ),
             ] else if (capability != null) ...[
               Icon(
-                capability.esimSupported || capability.nekokoAvailable
-                    ? Icons.sim_card_rounded
+                capability.esimSupported ||
+                        capability.nekokoAvailable ||
+                        capability.ccidAvailable
+                    ? capability.ccidAvailable
+                          ? Icons.usb_rounded
+                          : Icons.sim_card_rounded
                     : Icons.info_outline_rounded,
                 size: 84,
-                color: capability.esimSupported || capability.nekokoAvailable
+                color:
+                    capability.esimSupported ||
+                        capability.nekokoAvailable ||
+                        capability.ccidAvailable
                     ? AppColors.primary
                     : AppColors.textSecondary,
               ),
               const SizedBox(height: 18),
               Text(
-                capability.directInstallSupported
+                capability.ccidAvailable
+                    ? 'USB CCID reader hazır'
+                    : capability.directInstallSupported
                     ? 'eSIM kuruluma hazır'
                     : capability.nekokoAvailable
                     ? 'Roam2World eSIM Manager hazır'
@@ -208,6 +273,25 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 ),
               ],
               const SizedBox(height: 28),
+              if (capability.ccidAvailable)
+                ElevatedButton.icon(
+                  onPressed: _installing ? null : _connectCcid,
+                  icon: _installing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.usb_rounded),
+                  label: Text(
+                    _installing
+                        ? 'USB izni ve kart bekleniyor…'
+                        : 'CCID Reader’a Bağlan',
+                  ),
+                ),
+              if (capability.ccidAvailable &&
+                  capability.directInstallSupported)
+                const SizedBox(height: 10),
               if (capability.directInstallSupported)
                 ElevatedButton.icon(
                   onPressed: _installing ? null : _install,
@@ -234,7 +318,8 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 ),
               ],
               if (!capability.directInstallSupported &&
-                  !capability.nekokoAvailable) ...[
+                  !capability.nekokoAvailable &&
+                  !capability.ccidAvailable) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -255,7 +340,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 ),
               ],
             ],
-            if (!_installed && !_handedOff) ...[
+            if (!_installed && !_handedOff && !_ccidConnected) ...[
               const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: _installing
