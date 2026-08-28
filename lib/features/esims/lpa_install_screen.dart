@@ -60,7 +60,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
     });
     try {
       final result = await _bridge.connectCcidReader(
-        reader: _capability?.ccidReaders.firstOrNull,
+        reader: (_capability?.ccidReaders.isNotEmpty ?? false)\n            ? _capability!.ccidReaders.first\n            : null,
       );
       if (!mounted) return;
       setState(() {
