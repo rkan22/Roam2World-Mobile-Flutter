@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import 'ccid_euicc_channel.dart';
+
 class LpaCapability {
   const LpaCapability({
     required this.platform,
@@ -10,6 +12,8 @@ class LpaCapability {
     required this.reason,
     this.transport = 'none',
     this.nekokoAvailable = false,
+    this.ccidAvailable = false,
+    this.ccidReaders = const <String>[],
   });
 
   final String platform;
@@ -18,6 +22,8 @@ class LpaCapability {
   final String reason;
   final String transport;
   final bool nekokoAvailable;
+  final bool ccidAvailable;
+  final List<String> ccidReaders;
 
   factory LpaCapability.fromMap(Map<Object?, Object?> map) => LpaCapability(
     platform: map['platform']?.toString() ?? 'unknown',
@@ -27,6 +33,27 @@ class LpaCapability {
     transport: map['transport']?.toString() ?? 'none',
     nekokoAvailable: map['nekokoAvailable'] == true,
   );
+
+  LpaCapability withCcid(CcidEuiccCapability ccid) {
+    if (!ccid.available) return this;
+    return LpaCapability(
+      platform: platform,
+      esimSupported: true,
+      directInstallSupported: directInstallSupported,
+      reason: ccid.reason,
+      transport: 'usb_ccid',
+      nekokoAvailable: false,
+      ccidAvailable: true,
+      ccidReaders: ccid.readers,
+    );
+  }
+}
+
+class CcidConnectionResult {
+  const CcidConnectionResult({required this.reader, required this.atr});
+
+  final String reader;
+  final String atr;
 }
 
 class LpaInstallResult {
@@ -70,6 +97,14 @@ class LpaBridge {
       );
     }
 
+    final native = await _nativeCapability();
+    if (!Platform.isAndroid) return native;
+
+    final ccid = await CcidEuiccChannel.capability();
+    return native.withCcid(ccid);
+  }
+
+  Future<LpaCapability> _nativeCapability() async {
     try {
       final result = await _channel.invokeMethod<Map<Object?, Object?>>(
         'getCapability',
@@ -90,6 +125,42 @@ class LpaBridge {
         directInstallSupported: false,
         reason: 'Native LPA bridge is not available in this build.',
       );
+    }
+  }
+
+  Future<CcidConnectionResult> connectCcidReader({String? reader}) async {
+    final capability = await CcidEuiccChannel.capability();
+    if (!capability.available) {
+      throw LpaBridgeException('CCID_NOT_FOUND', capability.reason);
+    }
+
+    final selected = reader ?? capability.reader;
+    final channel = CcidEuiccChannel(readerName: selected);
+    try {
+      await channel.open();
+      final atr = channel.atr;
+      if (atr == null || atr.isEmpty) {
+        throw const LpaBridgeException(
+          'CCID_CARD_NOT_FOUND',
+          'Reader bulundu ancak içindeki karttan ATR alınamadı.',
+        );
+      }
+      return CcidConnectionResult(reader: selected, atr: atr);
+    } on LpaBridgeException {
+      rethrow;
+    } on PlatformException catch (error) {
+      throw LpaBridgeException(
+        error.code,
+        error.message ?? 'USB CCID reader bağlantısı kurulamadı.',
+        details: error.details,
+      );
+    } catch (error) {
+      throw LpaBridgeException(
+        'CCID_CONNECT_FAILED',
+        'USB CCID reader bağlantısı kurulamadı: $error',
+      );
+    } finally {
+      await channel.close();
     }
   }
 
