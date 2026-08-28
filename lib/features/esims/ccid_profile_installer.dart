@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:nlpa2/adapter/ccid/ccid_adapter.dart';
 import 'package:nlpa2/adapter/euicc_adapter.dart';
@@ -45,8 +48,11 @@ class CcidReaderConnection {
 class CcidProfileInstaller {
   CcidProfileInstaller() : _adapter = CcidAdapter();
 
+  static const _allowUntrustedSmdpTls = bool.fromEnvironment(
+    'ROAM_ALLOW_UNTRUSTED_SMDP_TLS',
+  );
+
   final CcidAdapter _adapter;
-  final HttpEs9PlusClient _es9 = HttpEs9PlusClient();
   late ProfileManager _manager;
   Reader? _reader;
   bool _connected = false;
@@ -95,6 +101,20 @@ class CcidProfileInstaller {
       throw const FormatException('Geçersiz LPA aktivasyon kodu.');
     }
 
+    final smdpHost = Uri.parse(
+      'https://${activation.smdpAddress}',
+    ).host.toLowerCase();
+    final httpClient = HttpClient();
+    if (kDebugMode && _allowUntrustedSmdpTls) {
+      // Debug-only escape hatch for test SM-DP+ environments using a private
+      // certificate chain. Never accepts a certificate for another host and
+      // is compiled out of release mode by the kDebugMode guard.
+      httpClient.badCertificateCallback = (_, host, __) {
+        return host.toLowerCase() == smdpHost;
+      };
+    }
+    final es9 = HttpEs9PlusClient(client: httpClient);
+
     Channel? channel;
     try {
       onUpdate(const CcidInstallUpdate(
@@ -116,7 +136,7 @@ class CcidProfileInstaller {
         ..processEuiccChallenge(challenge);
 
       final initiateRequest = session.getInitiateAuthenticationRequest();
-      final initiate = await _es9.initiateAuthentication(
+      final initiate = await es9.initiateAuthentication(
         smdpAddress: activation.smdpAddress,
         euiccChallenge: base64Encode(initiateRequest.euiccChallenge!),
         euiccInfo1: base64Encode(initiateRequest.euiccInfo1!.encode()),
@@ -147,7 +167,7 @@ class CcidProfileInstaller {
 
       final authenticateClientRequest =
           session.getAuthenticateClientRequest();
-      final authenticateClient = await _es9.authenticateClient(
+      final authenticateClient = await es9.authenticateClient(
         smdpAddress: activation.smdpAddress,
         transactionId: transactionText,
         authenticateServerResponse: base64Encode(
@@ -206,7 +226,7 @@ class CcidProfileInstaller {
       );
 
       final packageResponse =
-          await _es9.getBoundProfilePackage(
+          await es9.getBoundProfilePackage(
         smdpAddress: activation.smdpAddress,
         transactionId: transactionText,
         prepareDownloadResponse: base64Encode(prepare.encode()),
@@ -242,6 +262,7 @@ class CcidProfileInstaller {
       ));
     } finally {
       if (channel != null) await channel.close();
+      httpClient.close(force: true);
     }
   }
 
