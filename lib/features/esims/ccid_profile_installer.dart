@@ -9,6 +9,7 @@ import 'package:nlpa2/adapter/euicc_adapter.dart';
 import 'package:nlpa2/logic/profile_download_session.dart';
 import 'package:nlpa2/logic/profile_manager.dart';
 import 'package:nlpa2/models/activation_code.dart';
+import 'package:nlpa2/models/euicc_profile.dart';
 import 'package:nlpa2/models/asn1/rsp_definitions.g.dart';
 import 'package:roam_lpa_core/roam_lpa_core.dart';
 import 'package:nlpa2/utils/crypto_utils.dart';
@@ -86,6 +87,43 @@ class CcidProfileInstaller {
       throw StateError('Reader bulundu ancak eUICC karttan ATR alınamadı.');
     }
     return CcidReaderConnection(reader: reader.name, atr: atr);
+  }
+
+  Future<List<EuiccProfile>> listProfiles() async {
+    _ensureConnected();
+    return _manager.listProfiles();
+  }
+
+  Future<void> setProfileEnabled(String iccid, {required bool enabled}) async {
+    _ensureConnected();
+    if (enabled) {
+      await _manager.enableProfile(iccid);
+    } else {
+      await _manager.disableProfile(iccid);
+    }
+  }
+
+  Future<void> renameProfile(String iccid, String nickname) async {
+    _ensureConnected();
+    final value = nickname.trim();
+    if (value.isEmpty) {
+      throw const FormatException('Profil adı boş bırakılamaz.');
+    }
+    if (value.length > 64) {
+      throw const FormatException('Profil adı en fazla 64 karakter olabilir.');
+    }
+    await _manager.renameProfile(iccid, value);
+  }
+
+  Future<void> deleteProfile(String iccid) async {
+    _ensureConnected();
+    await _manager.deleteProfile(iccid);
+  }
+
+  void _ensureConnected() {
+    if (!_connected || _reader == null) {
+      throw StateError('Önce USB CCID reader bağlantısını kurun.');
+    }
   }
 
   Future<void> install(

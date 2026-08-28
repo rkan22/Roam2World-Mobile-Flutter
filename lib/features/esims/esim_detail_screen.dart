@@ -13,6 +13,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import 'esim_catalog.dart';
+import 'euicc_profile_manager_screen.dart';
 import 'esims_repository.dart';
 import 'lpa_install_screen.dart';
 import 'provider_lifecycle_repository.dart';
@@ -129,6 +130,12 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => LpaInstallScreen(esim: _esim)));
+  }
+
+  Future<void> _openProfileManager() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EuiccProfileManagerScreen()),
+    );
   }
 
   Future<void> _renewWithBackendOptions() async {
@@ -699,6 +706,13 @@ class _EsimDetailScreenState extends State<EsimDetailScreen> {
                     filled: true,
                   ),
                 ],
+                const SizedBox(height: B2BSpacing.sm),
+                _ActionButton(
+                  onPressed: _openProfileManager,
+                  icon: Icons.sim_card_rounded,
+                  label: 'Manage eUICC profiles',
+                  filled: false,
+                ),
                 if (_esim.activationCode.isNotEmpty) ...[
                   const SizedBox(height: B2BSpacing.sm),
                   _ActionButton(

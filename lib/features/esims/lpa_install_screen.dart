@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import 'ccid_profile_installer.dart';
 import 'esim_catalog.dart';
+import 'euicc_profile_manager_screen.dart';
 import 'lpa_bridge.dart';
 
 const _ccidReaderAsset = 'assets/images/lpa/ccid_reader.png';
@@ -189,6 +190,14 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   Future<void> _retry() async {
     await _ccidInstaller.disconnect();
     await _checkCompatibility();
+  }
+
+  Future<void> _openProfileManager() async {
+    await _ccidInstaller.disconnect();
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EuiccProfileManagerScreen()),
+    );
   }
 
   @override
@@ -526,6 +535,17 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
               : _retry,
           child: Text(success ? 'Tamam' : 'Tekrar Dene'),
         ),
+        if (success) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
+            onPressed: _openProfileManager,
+            icon: const Icon(Icons.sim_card_rounded),
+            label: const Text('Profilleri Yönet'),
+          ),
+        ],
         if (!success) ...[
           const SizedBox(height: 10),
           OutlinedButton(
