@@ -127,7 +127,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         onUpdate: (update) {
           if (!mounted) return;
           setState(() {
-            _progress = update.progress.clamp(0, 1);
+            _progress = update.progress.clamp(0.0, 1.0).toDouble();
             _progressMessage = update.message;
             _stage = switch (update.stage) {
               CcidInstallStage.connecting ||
@@ -297,7 +297,8 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
   }
 
   Widget _readerView() {
-    final reader = _capability?.ccidReaders.firstOrNull ?? 'USB CCID Reader';
+    final readers = _capability?.ccidReaders ?? const <String>[];
+    final reader = readers.isEmpty ? 'USB CCID Reader' : readers.first;
     return _StageCard(
       icon: Icons.usb_rounded,
       title: 'CCID Reader',
