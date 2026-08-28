@@ -194,7 +194,8 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
       _InstallStage.card => 3,
       _InstallStage.downloading => 4,
       _InstallStage.installing => 5,
-      _InstallStage.success || _InstallStage.failure => 6,
+      _InstallStage.success => 6,
+      _InstallStage.failure => 7,
     };
 
     return Scaffold(
@@ -210,7 +211,6 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _ProgressRail(current: step, failed: _stage == _InstallStage.failure),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 240),
@@ -225,8 +225,18 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
                 },
                 child: SingleChildScrollView(
                   key: ValueKey(_stage),
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-                  child: _stageBody(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                  child: Column(
+                    children: [
+                      _StageMarker(
+                        step: step,
+                        failed: _stage == _InstallStage.failure,
+                        completed: _stage == _InstallStage.success,
+                      ),
+                      const SizedBox(height: 22),
+                      _stageBody(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -248,7 +258,7 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
         ),
       _InstallStage.installing => _progressView(
           icon: Icons.sim_card_download_outlined,
-          title: 'Profile Yükleniyor',
+          title: 'Profil Yükleniyor',
           subtitle: _progressMessage,
           warning: 'Reader bağlantısını kesmeyin.',
         ),
@@ -501,6 +511,58 @@ class _LpaInstallScreenState extends State<LpaInstallScreen> {
           'Uygulamayı cihazdan kaldırıp temiz derleme ile yeniden kurun.';
     }
     return value.replaceFirst('Exception: ', '');
+  }
+}
+
+
+class _StageMarker extends StatelessWidget {
+  const _StageMarker({
+    required this.step,
+    required this.failed,
+    required this.completed,
+  });
+
+  final int step;
+  final bool failed;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = failed
+        ? AppColors.danger
+        : completed
+        ? AppColors.success
+        : AppColors.primary;
+
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: .22),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            '$step',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
