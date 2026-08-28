@@ -124,6 +124,15 @@ class CcidProfileInstaller {
       ));
 
       channel = await _manager.openSession();
+
+      // Capture the card state before installation so activation can target
+      // only the profile created by this download.
+      final profilesBefore = await _manager.listProfiles(useChannel: channel);
+      final existingIccids = profilesBefore
+          .map((profile) => profile.iccid)
+          .where((iccid) => iccid.isNotEmpty && iccid != 'Unknown')
+          .toSet();
+
       final challenge = await _manager.getEuiccChallenge(useChannel: channel);
       final info1 = await _manager.getEuiccInfo1(useChannel: channel);
 
@@ -256,9 +265,41 @@ class CcidProfileInstaller {
       );
 
       onUpdate(const CcidInstallUpdate(
+        stage: CcidInstallStage.installing,
+        progress: .99,
+        message: 'Yeni eSIM profili etkinleştiriliyor…',
+      ));
+
+      final profilesAfter = await _manager.listProfiles(useChannel: channel);
+      final installedProfiles = profilesAfter
+          .where((profile) =>
+              profile.iccid.isNotEmpty &&
+              profile.iccid != 'Unknown' &&
+              !existingIccids.contains(profile.iccid))
+          .toList(growable: false);
+
+      if (installedProfiles.length != 1) {
+        throw StateError(
+          installedProfiles.isEmpty
+              ? 'Profil karta yazıldı ancak yeni ICCID doğrulanamadı. '
+                  'Güvenlik için otomatik aktivasyon yapılmadı.'
+              : 'Birden fazla yeni profil bulundu. '
+                  'Güvenlik için otomatik aktivasyon yapılmadı.',
+        );
+      }
+
+      final installedProfile = installedProfiles.single;
+      if (!installedProfile.enabled) {
+        await _manager.enableProfile(
+          installedProfile.iccid,
+          useChannel: channel,
+        );
+      }
+
+      onUpdate(const CcidInstallUpdate(
         stage: CcidInstallStage.completed,
         progress: 1,
-        message: 'eSIM profili başarıyla yüklendi.',
+        message: 'eSIM profili yüklendi ve etkinleştirildi.',
       ));
     } finally {
       if (channel != null) await channel.close();
