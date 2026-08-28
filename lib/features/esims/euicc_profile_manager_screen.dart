@@ -959,7 +959,7 @@ class _ActiveBadge extends StatelessWidget {
             ? Border.all(color: AppColors.success.withValues(alpha: .4))
             : null,
       ),
-      child: const Text(
+      child: Text(
         'AKTİF',
         style: TextStyle(
           color: dark ? const Color(0xFFBBF7D0) : AppColors.success,
