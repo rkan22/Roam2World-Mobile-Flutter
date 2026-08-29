@@ -10,6 +10,7 @@ import 'ccid_profile_installer.dart';
 
 const _simAsset = 'assets/images/lpa/euicc_sim.png';
 const _activeSimAsset = 'assets/images/lpa/active_profile.png';
+const _readerAsset = 'assets/images/lpa/ccid_reader.png';
 
 class EuiccProfileManagerScreen extends StatefulWidget {
   const EuiccProfileManagerScreen({super.key});
@@ -289,240 +290,130 @@ class _EuiccHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF020817), Color(0xFF0B2742), Color(0xFF075F73)],
-        ),
-        borderRadius: BorderRadius.circular(B2BRadius.xxl),
-        boxShadow: B2BShadows.hero,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -34,
-            top: -44,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: .12),
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(B2BRadius.xl),
+            border: Border.all(color: AppColors.border),
+            boxShadow: B2BShadows.card,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .11),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: .14),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.sim_card_rounded,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'eUICC Kart',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Profil merkezi',
-                          style: TextStyle(color: Color(0xFF9FB4C8)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: .18),
-                      borderRadius: BorderRadius.circular(B2BRadius.pill),
-                      border: Border.all(
-                        color: AppColors.success.withValues(alpha: .42),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          color: Color(0xFF4ADE80),
-                          size: 8,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'BAĞLI',
-                          style: TextStyle(
-                            color: Color(0xFFBBF7D0),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: .7,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Image.asset(
+                _readerAsset,
+                width: 132,
+                height: 132,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
               ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  _HeroMetric(
-                    value: profileCount.toString(),
-                    label: 'Profil',
-                  ),
-                  const SizedBox(width: 10),
-                  _HeroMetric(
-                    value: activeProfile == null ? '—' : '1',
-                    label: 'Aktif',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: .11),
-                  ),
-                ),
-                child: Row(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      activeProfile == null ? _simAsset : _activeSimAsset,
-                      width: 54,
-                      height: 54,
-                      fit: BoxFit.contain,
+                    const Row(
+                      children: [
+                        Icon(Icons.circle, color: AppColors.success, size: 9),
+                        SizedBox(width: 7),
+                        Text(
+                          'Reader Bağlı',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 13),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            activeProfile?.displayName ?? 'Aktif profil yok',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            activeProfile == null
-                                ? 'Bir profil seçerek etkinleştirin'
-                                : (activeProfile!.serviceProviderName ??
-                                      'Kullanıma hazır'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF9FB4C8),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 10),
+                    Text(
+                      reader ?? 'USB CCID Reader',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
                       ),
                     ),
-                    if (activeProfile != null) const _ActiveBadge(dark: true),
+                    const SizedBox(height: 14),
+                    Text(
+                      '$profileCount profil · ${activeProfile == null ? 0 : 1} aktif',
+                      style: const TextStyle(
+                        color: AppColors.primaryDark,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.usb_rounded,
-                    color: Color(0xFF7DD3FC),
-                    size: 17,
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      reader ?? 'USB CCID Reader',
-                      maxLines: 1,
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Aktif Profil',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 10, 16, 10),
+          decoration: const BoxDecoration(
+            color: AppColors.card,
+            border: Border(
+              top: BorderSide(color: AppColors.border),
+              bottom: BorderSide(color: AppColors.border),
+            ),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                activeProfile == null ? _simAsset : _activeSimAsset,
+                width: 100,
+                height: 82,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activeProfile?.displayName ?? 'Aktif profil yok',
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF9FB4C8),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 5),
+                    Text(
+                      activeProfile == null
+                          ? 'Bir profili etkinleştirerek kullanıma başlayın.'
+                          : _masked(activeProfile!.iccid),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if (activeProfile != null) ...[
+                      const SizedBox(height: 8),
+                      const _ActiveBadge(),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .07),
-          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 21,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF9FB4C8),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
