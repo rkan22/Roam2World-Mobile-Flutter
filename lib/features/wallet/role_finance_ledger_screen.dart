@@ -335,12 +335,12 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Provider distribution',
+          'Sağlayıcı dağılımı',
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 4),
         Text(
-          'Split funds already available in your wallet into provider credit limits.',
+          'Cüzdan bakiyesini sağlayıcı limitlerine dağıtın.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: B2BSpacing.sm),
@@ -381,7 +381,7 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                     ),
                     const SizedBox(width: B2BSpacing.sm),
                     SizedBox(
-                      width: 140,
+                      width: 126,
                       child: TextField(
                         controller: _allocationControllers[key],
                         enabled: !_savingAllocation && allocation != null,
@@ -392,6 +392,11 @@ class _RoleFinanceLedgerScreenState extends State<RoleFinanceLedgerScreen> {
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           prefixText: '${wallet.currency} ',
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 11,
+                          ),
                         ),
                       ),
                     ),
@@ -575,7 +580,7 @@ class _WalletHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(B2BSpacing.xl),
+    padding: const EdgeInsets.all(B2BSpacing.lg),
     decoration: BoxDecoration(
       color: const Color(0xFF020817),
       borderRadius: BorderRadius.circular(B2BRadius.xl),
@@ -584,7 +589,7 @@ class _WalletHero extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'AVAILABLE WALLET BALANCE',
+          'KULLANILABİLİR BAKİYE',
           style: TextStyle(
             color: Colors.white60,
             fontSize: 11,
@@ -597,21 +602,21 @@ class _WalletHero extends StatelessWidget {
           money(wallet.availableAmount, wallet.currency),
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 32,
+            fontSize: 28,
             fontWeight: FontWeight.w900,
           ),
         ),
         const SizedBox(height: B2BSpacing.sm),
         const Text(
-          'Available funds can be distributed across approved providers.',
+          'Onaylı sağlayıcılara dağıtılabilir bayi bakiyesi.',
           style: TextStyle(color: Colors.white70),
         ),
         if (onRequestBalance != null) ...[
-          const SizedBox(height: B2BSpacing.lg),
+          const SizedBox(height: B2BSpacing.md),
           FilledButton.icon(
             onPressed: onRequestBalance,
             icon: const Icon(Icons.add_card_rounded),
-            label: const Text('Request balance'),
+            label: const Text('Bakiye talebi'),
           ),
         ],
       ],

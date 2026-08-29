@@ -96,9 +96,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
     final activeClients = customers
         .where((item) => _statusOf(item) == 'active')
         .length;
-    final pendingClients = customers
-        .where((item) => _statusOf(item) == 'pending')
-        .length;
     final activeEsims = customers.fold<int>(
       0,
       (sum, item) => sum + item.activeEsims,
@@ -125,7 +122,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   totalClients: _directory?.count ?? customers.length,
                   activeClients: activeClients,
                   activeEsims: activeEsims,
-                  pendingClients: pendingClients,
                 ),
                 const SizedBox(height: B2BSpacing.lg),
                 _SearchField(controller: _searchController),
@@ -299,113 +295,50 @@ class _KpiGrid extends StatelessWidget {
     required this.totalClients,
     required this.activeClients,
     required this.activeEsims,
-    required this.pendingClients,
   });
 
   final int totalClients;
   final int activeClients;
   final int activeEsims;
-  final int pendingClients;
-
-  @override
-  Widget build(BuildContext context) => GridView.count(
-    crossAxisCount: 2,
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    mainAxisSpacing: B2BSpacing.sm,
-    crossAxisSpacing: B2BSpacing.sm,
-    childAspectRatio: 2.25,
-    children: [
-      _KpiCard(
-        label: 'Total clients',
-        value: '$totalClients',
-        icon: Icons.groups_outlined,
-        color: const Color(0xFF2563EB),
-        soft: const Color(0xFFEFF6FF),
-      ),
-      _KpiCard(
-        label: 'Active clients',
-        value: '$activeClients',
-        icon: Icons.person_outline_rounded,
-        color: AppColors.success,
-        soft: AppColors.successSoft,
-      ),
-      _KpiCard(
-        label: 'Active eSIM / SIM',
-        value: '$activeEsims',
-        icon: Icons.sim_card_outlined,
-        color: AppColors.violet,
-        soft: const Color(0xFFF3EEFF),
-      ),
-      _KpiCard(
-        label: 'Pending activation',
-        value: '$pendingClients',
-        icon: Icons.pending_actions_outlined,
-        color: AppColors.orange,
-        soft: const Color(0xFFFFF2E8),
-      ),
-    ],
-  );
-}
-
-class _KpiCard extends StatelessWidget {
-  const _KpiCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.soft,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final Color soft;
 
   @override
   Widget build(BuildContext context) => B2BSurface(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.symmetric(vertical: 14),
     child: Row(
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: soft,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 20, color: color),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
+        Expanded(child: _KpiValue(label: 'Toplam', value: '$totalClients')),
+        const SizedBox(height: 50, child: VerticalDivider(width: 1)),
+        Expanded(child: _KpiValue(label: 'Aktif', value: '$activeClients')),
+        const SizedBox(height: 50, child: VerticalDivider(width: 1)),
+        Expanded(child: _KpiValue(label: 'Aktif eSIM', value: '$activeEsims')),
       ],
     ),
+  );
+}
+
+class _KpiValue extends StatelessWidget {
+  const _KpiValue({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
   );
 }
 
@@ -480,7 +413,8 @@ class _CustomerCard extends StatelessWidget {
     };
 
     return B2BSurface(
-      padding: const EdgeInsets.all(B2BSpacing.md),
+      onTap: onView,
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -546,53 +480,32 @@ class _CustomerCard extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _Metric(
-                  label: 'Current plan',
-                  value: customer.currentPlan.isEmpty
-                      ? 'No assigned plan'
-                      : customer.currentPlan,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _Metric(
-                  label: 'eSIM / SIM',
-                  value:
-                      '${customer.activeEsims} active · ${customer.totalEsims} total',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _Metric(
-                  label: 'Spend',
-                  value: _money(customer.totalSpent),
-                ),
+              const SizedBox(width: 6),
+              IconButton(
+                tooltip: 'Yeni sipariş',
+                onPressed: onOrder,
+                icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Row(
             children: [
-              OutlinedButton.icon(
-                onPressed: onView,
-                icon: const Icon(Icons.visibility_outlined, size: 17),
-                label: const Text('View'),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onOrder,
-                  icon: const Icon(Icons.sim_card_outlined, size: 17),
-                  label: const Text('Order'),
+              Text(
+                '${customer.activeEsims} aktif eSIM',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
+              const Spacer(),
+              Text(
+                _money(customer.totalSpent),
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, size: 18),
             ],
           ),
         ],
@@ -626,36 +539,6 @@ class _ContactLine extends StatelessWidget {
         ),
       ],
     ),
-  );
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label.toUpperCase(),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontSize: 9,
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-      ),
-    ],
   );
 }
 

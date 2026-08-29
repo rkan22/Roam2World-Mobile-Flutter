@@ -68,5 +68,6 @@ flutter:
     - assets/branding/
     - assets/onboarding/
     - assets/images/lpa/
+    - assets/images/products/
   config:
     enable-swift-package-manager: false

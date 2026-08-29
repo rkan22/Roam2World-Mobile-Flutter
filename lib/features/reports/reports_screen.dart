@@ -9,6 +9,7 @@ import '../../design_system/components/b2b_metric_card.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
+import '../../shared/widgets/product_pack_image.dart';
 import '../dashboard/dashboard_data.dart';
 import '../dashboard/dashboard_repository.dart';
 import '../orders/order_history.dart';
@@ -114,7 +115,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final packages = _topPackages(completed);
 
     return [
-      _ReportHero(
+      _ReportSummary(
         currency: data.currency,
         monthlySales: data.monthlySales,
         todaySales: data.todaySales,
@@ -203,8 +204,8 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _ReportHero extends StatelessWidget {
-  const _ReportHero({
+class _ReportSummary extends StatelessWidget {
+  const _ReportSummary({
     required this.currency,
     required this.monthlySales,
     required this.todaySales,
@@ -218,13 +219,8 @@ class _ReportHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(B2BSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: B2BGradients.primary,
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
-        boxShadow: B2BShadows.hero,
-      ),
+    return B2BSurface(
+      padding: const EdgeInsets.all(B2BSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -234,12 +230,12 @@ class _ReportHero extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .14),
+                  color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(B2BRadius.md),
                 ),
                 child: const Icon(
                   Icons.analytics_outlined,
-                  color: Colors.white,
+                  color: AppColors.primaryDark,
                 ),
               ),
               const SizedBox(width: B2BSpacing.md),
@@ -248,55 +244,53 @@ class _ReportHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Business performance',
+                      'B2B performansı',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Sales, orders and eSIM portfolio health',
-                      style: TextStyle(color: Colors.white70),
+                      'Satış ve sipariş özeti',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: B2BSpacing.xl),
+          const SizedBox(height: B2BSpacing.md),
           Text(
             '$currency ${monthlySales.toStringAsFixed(2)}',
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
               letterSpacing: -1,
             ),
           ),
           const SizedBox(height: B2BSpacing.xs),
           const Text(
-            'Monthly sales volume',
+            'Aylık satış hacmi',
             style: TextStyle(
-              color: Colors.white70,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: B2BSpacing.lg),
+          const SizedBox(height: B2BSpacing.md),
           Row(
             children: [
               Expanded(
                 child: _HeroStat(
-                  label: 'Today',
+                  label: 'Bugün',
                   value: '$currency ${todaySales.toStringAsFixed(2)}',
                 ),
               ),
               const SizedBox(width: B2BSpacing.sm),
               Expanded(
                 child: _HeroStat(
-                  label: 'Completed',
-                  value: '$completedOrders orders',
+                  label: 'Tamamlanan',
+                  value: '$completedOrders sipariş',
                 ),
               ),
             ],
@@ -318,7 +312,7 @@ class _HeroStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(B2BSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .12),
+        color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(B2BRadius.md),
       ),
       child: Column(
@@ -326,7 +320,10 @@ class _HeroStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
@@ -334,7 +331,6 @@ class _HeroStat extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Colors.white,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -567,16 +563,27 @@ class _PackageRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        CircleAvatar(
-          radius: 19,
-          backgroundColor: scheme.primaryContainer,
-          child: Text(
-            '$rank',
-            style: TextStyle(
-              color: scheme.primary,
-              fontWeight: FontWeight.w800,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ProductPackImage(label: name, width: 38, height: 50),
+            Positioned(
+              right: -5,
+              bottom: -3,
+              child: CircleAvatar(
+                radius: 9,
+                backgroundColor: scheme.primary,
+                child: Text(
+                  '$rank',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         const SizedBox(width: B2BSpacing.md),
         Expanded(
