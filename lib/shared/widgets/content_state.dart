@@ -262,8 +262,6 @@ class _StateCardState extends State<_StateCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
     return Center(
       child: FadeTransition(
         key: const Key('content-state-fade'),
@@ -272,83 +270,29 @@ class _StateCardState extends State<_StateCard>
           key: const Key('content-state-scale'),
           scale: _scale,
           child: Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(26),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(18),
             constraints: const BoxConstraints(maxWidth: 430),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  widget.iconColor.withValues(alpha: isDark ? .10 : .055),
-                  scheme.surface,
-                  scheme.surface,
-                ],
-                stops: const [0, .42, 1],
-              ),
-              borderRadius: BorderRadius.circular(B2BRadius.xl),
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(B2BRadius.lg),
               border: Border.all(
-                color: widget.iconColor.withValues(alpha: isDark ? .28 : .16),
+                color: scheme.outlineVariant,
               ),
-              boxShadow: isDark ? null : B2BShadows.elevated,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Semantics(
-                  label: 'Roam2World B2B',
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 11,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.surface.withValues(alpha: .78),
-                      borderRadius: BorderRadius.circular(B2BRadius.pill),
-                      border: Border.all(color: scheme.outlineVariant),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.travel_explore_rounded,
-                          size: 15,
-                          color: scheme.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'ROAM2WORLD  •  B2B',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: .75,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
                 Container(
-                  height: 72,
-                  width: 72,
+                  height: 50,
+                  width: 50,
                   decoration: BoxDecoration(
                     color: widget.iconColor.withValues(alpha: .11),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: widget.iconColor.withValues(alpha: .15),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.iconColor.withValues(alpha: .12),
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  child: Icon(widget.icon, size: 34, color: widget.iconColor),
+                  child: Icon(widget.icon, size: 25, color: widget.iconColor),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
@@ -356,17 +300,17 @@ class _StateCardState extends State<_StateCard>
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 9),
+                const SizedBox(height: 6),
                 Text(
                   widget.message,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.55,
+                    height: 1.35,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
                 if (widget.actionLabel != null && widget.onAction != null) ...[
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 14),
                   FilledButton.icon(
                     onPressed: widget.onAction,
                     icon: Icon(widget.actionIcon, size: 19),

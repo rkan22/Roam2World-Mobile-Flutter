@@ -9,6 +9,7 @@ import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
+import '../../shared/widgets/product_pack_image.dart';
 import 'order_history.dart';
 import 'orders_repository.dart';
 import 'widgets/orders_adaptive_grid.dart';
@@ -234,36 +235,25 @@ class _OrdersSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return B2BSurface(
-      backgroundColor: AppColors.navy,
-      borderColor: AppColors.navy,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(B2BRadius.md),
-            ),
-            child: const Icon(Icons.receipt_long_rounded, color: Colors.white),
-          ),
-          const SizedBox(width: B2BSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$label orders',
+                  '$label sipariş',
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: B2BSpacing.xxs),
                 Text(
-                  '$count records',
+                  '$count kayıt',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
@@ -274,7 +264,7 @@ class _OrdersSummary extends StatelessWidget {
           Text(
             '$currency ${total.toStringAsFixed(2)}',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -307,15 +297,10 @@ class _OrderCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 46,
-                width: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(B2BRadius.md),
-                ),
-                child: Icon(Icons.sim_card_outlined, color: scheme.primary),
+              ProductPackImage(
+                label: order.packageName,
+                width: 48,
+                height: 62,
               ),
               const SizedBox(width: B2BSpacing.sm),
               Expanded(

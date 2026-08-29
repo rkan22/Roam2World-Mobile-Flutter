@@ -9,7 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../design_system/components/b2b_surface.dart';
 import '../../design_system/tokens/b2b_tokens.dart';
 import '../../shared/widgets/package_destination_visual.dart';
-import '../../shared/widgets/package_type_chip.dart';
+import '../../shared/widgets/product_pack_image.dart';
 import '../../shared/widgets/content_state.dart';
 import '../../shared/widgets/r2w_bottom_nav.dart';
 import '../../shared/widgets/currency_switcher_button.dart';
@@ -222,13 +222,35 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 const _StaleDataBanner(),
                 const SizedBox(height: 14),
               ],
-              const Align(
-                alignment: Alignment.centerRight,
-                child: CurrencySwitcherButton(),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Katalog',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Canlı eSIM ve SIM ürünleri',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const CurrencySwitcherButton(),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    tooltip: 'Bildirimler',
+                    onPressed: () => context.push('/notifications'),
+                    icon: const Icon(Icons.notifications_none_rounded),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              const _CatalogHero(),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               CatalogFilterToolbar(
                 searchController: _searchController,
                 selection: _filters,
@@ -239,32 +261,48 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 onClearAll: _clearFilters,
               ),
               const SizedBox(height: 18),
-              _CatalogSection(
-                title: 'Available Plans',
-                trailing: '${visible.length} plans',
-                child: AnimatedSwitcher(
-                  duration: B2BMotion.standard,
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    final offset = Tween<Offset>(
-                      begin: const Offset(0, .025),
-                      end: Offset.zero,
-                    ).animate(animation);
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(position: offset, child: child),
-                    );
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey(
-                      '${_loading}_${_filters.operatorKey}_'
-                      '${_filters.packageType}_${_filters.countryCode}_'
-                      '${_filters.validityRange}_${_filters.dataRange}_'
-                      '${_searchController.text}_${visible.length}',
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Ürünler',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                    child: _buildCatalogContent(visible),
                   ),
+                  Text(
+                    '${visible.length} plan',
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AnimatedSwitcher(
+                duration: B2BMotion.standard,
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final offset = Tween<Offset>(
+                    begin: const Offset(0, .025),
+                    end: Offset.zero,
+                  ).animate(animation);
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(position: offset, child: child),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    '${_loading}_${_filters.operatorKey}_'
+                    '${_filters.packageType}_${_filters.countryCode}_'
+                    '${_filters.validityRange}_${_filters.dataRange}_'
+                    '${_searchController.text}_${visible.length}',
+                  ),
+                  child: _buildCatalogContent(visible),
                 ),
               ),
             ],
@@ -295,8 +333,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
     return Column(
       children: [
-        _LiveCatalogBanner(count: visible.length),
-        const SizedBox(height: 14),
         for (var index = 0; index < visible.length; index++) ...[
           StaggeredEntrance(
             key: ValueKey('${visible[index].provider}-${visible[index].id}'),
@@ -307,138 +343,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   context.push('/packages/detail', extra: visible[index]),
             ),
           ),
-          if (index != visible.length - 1) const SizedBox(height: 14),
+          if (index != visible.length - 1) const SizedBox(height: 10),
         ],
       ],
-    );
-  }
-}
-
-class _CatalogHero extends StatelessWidget {
-  const _CatalogHero();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primarySoft, AppColors.accentSoft],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
-        border: Border.all(color: AppColors.primaryLight),
-        boxShadow: theme.brightness == Brightness.light
-            ? B2BShadows.card
-            : null,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .9),
-              borderRadius: BorderRadius.circular(17),
-            ),
-            child: const Icon(
-              Icons.public_rounded,
-              color: AppColors.primary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Unified Operator Catalog',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Multi-provider eSIM inventory with smart routing',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-          IconButton.filledTonal(
-            tooltip: 'Notifications',
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CatalogSection extends StatelessWidget {
-  const _CatalogSection({
-    required this.title,
-    required this.trailing,
-    required this.child,
-  });
-
-  final String title;
-  final String trailing;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(B2BRadius.xl),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: theme.brightness == Brightness.light
-            ? B2BShadows.card
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  trailing,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.primaryDark,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
     );
   }
 }
@@ -469,60 +376,6 @@ class _StaleDataBanner extends StatelessWidget {
   );
 }
 
-class _LiveCatalogBanner extends StatelessWidget {
-  const _LiveCatalogBanner({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryLight),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: AppColors.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Only live plans are shown in the catalog.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.primary),
-            ),
-            child: Text(
-              '$count live ${count == 1 ? 'plan' : 'plans'}',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _OperatorPlanCard extends StatelessWidget {
   const _OperatorPlanCard({required this.package, required this.onTap});
 
@@ -546,10 +399,11 @@ class _OperatorPlanCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PackageTypeChip(
-                packageType: package.packageType,
-                size: 42,
-                iconSize: 23,
+              ProductPackImage(
+                label:
+                    '${package.destination} ${package.name} ${package.countryCode}',
+                width: 62,
+                height: 82,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -628,7 +482,7 @@ class _OperatorPlanCard extends StatelessWidget {
             const SizedBox(height: 12),
             _CoveragePreview(countries: package.supportedCountries),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerLowest,
