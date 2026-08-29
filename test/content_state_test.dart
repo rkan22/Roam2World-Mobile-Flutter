@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roam2world_mobile_flutter/shared/widgets/content_state.dart';
 
 void main() {
-  testWidgets('renders branded error state and retry action', (tester) async {
+  testWidgets('renders compact error state and retry action', (tester) async {
     var retried = false;
 
     await tester.pumpWidget(
@@ -19,7 +19,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('ROAM2WORLD  •  B2B'), findsOneWidget);
+    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     expect(find.text('Something went wrong'), findsOneWidget);
     expect(find.text('Connection unavailable.'), findsOneWidget);
 
