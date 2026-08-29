@@ -17,10 +17,8 @@ class ProductPackImage extends StatelessWidget {
     if (normalized.contains('turk') || normalized.contains('türki')) {
       return 'assets/images/products/turkiye_plan.png';
     }
-    if (normalized.contains('usa') ||
-        normalized.contains('united states') ||
-        normalized.contains('america')) {
-      return 'assets/images/products/usa_plan.png';
+    if (normalized.contains('balkan')) {
+      return 'assets/images/products/balkans_plan.png';
     }
     if (normalized.contains('global') || normalized.contains('world')) {
       return 'assets/images/products/global_plan.png';

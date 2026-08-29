@@ -376,60 +376,6 @@ class _StaleDataBanner extends StatelessWidget {
   );
 }
 
-class _LiveCatalogBanner extends StatelessWidget {
-  const _LiveCatalogBanner({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryLight),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: AppColors.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Only live plans are shown in the catalog.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.primary),
-            ),
-            child: Text(
-              '$count live ${count == 1 ? 'plan' : 'plans'}',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _OperatorPlanCard extends StatelessWidget {
   const _OperatorPlanCard({required this.package, required this.onTap});
 
