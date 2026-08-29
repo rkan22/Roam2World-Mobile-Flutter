@@ -361,16 +361,21 @@ class _PartnerBusinessDashboardScreenState
         ],
       ),
       child: Stack(
-        clipBehavior: Clip.none,
+        clipBehavior: Clip.hardEdge,
         children: [
           Positioned(
-            right: -18,
-            bottom: -24,
+            right: -12,
+            bottom: -16,
             child: IgnorePointer(
-              child: Icon(
-                Icons.account_balance_wallet_outlined,
-                size: 150,
-                color: Colors.white.withValues(alpha: .08),
+              child: Opacity(
+                opacity: .96,
+                child: Image.asset(
+                  'assets/images/lpa/active_profile.png',
+                  width: 154,
+                  height: 154,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
             ),
           ),
@@ -379,22 +384,6 @@ class _PartnerBusinessDashboardScreenState
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .08),
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Icon(
-                      _isDealer
-                          ? Icons.point_of_sale_outlined
-                          : Icons.hub_outlined,
-                      color: Colors.white70,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +451,7 @@ class _PartnerBusinessDashboardScreenState
               const SizedBox(height: 22),
               SizedBox(
                 height: 44,
-                child: FilledButton.icon(
+                child: FilledButton(
                   onPressed: () => _openTopUp(currency),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accent,
@@ -472,9 +461,8 @@ class _PartnerBusinessDashboardScreenState
                       borderRadius: BorderRadius.circular(13),
                     ),
                   ),
-                  icon: const Icon(Icons.add_rounded, size: 19),
-                  label: const Text(
-                    'Add Funds',
+                  child: const Text(
+                    'Bakiye Yükle',
                     style: TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
@@ -489,28 +477,20 @@ class _PartnerBusinessDashboardScreenState
   Widget _kpiGrid(DashboardData data) {
     final items = <_MetricData>[
       _MetricData(
-        'Revenue',
-        _money(data.monthlySales, data.currency),
-        '${data.successfulOrders} successful orders',
+        'Bugünkü Satış',
+        _money(data.todaySales, data.currency),
+        '${data.successfulOrders} başarılı',
         Icons.trending_up_rounded,
+        AppColors.primaryDark,
+        AppColors.primarySoft,
+      ),
+      _MetricData(
+        'Sipariş',
+        '${data.totalOrders}',
+        '${data.pendingOrders} bekliyor',
+        Icons.receipt_long_outlined,
         const Color(0xFF334155),
         const Color(0xFFF1F5F9),
-      ),
-      _MetricData(
-        'Gross Profit',
-        _money(data.grossProfit, data.currency),
-        '${data.grossMarginPercent.toStringAsFixed(2)}% margin',
-        Icons.account_balance_outlined,
-        AppColors.violet,
-        const Color(0xFFF3EEFF),
-      ),
-      _MetricData(
-        'Customers',
-        '${data.customerCount}',
-        '${data.totalOrders} orders in period',
-        Icons.groups_outlined,
-        AppColors.orange,
-        const Color(0xFFFFF2E8),
       ),
       _MetricData(
         'Active eSIMs',
@@ -522,45 +502,39 @@ class _PartnerBusinessDashboardScreenState
       ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - 10) / 2;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final item in items)
-              SizedBox(width: width, child: _metricCard(item)),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        border: Border(
+          top: BorderSide(color: AppColors.border),
+          bottom: BorderSide(color: AppColors.border),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var index = 0; index < items.length; index++) ...[
+            Expanded(child: _metricCard(items[index])),
+            if (index != items.length - 1)
+              const SizedBox(
+                height: 64,
+                child: VerticalDivider(width: 1, color: AppColors.border),
+              ),
           ],
-        );
-      },
+        ],
+      ),
     );
   }
 
   Widget _metricCard(_MetricData metric) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: B2BShadows.card,
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: metric.soft,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: Icon(metric.icon, size: 18, color: metric.color),
-          ),
-          const SizedBox(height: 13),
           AnimatedMetricValue(
             value: metric.value,
             maxLines: 1,
@@ -568,6 +542,7 @@ class _PartnerBusinessDashboardScreenState
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -.35,
+              fontSize: 17,
             ),
           ),
           const SizedBox(height: 4),
@@ -578,16 +553,6 @@ class _PartnerBusinessDashboardScreenState
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            metric.detail,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              color: AppColors.textSecondary,
             ),
           ),
         ],
