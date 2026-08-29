@@ -97,7 +97,13 @@ class AppTheme {
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
+      canvasColor: background,
+      disabledColor: textMuted.withValues(alpha: .48),
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       splashFactory: InkRipple.splashFactory,
+      iconTheme: IconThemeData(color: textSecondary, size: 22),
+      primaryIconTheme: IconThemeData(color: primary, size: 22),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: BrandedPageTransitionsBuilder(),
@@ -127,7 +133,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: surface,
-        elevation: 0,
+        elevation: isDark ? 0 : 1,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shadowColor: isDark
@@ -302,6 +308,52 @@ class AppTheme {
           return states.contains(WidgetState.selected) ? primary : null;
         }),
       ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected) ? primary : textMuted;
+        }),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return textMuted.withValues(alpha: .55);
+          }
+          return states.contains(WidgetState.selected)
+              ? Colors.white
+              : const Color(0xFFF8FAFC);
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return border.withValues(alpha: .7);
+          }
+          return states.contains(WidgetState.selected)
+              ? primary
+              : (isDark ? const Color(0xFF334155) : AppColors.borderStrong);
+        }),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+      ),
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: B2BSpacing.md,
+          vertical: B2BSpacing.xxs,
+        ),
+        minTileHeight: 58,
+        iconColor: textSecondary,
+        textColor: textPrimary,
+        titleTextStyle: TextStyle(
+          color: textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+        ),
+        subtitleTextStyle: TextStyle(
+          color: textSecondary,
+          fontSize: 12.5,
+          height: 1.35,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(B2BRadius.md),
+        ),
+      ),
       dividerTheme: DividerThemeData(color: border, thickness: 1, space: 1),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
@@ -319,6 +371,9 @@ class AppTheme {
             top: Radius.circular(B2BRadius.xl),
           ),
         ),
+        showDragHandle: true,
+        dragHandleColor: textMuted.withValues(alpha: .45),
+        dragHandleSize: const Size(38, 4),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surfaceMuted,
@@ -339,6 +394,111 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(B2BRadius.md),
         ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primary,
+        linearTrackColor: isDark
+            ? const Color(0xFF1E293B)
+            : AppColors.primaryLight,
+        circularTrackColor: isDark
+            ? const Color(0xFF1E293B)
+            : AppColors.primaryLight,
+        linearMinHeight: 7,
+        borderRadius: BorderRadius.circular(B2BRadius.pill),
+      ),
+      tabBarTheme: TabBarThemeData(
+        dividerColor: Colors.transparent,
+        indicatorColor: primary,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: textPrimary,
+        unselectedLabelColor: textSecondary,
+        labelStyle: const TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w800,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w600,
+        ),
+        overlayColor: WidgetStatePropertyAll(primary.withValues(alpha: .08)),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: isDark ? .34 : .12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(B2BRadius.md),
+          side: BorderSide(color: border),
+        ),
+        textStyle: TextStyle(
+          color: textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFFF8FAFC) : AppColors.navy,
+          borderRadius: BorderRadius.circular(B2BRadius.sm),
+          boxShadow: B2BShadows.card,
+        ),
+        textStyle: TextStyle(
+          color: isDark ? AppColors.navy : Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+        waitDuration: const Duration(milliseconds: 450),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
+          iconSize: const WidgetStatePropertyAll(22),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) return textMuted;
+            return states.contains(WidgetState.selected)
+                ? primary
+                : textSecondary;
+          }),
+          overlayColor: WidgetStatePropertyAll(primary.withValues(alpha: .09)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(B2BRadius.sm),
+            ),
+          ),
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thickness: const WidgetStatePropertyAll(4),
+        radius: const Radius.circular(B2BRadius.pill),
+        thumbColor: WidgetStatePropertyAll(textMuted.withValues(alpha: .45)),
+        trackColor: const WidgetStatePropertyAll(Colors.transparent),
+      ),
+      searchBarTheme: SearchBarThemeData(
+        backgroundColor: WidgetStatePropertyAll(surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(0),
+        shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+        side: WidgetStatePropertyAll(BorderSide(color: border)),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(B2BRadius.md),
+          ),
+        ),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: B2BSpacing.md),
+        ),
+        hintStyle: WidgetStatePropertyAll(TextStyle(color: textMuted)),
+        textStyle: WidgetStatePropertyAll(
+          TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        ),
+      ),
+      badgeTheme: BadgeThemeData(
+        backgroundColor: primary,
+        textColor: AppColors.navy,
+        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       ),
     );
   }

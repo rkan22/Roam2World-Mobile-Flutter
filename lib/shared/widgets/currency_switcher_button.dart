@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/currency/currency_controller.dart';
+import '../../design_system/tokens/b2b_tokens.dart';
 
 class CurrencySwitcherButton extends StatefulWidget {
   const CurrencySwitcherButton({super.key});
@@ -24,80 +25,11 @@ class _CurrencySwitcherButtonState extends State<CurrencySwitcherButton> {
       animation: controller,
       builder: (context, _) {
         final current = controller.selectedCurrency;
-        final currentSymbol = current == 'EUR' ? '€' : r'$';
-        final nextSymbol = current == 'EUR' ? r'$' : '€';
         return Tooltip(
           message: current == 'EUR' ? 'Switch to USD' : 'Switch to EUR',
-          child: InkWell(
+          child: _PremiumCurrencyPill(
+            currency: current,
             onTap: controller.toggle,
-            borderRadius: BorderRadius.circular(13),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    left: 5,
-                    top: 5,
-                    child: _CurrencyDot(
-                      symbol: currentSymbol,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      foreground: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  Positioned(
-                    left: 14,
-                    top: 11,
-                    child: Icon(
-                      Icons.swap_vert_rounded,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  Positioned(
-                    right: 5,
-                    bottom: 5,
-                    child: _CurrencyDot(
-                      symbol: nextSymbol,
-                      color: Theme.of(context).colorScheme.primary,
-                      foreground: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  Positioned(
-                    right: -5,
-                    bottom: -5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade600,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surface,
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        current,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 7,
-                          fontWeight: FontWeight.w900,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         );
       },
@@ -105,31 +37,103 @@ class _CurrencySwitcherButtonState extends State<CurrencySwitcherButton> {
   }
 }
 
-class _CurrencyDot extends StatelessWidget {
-  const _CurrencyDot({
-    required this.symbol,
-    required this.color,
-    required this.foreground,
+class _PremiumCurrencyPill extends StatefulWidget {
+  const _PremiumCurrencyPill({
+    required this.currency,
+    required this.onTap,
   });
 
-  final String symbol;
-  final Color color;
-  final Color foreground;
+  final String currency;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: 18,
-    height: 18,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    child: Text(
-      symbol,
-      style: TextStyle(
-        color: foreground,
-        fontSize: 11,
-        fontWeight: FontWeight.w900,
-        height: 1,
+  State<_PremiumCurrencyPill> createState() => _PremiumCurrencyPillState();
+}
+
+class _PremiumCurrencyPillState extends State<_PremiumCurrencyPill> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final symbol = widget.currency == 'EUR' ? '€' : r'$';
+
+    return AnimatedScale(
+      scale: _pressed ? .96 : 1,
+      duration: B2BMotion.fast,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          onHighlightChanged: (value) => setState(() => _pressed = value),
+          borderRadius: BorderRadius.circular(B2BRadius.pill),
+          child: AnimatedContainer(
+            duration: B2BMotion.standard,
+            height: 40,
+            padding: const EdgeInsets.fromLTRB(5, 4, 10, 4),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(B2BRadius.pill),
+              border: Border.all(color: scheme.outlineVariant),
+              boxShadow: isDark ? null : B2BShadows.card,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: B2BMotion.standard,
+                  width: 31,
+                  height: 31,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [scheme.primary, scheme.secondary],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: B2BMotion.fast,
+                    child: Text(
+                      symbol,
+                      key: ValueKey(symbol),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedSwitcher(
+                  duration: B2BMotion.fast,
+                  child: Text(
+                    widget.currency,
+                    key: ValueKey(widget.currency),
+                    style: TextStyle(
+                      color: scheme.onSurface,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: .5,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.swap_vert_rounded,
+                  size: 15,
+                  color: scheme.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
