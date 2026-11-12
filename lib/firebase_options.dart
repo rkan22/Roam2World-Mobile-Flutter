@@ -59,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCL2sM5Lnh2i3_fqMVXeEKLbgmPZQCj5Q0',
-    appId: '1:383607664330:ios:4e2ca91a2bc59ecb90ce33',
+    appId: '1:383607664330:ios:8f3091fb12d8a3ca90ce33',
     messagingSenderId: '383607664330',
     projectId: 'roam2world-b2b',
     storageBucket: 'roam2world-b2b.firebasestorage.app',
-    iosBundleId: 'com.roam2world.b2b',
+    iosBundleId: 'com.roam2world.mobile',
   );
 }
